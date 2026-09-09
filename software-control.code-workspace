@@ -1,0 +1,12 @@
+{
+    "folders": [
+        { "path": "../gcb-host", "name": "gcb-host" },
+        { "path": "../gcb-python-orchestrator", "name": "gcb-python-orchestrator" }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": true,
+            "**/__pycache__": true
+        }
+    }
+}

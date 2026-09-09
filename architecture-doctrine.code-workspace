@@ -1,0 +1,15 @@
+{
+    "folders": [
+        { "path": "../gcb-spec", "name": "gcb-spec" },
+        { "path": "../gcb-wiki", "name": "gcb-wiki" },
+        { "path": "../gcb-papers", "name": "gcb-papers" },
+        { "path": "../gcb-grants", "name": "gcb-grants" },
+        { "path": ".", "name": "gcb-workspaces" }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": true,
+            "**/__pycache__": true
+        }
+    }
+}

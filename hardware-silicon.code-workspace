@@ -1,0 +1,16 @@
+{
+    "folders": [
+        { "path": "../gcb-rtl", "name": "gcb-rtl" },
+        { "path": "../gcb-photonic-qam-v2", "name": "gcb-photonic-qam-v2" },
+        { "path": "../gcb-pic-core", "name": "gcb-pic-core" },
+        { "path": "../gcb-analog-rx", "name": "gcb-analog-rx" },
+        { "path": "../gcb-wdm-transceiver", "name": "gcb-wdm-transceiver" },
+        { "path": "../gcb-dashboard", "name": "gcb-dashboard" }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": true,
+            "**/__pycache__": true
+        }
+    }
+}
