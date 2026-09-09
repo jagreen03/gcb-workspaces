@@ -39,7 +39,11 @@ gcb-workspaces/
     ├── TKT-014-knowledge-graph-gap-analysis-research.md
     ├── TKT-014-FINDINGS.md
     ├── TKT-015-bitplane-tx-mapper-doctrine.md
-    └── TKT-016-shared-max-reduce-macro.md
+    ├── TKT-016-shared-max-reduce-macro.md
+    ├── TKT-017-epic-compute-execution-units.md
+    ├── TKT-018-epic-openroad-physical-layout.md
+    ├── TKT-019-epic-optical-wdm-transport.md
+    └── TKT-020-red-yellow-audit.md
 ```
 
 ## Workspaces
@@ -119,3 +123,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | done | green |
 | TKT-015 | Bit-plane Tx mapper doctrine — document the INT4↔optical encoding TKT-014 found undocumented | done | green |
 | TKT-016 | Shared gcb_max_reduce macro — one verified max/argmax primitive for QAM slicing and softmax | done | green |
+| TKT-017 | EPIC — Compute execution units: verified INT4 matrix-multiply tiles between the SRAM macros and the Softmax/QAM blocks | open | pending |
+| TKT-018 | EPIC — OpenROAD physical layout: push the verified SV-2017 logic to a 5nm-class GDSII | open | pending |
+| TKT-019 | EPIC — Optical WDM transport: scale the WDM PHY and transceiver logic on the bitplane doctrine | open | pending |
+| TKT-020 | Red/Yellow foundation audit — adversarial + tech-debt review of the locked baseline before the Epics | open | pending |
