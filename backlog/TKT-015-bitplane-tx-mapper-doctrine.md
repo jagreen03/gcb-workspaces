@@ -2,8 +2,12 @@
 id: TKT-015
 title: "Bit-plane Tx mapper doctrine — document the INT4↔optical encoding TKT-014 found undocumented"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.0
 tags:
   - backlog
   - doctrine
@@ -125,13 +129,83 @@ cleanly and verifiably.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Lead Technical Writer / Systems Architect (Claude Sonnet 5) —
+  `https://claude.ai/code/session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
+  * Read + analysed `gcb-wdm-transceiver/rtl/gcb_bitplane_tx_mapper.sv`,
+    `gcb_wavelength_router.sv`, `gcb_qam_datapath_top.sv`,
+    `gcb_rx_digital_recombiner.sv` — extracted the encode / route / marginal /
+    cross-product / reconstruction math.
+  * `grep -niE 'bit[- ]?plane' gcb-wiki/*.md` (pre-check) — confirmed 3
+    incidental mentions, zero doctrine.
+  * **Falsifiable close (Green-Target item 8):**
+    `python scripts/kg_gap_analysis_spike.py` re-run with doc 13 present —
+    `gcb_bitplane_tx_mapper.sv` nearest-doctrine `cos_dist` **0.9289 → 0.6933**
+    (`cos_sim` 0.071 → 0.307), nearest chunk now `13_bitplane_tx_mapper.md`;
+    it is **no longer the loneliest RTL module** (new loneliest is
+    `gcb_dwdm_pkg.sv` at 0.9046, **below τ = 0.92**); **0 RTL chunks past τ**.
+    The gap is measurably closed.
+
+* **Findings — the reconstruction the RTL implements:**
+  * **Encode** (`gcb_bitplane_tx_mapper.sv:59–60`): plane `p` carries raw bit
+    `p` of the INT4 operand, unweighted; antipodal map
+    `α_p[k] = 2·a_p[k] − 1 ∈ {−1,+1}`. No radix scaling in the optical field.
+  * **Route** (`gcb_wavelength_router.sv:48–51`): colour 0 = {I: plane 0,
+    Q: plane 1}, colour 1 = {I: plane 2, Q: plane 3} → lanes `*_c0_i`,
+    `*_c0_q`, `*_c1_i`, `*_c1_q`; digital weights `W = (1, 2, 4, −8)`.
+  * **Marginals** (`gcb_qam_datapath_top.sv:118–119`):
+    `M_a[i] = Σ_{k<K} a_i[k]`, likewise `M_b`.
+  * **Optical** (`gcb_rx_digital_recombiner.sv:8–11`):
+    `L_ij = Σ_{k<K} (2a_i[k]−1)(2b_j[k]−1)`.
+  * **Reconstruction** (`gcb_rx_digital_recombiner.sv:16–17, :75–81`):
+    `S_ij = (L_ij + 2·M_a[i] + 2·M_b[j] − K) / 4` (exact `>>> 2`), then
+    `Y = Σ_i Σ_j W_i·W_j·S_ij`, `result = 16'(Y)`.
+  * Worked example in the doc: `K=2`, `a=[3,−2]`, `b=[1,−4]` → `Y = 11`,
+    every `S_ij` cross-checked against the direct AND-popcount.
+
 * **Artifacts Touched:**
+  * `gcb-wiki/13_bitplane_tx_mapper.md` (new) — `**Level:** L1`, fixed-quantities
+    table, §1 invariant, §2 encode, §3 route + lane table, §4 lane gating +
+    marginals, §5 `L_ij`, §6 reconstruction + exactness proof, §7 worked
+    example, §8 16-row RTL line-level traceability table, §9 cross-references.
+  * `gcb-wiki/README.md` — added the doc 13 row to the architecture index, and
+    also the doc 12 row (a pre-existing omission from TKT-012).
+  * **Noted deviation (Green-Target item 6):** doc 13 §9 cross-references
+    `03_dual_mode_integration.md`, `05_photonic_memory_dataflow.md`, `goal.md`,
+    `intent.md`; the reciprocal one-line back-links *in* those four files were
+    not added this pass (the executing instruction scoped the index update to
+    `gcb-wiki/README.md` only). A trivial follow-up; it does not affect the
+    doc's completeness, accuracy, or the item-8 close.
+  * No RTL change; `gcb-wdm-transceiver` untouched.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence 0.0)`,
+`‖T‖₂ = √2 ≈ 1.414`.
+
+* **X — Specification `+1.0`.** `13_bitplane_tx_mapper.md` is mathematically
+  complete and RTL-faithful: the INT4→antipodal-bit-plane decomposition with its
+  governing equation, the full per-colour × I/Q lane-assignment table tied to
+  the router / datapath ports, the algebraic INT16 reconstruction with an
+  independent exactness proof, a per-line traceability table, and a worked
+  encode→lanes→decode example verified end-to-end. Green-Target item 8 — the
+  falsifiable close — passed with a wide margin (`cos_dist` 0.9289 → 0.6933; no
+  RTL module past τ). Item 6's reciprocal back-links in four other docs are a
+  noted trivial follow-up, not a gap in the deliverable.
+
+* **Y — Quality `+1.0`.** Every formula derived from first principles and
+  cross-checked (`(2a−1)(2b−1)` expansion → `S_ij` recovery; `Σ a[k]b[k] =
+  Σ W_iW_j S_ij`); a 16-row line-level traceability table; a fully-worked
+  numeric example with each `S_ij` checked against the direct AND-popcount; the
+  falsifiable close actually executed, not merely asserted. House style
+  consistent with docs 11 / 12.
+
+* **Z — Emergence `0.0`.** Doctrine capture of existing silicon — no net-new
+  platform capability, and none claimed by the ticket.
+
+Dominant spoke: `|x| = |y| = 1.0`; tie-break `X > Y > Z` → `X+` → **Green**.
