@@ -30,7 +30,10 @@ gcb-workspaces/
     ├── TKT-005-pbg-vector-math.md
     ├── TKT-006-dispatcher-reserved-byte-plumbing.md
     ├── TKT-007-pbg-telemetry-scraper.md
-    └── TKT-008-gddr7-dma-engine-scoping.md
+    ├── TKT-008-gddr7-dma-engine-scoping.md
+    ├── TKT-009-gddr7-dma-rtl-implementation.md
+    ├── TKT-010-dma-jinja2-generator.md
+    └── TKT-011-cyclopter-pgvector-integration.md
 ```
 
 ## Workspaces
@@ -102,3 +105,6 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-006 | Plumb the dispatcher [119:112] reserved byte to the BPR base-select override | done | green |
 | TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | done | green |
 | TKT-008 | GDDR7 tensor-operand DMA engine — architecture scoping & trade study | done | green |
+| TKT-009 | GDDR7 tensor-operand DMA — RTL implementation (arbiter + bank-group pipeline) | open | pending |
+| TKT-010 | DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog | open | pending |
+| TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | open | pending |
