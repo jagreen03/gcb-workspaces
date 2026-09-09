@@ -2,8 +2,12 @@
 id: TKT-013
 title: "Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.5
 tags:
   - backlog
   - software
@@ -122,13 +126,87 @@ builds on.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Lead Python Developer (Claude Sonnet 5) —
+  `https://claude.ai/code/session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
+  * `python scripts/cyclopter_scavenger.py --help` — CLI surface confirmed
+    (`--once`, `--interval`, `--debounce`, `--backlog`, `--dsn`, `--migration`,
+    `--dry-run`, `--noise K`, `--noise-random M`, `--noise-vector`, `--seed`,
+    `--force`, `--verbose`).
+  * `python scripts/cyclopter_scavenger.py --once --dry-run --noise 5` — detect
+    + log only; verified it never scrapes / upserts / writes the state file.
+  * **Live demonstration** against an ephemeral `pgserver` (bundled PG16 +
+    pgvector 0.6.2; a local `--migration` shim swaps only the `vec_norm`
+    generated-column expr to `vector_norm(telemetry_vec)` — identical value,
+    committed migration untouched — same stand-in as TKT-011, since the box has
+    no Docker / pgvector ≥ 0.7), driving the **real**
+    `scripts/cyclopter_scavenger.py` as a subprocess daemon over a temp copy of
+    this backlog:
+    1. `--once` baseline → `event=reconcile` → `scraped rows=10` →
+       `upserted db_rows=10`.
+    2. Daemon running; edit a scratch `TKT-999` `open → done + telemetry_color:
+       green` → `event=queued ticket=TKT-999 debounce=1.0s` →
+       `event=detected ticket=TKT-999 status=done color=green` →
+       `event=scraped rows=11` → `event=upserted db_rows=11` →
+       `event=noise-emitted path=deploy/cyclopter/noise/…_TKT-999.json` →
+       `SIGTERM` → `event=shutdown signal=SIGTERM` → `event=stopped`.
+       **DB row count 10 → 11, TKT-999 present, no human step.**
+    3. Restart the daemon → `re-fired TKT-999? False`, row count **stable at
+       11** (state file suppresses the redundant run; the startup reconcile is
+       still idempotent).
+    4. `SIGKILL` mid-debounce (lock file orphaned) → restart with `--force` →
+       `event=lock-stale … taking over`, the pending re-grade
+       (`green → blue`) is caught and upserted, row count still 11, TKT-999 now
+       `color=blue vec=[0,1,0]`.
+
 * **Artifacts Touched:**
+  * `gcb-python-orchestrator/scripts/cyclopter_scavenger.py` (new) — the daemon.
+  * `gcb-python-orchestrator/deploy/cyclopter/README.md` — new
+    "Scavenger agent (TKT-013)" section: run recipes + the stochastic-noise
+    artifact contract.
+  * `gcb-python-orchestrator/.gitignore` — ignores
+    `deploy/cyclopter/noise/`, `.scavenger_state.json`, `.scavenger.lock`.
+  * No change to `parse_pbg_telemetry.py`, `load_telemetry_pg.py`, the Doc 09
+    schema, or `pbg_telemetry`'s contents outside the existing loader path.
+  * `requirements.txt` unchanged — the daemon uses stdlib `stat` + content-hash
+    polling, no `watchdog` dependency.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence +0.5)`,
+`‖T‖₂ = √2.25 = 1.5`.
+
+* **X — Specification `+1.0`.** All eight Green-Target criteria met: a
+  long-running watcher over `../gcb-workspaces/backlog/*.md`; a *real* state
+  transition (`status: done` **and** `telemetry_color != pending`, or a content
+  change to an already-closed ticket) — not "any file write" — that is
+  debounced and lock-guarded before it invokes the unchanged
+  `parse_pbg_telemetry.py` + `load_telemetry_pg.py`, converging the store with
+  no human step (demo: 10 → 11 rows); the full flag set; a module-header +
+  `deploy/cyclopter/README.md` definition of the read-only, provenance-tagged
+  K-cosine-+-M-random noise artifact; demonstrated restart-safety (kill
+  mid-watch → restart → DB converged, row count stable, no duplicates); one
+  `event=…` line per event with clean `SIGINT`/`SIGTERM`; stdlib polling so
+  `requirements.txt` is untouched; the diff confined to `gcb-python-
+  orchestrator` with `pbg_telemetry` touched only through the existing loader.
+
+* **Y — Quality `+1.0`.** Blue-grade: reuses the existing frontmatter parser
+  and the DSN / vector helpers rather than re-implementing them (the Red the
+  ticket calls out), PID lock + stale-lock takeover + in-process critical-
+  section lock, atomic state-file writes, per-file hash-stable debounce,
+  interruptible sleep, `--dry-run` that never mutates on-disk state, best-effort
+  cross-platform PID liveness. No hard-coded path or DSN, no `while True:
+  sleep()` without debounce/lock.
+
+* **Z — Emergence `+0.5`.** The Purple lean the ticket names: the first agent
+  that makes Cyclopter *self-maintaining*, and the noise artifact is a net-new
+  input class for later retrieval-augmented planning. Bounded and opt-in, and
+  the consuming planner is a separate ticket, so a lean — not full Purple.
+
+Dominant spoke: `|x| = |y| = 1.0 > |z| = 0.5`; tie-break `X > Y > Z` → `X+` →
+**Green**, with a mild Purple lean.

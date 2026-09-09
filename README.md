@@ -112,5 +112,5 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-010 | DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog | done | green |
 | TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | done | green |
 | TKT-012 | Tensor operand SRAM — allocation strategy + real controller behind the frozen engine | done | green |
-| TKT-013 | Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification | open | pending |
+| TKT-013 | Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification | done | green |
 | TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | open | pending |
