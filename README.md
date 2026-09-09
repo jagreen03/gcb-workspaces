@@ -29,7 +29,8 @@ gcb-workspaces/
     ├── TKT-004-address-translation-trade-study.md
     ├── TKT-005-pbg-vector-math.md
     ├── TKT-006-dispatcher-reserved-byte-plumbing.md
-    └── TKT-007-pbg-telemetry-scraper.md
+    ├── TKT-007-pbg-telemetry-scraper.md
+    └── TKT-008-gddr7-dma-engine-scoping.md
 ```
 
 ## Workspaces
@@ -100,3 +101,4 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-005 | Formalize the PBG telemetry taxonomy as a 3D bipolar vector space | done | green |
 | TKT-006 | Plumb the dispatcher [119:112] reserved byte to the BPR base-select override | done | green |
 | TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | done | green |
+| TKT-008 | GDDR7 tensor-operand DMA engine — architecture scoping & trade study | open | pending |
