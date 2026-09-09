@@ -107,4 +107,4 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-008 | GDDR7 tensor-operand DMA engine — architecture scoping & trade study | done | green |
 | TKT-009 | GDDR7 tensor-operand DMA — RTL implementation (arbiter + bank-group pipeline) | done | green |
 | TKT-010 | DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog | done | green |
-| TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | open | pending |
+| TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | done | green |

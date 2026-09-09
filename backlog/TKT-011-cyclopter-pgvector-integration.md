@@ -2,8 +2,12 @@
 id: TKT-011
 title: "Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.5
 tags:
   - backlog
   - software
@@ -126,13 +130,96 @@ capability the rest of the roadmap builds on.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Claude Sonnet 5 (Release Engineer / DevOps Architect) — session
+  `session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
-* **Artifacts Touched:**
+  * `python scripts/parse_pbg_telemetry.py --backlog ../gcb-workspaces/backlog
+    --out telemetry_export.jsonl` → 8 emitted (TKT-003..010), 3 skipped
+    (TKT-001/002/011 pending), 0 colour mismatch.
+  * `python scripts/load_telemetry_pg.py --dsn <db>` → applied
+    `migrations/001_pbg_telemetry.sql`, upserted 8 rows,
+    `SELECT count(*) = 8`. Re-ran → still 8 (`ON CONFLICT (ticket_id) DO
+    UPDATE`, no duplicates).
+  * Schema verified against Doc 09 §5.1/§5.2: 7 columns
+    (`telemetry_vec vector(3)`, `vec_norm real GENERATED ALWAYS … STORED`),
+    `pbg_telemetry_cos` HNSW `vector_cosine_ops` `WHERE telemetry_color <>
+    'pending'`, `pbg_telemetry_l2` HNSW `vector_l2_ops`, PK on `ticket_id`.
+  * **Cosine KNN**, `telemetry_vec <=> '[1,0.5,0.5]'`, pending excluded, k=3:
+
+    | # | ticket | color | vec_norm | cos_dist |
+    |---|---|---|---|---|
+    | 1 | **TKT-008** | green | 1.225 | **0.000000** |
+    | 2 | TKT-009 | green | 1.414 | 0.133975 |
+    | 3 | TKT-010 | green | 1.414 | 0.133975 |
+
+    TKT-008's own vector is `[1, 0.5, 0.5]` → distance 0, exactly as Doc 09
+    §5.2's worked example predicts. L2 KNN for contrast: TKT-008 0.000,
+    TKT-009/010 0.707107.
+
+* **Environment note:** the workstation has **no Docker** (and no host
+  pgvector). The committed `docker-compose.yml` (`pgvector/pgvector:pg16`,
+  5433) is the reproducible artifact of record; the verification run above used
+  an ephemeral `pgserver` (bundled PostgreSQL 16 + pgvector) as a drop-in
+  stand-in — same schema, same queries. Because that stand-in bundles pgvector
+  0.6.2 (no `vector[i]` subscripting until 0.7), the *local run only* pointed
+  `--migration` at a shim that swaps the `vec_norm` generated-column expression
+  to the version-portable `l2_distance(telemetry_vec,'[0,0,0]')` (identical
+  value; Doc 09 §5.1 already sanctions an alternate expression for that
+  column). The committed `001_pbg_telemetry.sql` is byte-for-byte Doc 09 §5.1
+  and is correct for the pg16 image (pgvector 0.8).
+
+* **Artifacts Touched (all in `gcb-python-orchestrator` — Doc 04 boundary
+  respected):**
+  * `deploy/cyclopter/docker-compose.yml` — **new**. `pgvector/pgvector:pg16`,
+    host port **5433** (avoids Windows PG17 on 5432), `POSTGRES_PASSWORD=
+    cyclopter`, named volume `cyclopter_pgdata`, `pg_isready` healthcheck.
+  * `deploy/cyclopter/migrations/001_pbg_telemetry.sql` — **new**. `CREATE
+    EXTENSION vector`; `pbg_telemetry` per Doc 09 §5.1 verbatim; the two §5.2
+    HNSW indexes verbatim. All `IF NOT EXISTS` → idempotent.
+  * `deploy/cyclopter/.env.example` — **new**. `CYCLOPTER_DSN=postgresql://
+    postgres:cyclopter@localhost:5433/postgres`. `.env` git-ignored.
+  * `deploy/cyclopter/README.md` — **new**. Bring-up: compose up → scrape →
+    load → query; direct-SQL examples; the no-Docker fallback.
+  * `scripts/load_telemetry_pg.py` — **new**. psycopg3 loader:
+    DSN resolution (`--dsn` > `$CYCLOPTER_DSN` > `.env` > default), applies the
+    migration (multi-statement split for the extended protocol), bulk
+    `executemany` upsert, `count(*)`, cosine + L2 KNN. `--help`, `--jsonl`,
+    `--migration`, `--target`, `--k`, `--no-load`.
+  * `requirements.txt` — **+`psycopg[binary]`, `pgvector`**.
+  * `.gitignore` — **+`deploy/cyclopter/.env`, `telemetry_export.jsonl`**.
+
+**Deviations from the literal "Green" checklist** (environmental, documented):
+the end-to-end run used `pgserver` not `docker compose up` (no Docker on this
+box); the local run's `vec_norm` expression was shimmed for the stand-in's old
+pgvector. The committed compose file, migration, and loader are unchanged and
+correct for the pg16 target.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green` — the `pgvector` store from Doc 09 §5 is instantiated
+(not redesigned): committed `docker-compose` + verbatim §5.1/§5.2 migration +
+an idempotent JSONL upsert loader, with cosine and L2 KNN demonstrated against
+the live 8-row export (nearest to `[1,0.5,0.5]` → TKT-008, distance 0). This is
+the first durable, queryable slice of the Cyclopter orchestration substrate.
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence +0.5)`;
+`‖T‖₂ = √2.25 = 1.5`; dominant spoke resolves **X+ → Green** by the Doc 09
+tie-break (`|x| = |y| = 1.0 > |z|`, X > Y > Z) — Green with the mild Purple lean
+the ticket anticipated.
+* **Specification +1.0** — every Green-target artifact delivered: committed
+  compose (pinned image, 5433, password), verbatim §5.1/§5.2 migration,
+  idempotent `ON CONFLICT` loader with `--help`/`--dsn`, end-to-end run
+  (count = 8), cosine + L2 KNN with the expected ordering, README, driver in
+  `requirements.txt`, nothing outside `gcb-python-orchestrator`. The
+  no-Docker / old-pgvector substitutions are environmental, not schema changes.
+* **Quality +1.0** — idempotent migration, layered DSN resolution with a
+  fallback, JSONL row validation, multi-statement handling for psycopg3's
+  extended protocol, a `--migration` hook that made the constrained local run
+  possible; idempotency actually demonstrated (two loads → 8 rows).
+* **Emergence +0.5** — the ticket's "mild Purple lean": this is the first
+  concrete piece of the Cyclopter cross-session state substrate the rest of the
+  roadmap builds on, beyond pure spec-execution — but the orchestration engine
+  that consumes it is still a later ticket.
