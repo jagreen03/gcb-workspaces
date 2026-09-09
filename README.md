@@ -36,7 +36,8 @@ gcb-workspaces/
     ├── TKT-011-cyclopter-pgvector-integration.md
     ├── TKT-012-tensor-memory-engine-sram-controller.md
     ├── TKT-013-cyclopter-scavenger-agent.md
-    └── TKT-014-knowledge-graph-gap-analysis-research.md
+    ├── TKT-014-knowledge-graph-gap-analysis-research.md
+    └── TKT-014-FINDINGS.md
 ```
 
 ## Workspaces
@@ -113,4 +114,4 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | done | green |
 | TKT-012 | Tensor operand SRAM — allocation strategy + real controller behind the frozen engine | done | green |
 | TKT-013 | Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification | done | green |
-| TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | open | pending |
+| TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | done | green |

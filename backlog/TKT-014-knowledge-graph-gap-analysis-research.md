@@ -2,8 +2,12 @@
 id: TKT-014
 title: "Research spike — vector-space gap analysis between SV modules and Markdown doctrine"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.5
 tags:
   - backlog
   - research
@@ -120,13 +124,87 @@ does.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Lead AI Researcher (Claude Sonnet 5) —
+  `https://claude.ai/code/session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
+  * `python scripts/kg_gap_analysis_spike.py --json out.json` — the spike:
+    26 `.sv` → 27 module chunks, 17 `.md` → 156 section chunks, vocab 2779,
+    deterministic TF-IDF + cosine, τ = 0.92.
+  * `python scripts/kg_gap_analysis_spike.py --json a.json` ×2 →
+    **byte-identical** output (deterministic re-run confirmed).
+  * `python scripts/kg_gap_analysis_spike.py --pg-dsn <pgserver> --pg-dim 400`
+    — builds a throwaway `doc_rtl_embed(id, kind CHECK IN ('rtl','doc'),
+    source, chunk, embedding vector(400))` + HNSW `vector_cosine_ops` index,
+    183 rows, KNN probe SQL `<=>` top-3 **== NumPy cosine top-3 exactly**
+    (`agree: True`), then `DROP TABLE`. `pbg_telemetry` untouched.
+  * `grep -niE 'bit[- ]?plane' gcb-wiki/*.md` — 3 incidental one-line
+    mentions, **zero doctrine sections** → confirms the headline gap.
+
+* **Findings** (full detail: `backlog/TKT-014-FINDINGS.md`):
+  * **Gap — undocumented silicon:** `gcb_bitplane_tx_mapper.sv` is the
+    loneliest RTL module (nearest doctrine `cos_dist 0.9289 / cos_sim 0.0711`,
+    past τ). grep confirms the bit-plane transmit encoding — the load-bearing
+    bridge between the INT4 tensor datapath and the optical transport — has no
+    `gcb-wiki` section. The symmetric "doctrine with no silicon" set
+    (`04_ai_protocols…`, `09` axis sections, `10_open_source_eda…` at
+    `cos_dist ≈ 1.0`) is **not a defect** — the method re-derives the
+    `gcb-wiki/04` prompt-layer/silicon boundary and shows it is holding.
+  * **Serendipitous correlation:** `gcb_qam_datapath_top` ↔
+    `07_inline_vector_softmax.md` §3, `cos_sim 0.2099`, surface Jaccard 0.010,
+    linked *only* by `max` (surprise 19.95, top of the ranking). Both pipelines
+    open with a small-vector **max-reduction** as their first numerically
+    load-bearing step — QAM max-likelihood slice vs. softmax max-subtraction —
+    so a shared `argmax`/`max`-reduce primitive is a candidate for common
+    hardware across the photonic RX and the Vortex softmax unit. Runner-up
+    (structural): `gcb_tensor_address_translation` ↔ `03_dual_mode_integration`
+    linked only by `csr`.
+
 * **Artifacts Touched:**
+  * `gcb-python-orchestrator/scripts/kg_gap_analysis_spike.py` (new) — the PoC
+    (per the Task-1 instruction; `scripts/` rather than the ticket-draft's
+    `research/` path, and the findings live in this backlog as
+    `TKT-014-FINDINGS.md` rather than `research/FINDINGS-kg-gap.md`, both per
+    the executing instruction).
+  * `gcb-python-orchestrator/requirements.txt` — comment recording that the
+    TF-IDF fallback embedder needs no extra dependency (numpy suffices).
+  * `gcb-workspaces/backlog/TKT-014-FINDINGS.md` (new) — method, τ, the gap,
+    the correlation, and a "what this does / does not prove" section.
+  * Nothing in `gcb-rtl` / `gcb-wdm-transceiver` / `gcb-host`; `pbg_telemetry`
+    untouched; the `doc_rtl_embed` table is created and dropped by the script.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence +0.5)`,
+`‖T‖₂ = √2.25 = 1.5`.
+
+* **X — Specification `+1.0`.** All eight Green-Target criteria met: a
+  configurable PoC that chunks `*.sv` at module and `*.md` at section
+  granularity, embeds both with a documented deterministic fallback (fixed by
+  construction), runs cross-type cosine KNN **both directions**, applies a
+  stated gap rule (`τ = 0.92`), runs a low-surface-overlap serendipity pass,
+  and — via `--pg-dsn` — round-trips a throwaway `doc_rtl_embed` `vector(N)`
+  table with an HNSW cosine index that reproduces the NumPy ranking exactly
+  before dropping itself. `--help`, fixed seed, byte-identical re-run. A
+  `FINDINGS` doc names a real gap and a real correlation with numbers and a
+  caveats section. Nothing touches the hardware repos or `pbg_telemetry`.
+
+* **Y — Quality `+1.0`** (to the spike's own bar). Deterministic and
+  reproducible; the pgvector path is a genuine cross-check, not decoration
+  (`SQL <=> == NumPy`, `agree: True`); the caveats section explicitly
+  down-scopes the serendipity signal to a human lead-generator and states the
+  TF-IDF-is-not-semantics limitation; configurable globs / τ / thresholds; no
+  `pbg_telemetry` contamination.
+
+* **Z — Emergence `+0.5`.** The Purple lean the ticket names: it probes — and
+  answers yes to — "can the vector store drive architectural QA and surface
+  serendipitous cross-domain links", which no current tool does. Bounded
+  (throwaway table, no service), so a lean, not full Purple. The always-on
+  gap-analysis service remains Purple / a later ticket.
+
+Dominant spoke: `|x| = |y| = 1.0 > |z| = 0.5`; tie-break `X > Y > Z` → `X+` →
+**Green**, with a mild Purple lean.
