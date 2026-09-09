@@ -24,7 +24,12 @@ gcb-workspaces/
 ├── architecture-doctrine.code-workspace  spec, wiki, papers, grants, this repo
 └── backlog/
     ├── TKT-001-netlistsvg-chip-scale-rendering.md
-    └── TKT-002-opcode-dispatcher-wiring.md
+    ├── TKT-002-opcode-dispatcher-wiring.md
+    ├── TKT-003-tensor-memory-addressing.md
+    ├── TKT-004-address-translation-trade-study.md
+    ├── TKT-005-pbg-vector-math.md
+    ├── TKT-006-dispatcher-reserved-byte-plumbing.md
+    └── TKT-007-pbg-telemetry-scraper.md
 ```
 
 ## Workspaces
@@ -89,4 +94,9 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | Ticket | Title | Status | Color |
 |---|---|---|---|
 | TKT-001 | Migrate RTL schematic rendering off netlistsvg to a headless chip-scale layout engine | open | pending |
-| TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports | open | pending |
+| TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports | done | green |
+| TKT-003 | Widen tensor-memory addressing past 4 GiB with a formal translation layer | done | green |
+| TKT-004 | Address-translation mechanism trade study for tensor-memory addressing | done | green |
+| TKT-005 | Formalize the PBG telemetry taxonomy as a 3D bipolar vector space | done | green |
+| TKT-006 | Plumb the dispatcher [119:112] reserved byte to the BPR base-select override | done | green |
+| TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | open | pending |
