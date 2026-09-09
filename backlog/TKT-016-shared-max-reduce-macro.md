@@ -2,8 +2,12 @@
 id: TKT-016
 title: "Shared gcb_max_reduce macro — one verified max/argmax primitive for QAM slicing and softmax"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.0
 tags:
   - backlog
   - rtl
@@ -136,13 +140,96 @@ argument.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Lead Hardware Engineer (Claude Sonnet 5) —
+  `https://claude.ai/code/session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
+  * `verilator --lint-only -sv -Wall -Wno-DECLFILENAME -Wno-UNUSEDPARAM
+    --top-module gcb_max_reduce` — clean.
+  * `bash sim/lint.sh` — **exit 0, 29 tops** (`gcb_max_reduce` added to the RTL
+    list and the top loop).
+  * `make -C sim/cocotb -f Makefile.max_reduce` — **`TESTS=5 PASS=5 FAIL=0`**
+    (softmax, QAM, corner configs, pipeline, 1200 randomised cross-checks).
+  * `sv2v mr_<cfg>.sv rtl/gcb_max_reduce.sv | yosys -p 'read_verilog;
+    hierarchy -check; proc; opt -purge; check -assert; select -assert-none
+    t:$latch; synth -flatten; stat'` for the softmax (W16/N64) and QAM
+    (W12/N16) configs — **exit 0 both, `Found and reported 0 problems`,
+    latch-free**.
+
+* **Cocotb assertions proven** (`sim/cocotb/test_max_reduce.py`):
+  * `test_softmax_max_subtraction` — `max_val == max(x)` for 64 signed
+    W=16/N=64 vectors incl. most-negative (`-2^15`), most-positive, all-equal;
+    and `(x[k] - max_val) mod 2^16` bit-identical to the reference
+    `(x[k] - max(x))` for every `k` (two's-complement wrap).
+  * `test_qam_min_distance_slice` — `max_idx == argmin(distances)` with the
+    documented lowest-index tie-break for 54 unsigned W=12/N=16 candidate sets
+    (unique min, two-way tie, all-equal, min at last index). *(The shipped
+    `gcb_qam_datapath_top` has no in-RTL argmin — the optical/ADC path makes
+    the hard decision — so the reference is a Python model of a min-distance
+    slicer, per out-of-scope item 4.)*
+  * `test_corner_configs` — non-power-of-two `N=7` with the max at the
+    odd-carry position (index 6); `TIE_LOW=0` resolving ties to the highest
+    index; `N=1` degenerate (`val = elem`, `idx = 0`).
+  * `test_pipeline_valid` — `REG_STAGES=2` delays value / index / `out_valid`
+    by exactly 2 cycles (38 checks) and drains cleanly.
+  * `test_randomized_equivalence` — 1200 value+index cross-checks across the
+    soft / qam / np2 configs.
+
+* **Yosys area (`synth -flatten`, gate-level cell count):**
+
+  | config | cells |
+  |---|---|
+  | softmax envelope — `WIDTH=16, N_ELEMENTS=64, MODE=MAX, OUTPUT=BOTH` | **6629** |
+  | QAM — `WIDTH=12, N_ELEMENTS=16, MODE=MIN, OUTPUT=BOTH` | **1248** |
+  | two dedicated bespoke trees (sum) | **7877** |
+  | one shared `gcb_max_reduce` at the W16/N64 envelope, time-multiplexed | **6629** |
+
+  **Δ ≈ 1248 cells ≈ 15.8 %** of the combined 7877 eliminated when both sites
+  time-multiplex the shared instance (the W12/N16 op fits the 16-bit/64-elem
+  envelope with tie-off). Even without time-multiplexing, the two call sites
+  now carry *identical, formally-equivalent* logic behind one lint / Yosys /
+  Cocotb gate instead of two hand-rolled trees, with retiming-friendly
+  `REG_STAGES`.
+
 * **Artifacts Touched:**
+  * `gcb-wdm-transceiver/rtl/gcb_max_reduce.sv` (new).
+  * `gcb-wdm-transceiver/sim/cocotb/{max_reduce_tb_top.sv, test_max_reduce.py,
+    Makefile.max_reduce}` (new).
+  * `gcb-wdm-transceiver/sim/lint.sh`, `sim/run_tb.sh`, `.gitignore` — wired in
+    the new top / cocotb stanza / build dirs.
+  * No change to `gcb_qam_datapath_top`, `gcb_inline_vector_unit`, or any
+    frozen-list interface; no consumer instantiation (integration follow-on).
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence 0.0)`,
+`‖T‖₂ = √2 ≈ 1.414`.
+
+* **X — Specification `+1.0`.** All eight Green-Target criteria met: one
+  parameterised SV-2017 comparator tree (`WIDTH`, `N_ELEMENTS`, `MODE`
+  MAX/MIN, `OUTPUT` VALUE/INDEX/BOTH, `SIGNED_CMP`, `TIE_LOW`, `REG_STAGES`;
+  no `N`-specific literal; `N` need not be a power of two); a Cocotb TB proving
+  value+index equivalence vs a Python reference over {signed,unsigned} ×
+  {MAX,MIN} plus the two use-case proofs (softmax `x−max(x)` bit-exact; QAM
+  `argmin` index) and the directed corners; `sim/lint.sh` exit 0 and Cocotb
+  `FAIL=0`, both wired into the sim scripts; `sv2v`→Yosys elaboration clean and
+  latch-free; and a Yosys `stat` quantifying the ~1248-cell / ~15.8 % saving.
+  The `OUTPUT` naming (vs the ticket's compound `OUTPUT_TIE`) and the
+  slicer-model reference for the QAM proof are scoped decisions, not spec gaps.
+
+* **Y — Quality `+1.0`.** Blue-grade: one verified primitive rather than two
+  hand-rolled trees, strict-`-Wall` lint-clean, `sv2v`→Yosys "0 problems" and
+  latch-free, 1200+ randomised cross-checks plus directed odd-carry / both
+  tie-policies / `N=1`, a real `REG_STAGES` pipeline with a drain proof, and an
+  honest area figure with its time-multiplex assumption stated. No frozen
+  interface touched; consumer integration correctly deferred.
+
+* **Z — Emergence `0.0`.** A shared reusable primitive exploiting a TKT-014
+  correlation — Blue consolidation, not net-new platform capability; the ticket
+  claimed no Purple lean.
+
+Dominant spoke: `|x| = |y| = 1.0`; tie-break `X > Y > Z` → `X+` → **Green**.
