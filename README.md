@@ -105,6 +105,6 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-006 | Plumb the dispatcher [119:112] reserved byte to the BPR base-select override | done | green |
 | TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | done | green |
 | TKT-008 | GDDR7 tensor-operand DMA engine — architecture scoping & trade study | done | green |
-| TKT-009 | GDDR7 tensor-operand DMA — RTL implementation (arbiter + bank-group pipeline) | open | pending |
+| TKT-009 | GDDR7 tensor-operand DMA — RTL implementation (arbiter + bank-group pipeline) | done | green |
 | TKT-010 | DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog | open | pending |
 | TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | open | pending |
