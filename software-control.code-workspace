@@ -7,6 +7,106 @@
         "files.exclude": {
             "**/.git": true,
             "**/__pycache__": true
-        }
+        },
+        "python.defaultInterpreterPath": "${workspaceFolder:gcb-python-orchestrator}/.venv/Scripts/python.exe",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "python.analysis.autoImportCompletions": true
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-python.debugpy"
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Orchestrator: scheduler.py (gcb-python-orchestrator)",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:gcb-python-orchestrator}/scheduler.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-python-orchestrator}",
+                "justMyCode": true,
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder:gcb-python-orchestrator}"
+                }
+            },
+            {
+                "name": "Host: pytest control plane (gcb-host)",
+                "type": "debugpy",
+                "request": "launch",
+                "module": "pytest",
+                "args": [
+                    "${workspaceFolder:gcb-host}/tests",
+                    "-v"
+                ],
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-host}",
+                "justMyCode": false,
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder:gcb-host}"
+                }
+            },
+            {
+                "name": "Host: Debug proxy (gcb-host)",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:gcb-host}/proxy/gcb_proxy.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-host}/proxy",
+                "justMyCode": true,
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder:gcb-host}"
+                }
+            }
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "PY: Install orchestrator requirements (.venv)",
+                "type": "shell",
+                "command": "${workspaceFolder:gcb-python-orchestrator}/.venv/Scripts/python.exe",
+                "args": [
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    "requirements.txt"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder:gcb-python-orchestrator}"
+                },
+                "group": "build",
+                "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+            },
+            {
+                "label": "PY: Run pytest (gcb-host control plane)",
+                "type": "shell",
+                "command": "${workspaceFolder:gcb-python-orchestrator}/.venv/Scripts/python.exe",
+                "args": [
+                    "-m",
+                    "pytest",
+                    "${workspaceFolder:gcb-host}/tests",
+                    "-v"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder:gcb-host}",
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder:gcb-host}"
+                    }
+                },
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
+                "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+            }
+        ]
     }
 }

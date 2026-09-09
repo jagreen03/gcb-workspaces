@@ -41,6 +41,26 @@ per-machine path edits.
 
 Open one with **File → Open Workspace from File…**, or `code <name>.code-workspace`.
 
+Each workspace also carries its own `launch` configurations and `tasks` tuned to
+that domain (visualization / RTL lint for `hardware-silicon`, orchestrator debug
+and control-plane `pytest` for `software-control`, PBG telemetry parsing and
+Markdown lint for `architecture-doctrine`).
+
+### Recommended extensions
+
+Every workspace declares an `extensions.recommendations` list scoped to its
+engineering domain. The first time you open a workspace, VS Code shows a
+notification offering to install exactly the extensions that domain needs — you
+never hand-pick them, and a hardware engineer is never prompted to install
+Markdown tooling (or vice versa). Run **Extensions: Show Recommended Extensions**
+from the Command Palette to see or install them later.
+
+| Workspace | Recommended extensions | Purpose |
+|---|---|---|
+| `hardware-silicon` | `mshr-h.veriloghdl`, `eirikpre.systemverilog`, `yosyshq.digitaljs`, `ms-python.python` | SystemVerilog/Verilog linting, DigitalJS schematic rendering, `build_visuals.py` |
+| `software-control` | `ms-python.python`, `ms-python.vscode-pylance`, `ms-python.debugpy` | Python editing, type analysis, and debugging |
+| `architecture-doctrine` | `davidanson.vscode-markdownlint`, `redhat.vscode-yaml`, `yzhang.markdown-all-in-one` | Markdown linting, YAML parsing for PBG ticket frontmatter, Markdown authoring |
+
 ## Backlog
 
 Each `backlog/TKT-NNN-*.md` follows a fixed template:

@@ -12,5 +12,139 @@
             "**/.git": true,
             "**/__pycache__": true
         }
+    },
+    "extensions": {
+        "recommendations": [
+            "mshr-h.veriloghdl",
+            "eirikpre.systemverilog",
+            "yosyshq.digitaljs",
+            "ms-python.python"
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "VIS: Build Hardware Visualizations (gcb-dashboard)",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:gcb-dashboard}/build_visuals.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-dashboard}",
+                "justMyCode": true,
+                "env": {
+                    "GCB_REPO_ROOT": "${workspaceFolder:gcb-dashboard}/.."
+                }
+            },
+            {
+                "name": "VIS: Build Hardware Visualizations + Photonic GDS (gcb-dashboard)",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:gcb-dashboard}/build_visuals.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-dashboard}",
+                "justMyCode": true,
+                "env": {
+                    "GCB_REPO_ROOT": "${workspaceFolder:gcb-dashboard}/..",
+                    "GCB_ENABLE_PHOTONIC": "1"
+                }
+            },
+            {
+                "name": "PIC: Run layout_homodyne.py (gcb-pic-core)",
+                "type": "debugpy",
+                "request": "launch",
+                "program": "${workspaceFolder:gcb-pic-core}/layout_homodyne.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder:gcb-pic-core}",
+                "justMyCode": true
+            }
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "SV: Syntax check current file (Verilator)",
+                "type": "shell",
+                "command": "verilator",
+                "args": [
+                    "--lint-only",
+                    "-Wall",
+                    "-sv",
+                    "${file}"
+                ],
+                "options": {
+                    "cwd": "${fileDirname}"
+                },
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "problemMatcher": {
+                    "owner": "verilator",
+                    "fileLocation": [
+                        "autoDetect",
+                        "${fileDirname}"
+                    ],
+                    "pattern": {
+                        "regexp": "^%(Error|Warning)[^:]*:\\s+([^:]+):(\\d+):(?:(\\d+):)?\\s+(.*)$",
+                        "severity": 1,
+                        "file": 2,
+                        "line": 3,
+                        "column": 4,
+                        "message": 5
+                    }
+                },
+                "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+            },
+            {
+                "label": "SV: Syntax check current file (Icarus)",
+                "type": "shell",
+                "command": "iverilog",
+                "args": [
+                    "-g2012",
+                    "-t",
+                    "null",
+                    "-Wall",
+                    "${file}"
+                ],
+                "options": {
+                    "cwd": "${fileDirname}"
+                },
+                "group": "build",
+                "problemMatcher": {
+                    "owner": "iverilog",
+                    "fileLocation": [
+                        "autoDetect",
+                        "${fileDirname}"
+                    ],
+                    "pattern": {
+                        "regexp": "^([^:]+):(\\d+):\\s+(error|warning|sorry):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "severity": 3,
+                        "message": 4
+                    }
+                },
+                "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+            },
+            {
+                "label": "VIS: Build Hardware Visualizations (gcb-dashboard)",
+                "type": "shell",
+                "command": "python3",
+                "args": [
+                    "build_visuals.py"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder:gcb-dashboard}",
+                    "env": {
+                        "GCB_REPO_ROOT": "${workspaceFolder:gcb-dashboard}/.."
+                    }
+                },
+                "group": "build",
+                "problemMatcher": [],
+                "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+            }
+        ]
     }
 }
