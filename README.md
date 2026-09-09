@@ -33,7 +33,10 @@ gcb-workspaces/
     ├── TKT-008-gddr7-dma-engine-scoping.md
     ├── TKT-009-gddr7-dma-rtl-implementation.md
     ├── TKT-010-dma-jinja2-generator.md
-    └── TKT-011-cyclopter-pgvector-integration.md
+    ├── TKT-011-cyclopter-pgvector-integration.md
+    ├── TKT-012-tensor-memory-engine-sram-controller.md
+    ├── TKT-013-cyclopter-scavenger-agent.md
+    └── TKT-014-knowledge-graph-gap-analysis-research.md
 ```
 
 ## Workspaces
@@ -108,3 +111,6 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-009 | GDDR7 tensor-operand DMA — RTL implementation (arbiter + bank-group pipeline) | done | green |
 | TKT-010 | DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog | done | green |
 | TKT-011 | Cyclopter pgvector integration — ingest telemetry JSONL, KNN over ticket outcomes | done | green |
+| TKT-012 | Tensor operand SRAM — allocation strategy + real controller behind the frozen engine | open | pending |
+| TKT-013 | Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification | open | pending |
+| TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | open | pending |
