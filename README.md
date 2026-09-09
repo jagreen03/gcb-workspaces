@@ -37,7 +37,9 @@ gcb-workspaces/
     ├── TKT-012-tensor-memory-engine-sram-controller.md
     ├── TKT-013-cyclopter-scavenger-agent.md
     ├── TKT-014-knowledge-graph-gap-analysis-research.md
-    └── TKT-014-FINDINGS.md
+    ├── TKT-014-FINDINGS.md
+    ├── TKT-015-bitplane-tx-mapper-doctrine.md
+    └── TKT-016-shared-max-reduce-macro.md
 ```
 
 ## Workspaces
@@ -115,3 +117,5 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-012 | Tensor operand SRAM — allocation strategy + real controller behind the frozen engine | done | green |
 | TKT-013 | Cyclopter scavenger agent — auto-ingest on ticket closure + bounded retrieval diversification | done | green |
 | TKT-014 | Research spike — vector-space gap analysis between SV modules and Markdown doctrine | done | green |
+| TKT-015 | Bit-plane Tx mapper doctrine — document the INT4↔optical encoding TKT-014 found undocumented | open | pending |
+| TKT-016 | Shared gcb_max_reduce macro — one verified max/argmax primitive for QAM slicing and softmax | open | pending |

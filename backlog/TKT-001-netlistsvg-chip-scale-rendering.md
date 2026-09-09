@@ -12,14 +12,20 @@ tags:
 
 # Objective
 
-Close the visualization-layer capability gap: `build_visuals.py` (`DigitalRtlBuilder`)
-cannot produce a schematic for any RTL module whose flattened netlist contains a
-wide register array or a deep address-decode mux tree. `netlistsvg` — the current
-`yosys JSON -> SVG` renderer — aborts on these with a V8 stack overflow, so the
-DMA engine, the AXI read master, the SS/TDC, and the MMIO register file (the
-modules a reviewer most wants to see) never render. The pipeline must be able to
-turn every `greencoyote_*` / `gcb_*` top into a diagram, headlessly, in CI, with
-no per-module manual fallback.
+Close the visualization-layer capability gap: `gcb-dashboard/build_visuals.py`
+(`DigitalRtlBuilder`) cannot produce a schematic for any RTL module whose
+flattened netlist contains a wide register array or a deep address-decode mux
+tree. `netlistsvg` — the current `yosys JSON -> SVG` renderer — aborts on these
+with a V8 stack overflow, so the DMA engine, the AXI read master, the SS/TDC, and
+the MMIO register file (the modules a reviewer most wants to see) never render.
+The pipeline must be able to turn every `greencoyote_*` / `gcb_*` top into a
+diagram, headlessly, in CI, with no per-module manual fallback.
+
+**Scope:** a single-path replacement of the render backend inside
+`gcb-dashboard/build_visuals.py` — Option B below (headless DigitalJS via
+`yosys2digitaljs` + `elkjs`), grading Green only once `netlistsvg` (and the
+Graphviz bridge, if used) are out of `DigitalRtlBuilder` entirely. The
+visualization pipeline lives in `gcb-dashboard/`, not `gcb-python-orchestrator/`.
 
 ## Context & Constraints
 
