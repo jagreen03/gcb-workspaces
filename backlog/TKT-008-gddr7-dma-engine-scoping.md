@@ -2,8 +2,12 @@
 id: TKT-008
 title: "GDDR7 tensor-operand DMA engine — architecture scoping & trade study"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 0.5
+  emergence: 0.5
 tags:
   - backlog
   - rtl
@@ -159,13 +163,82 @@ A "Green" outcome is one accepted spec document such that it defines:
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
-* **Commands Run:**
+
+* **Agent ID:** Claude Sonnet 5 — session_01Rpa9VJGe7xypzp5FkukSco (acting as
+  Lead Hardware Architect)
+* **Commands Run:** none — desk trade study against
+  `gcb_tensor_sram_controller.sv` / `gcb_tensor_memory_engine.sv` /
+  `gcb_tensor_command_wiring.sv` (interfaces, geometry, FSM residency),
+  `gcb-wiki/05` (bandwidth + residency model), `gcb-wiki/08` (EA contract),
+  and `gcb-rtl/rtl/greencoyote_{dma_walker,dma_axi_master,cs_lane_fifo,
+  streaming_dma}.sv` (the reuse survey).
 * **Artifacts Touched:**
+  * `gcb-wiki/11_gddr7_tensor_dma_architecture.md` — NEW. The spec / trade
+    study, all ten Green-Target criteria:
+    1. **EA → GDDR7 byte address** — `X_addr = ea + matrix_idx*ROW_STRIDE +
+       k*VEC_BYTES` with `ROW_STRIDE = K_STEPS*VEC_BYTES`; two worked numeric
+       examples (A `band=3,r=5,k=100` → `0x0005_0001_AB20`; B
+       `pass=2,c=300,k=7` → `0x0007_1049_6038`); one translation only (BPR
+       added the instruction offset; DMA adds only the structured offset).
+    2. **DRAM layout contract** — A row-major K-contiguous (band = 32 KiB
+       contiguous); **B stored transposed, N-major K-contiguous** (tile =
+       2 MiB contiguous) — K-major B rejected (256× the page activations);
+       `OPERAND_BITS ∈ {4,8}` scales `VEC_BYTES`/`ROW_STRIDE` only.
+    3. **Alignment** — 64 B base alignment mandatory (allocator-enforced, DMA
+       raises `CFG_ERR` otherwise); 2 KiB page alignment recommended not
+       required (unaligned costs ~2.7% extra `tRCD`, never a stall);
+       arbitrary-alignment head/tail + byte-rotate rejected (< 0.1% BW for a
+       shifter datapath).
+    4. **Burst coalescing** — BL32 (128 B / 16 beats) along `k`, BL16 fallback;
+       one matrix row/col = one 2048 B page = 16× BL32; 8-deep bank-group
+       activate pipeline hides `tRCD` on the sustained path; strictly ascending
+       `(r,k)`/`(c,k)`.
+    5. **Latency/throughput proof** — `t_load = 30 ns + bytes/90 GB/s`.
+       A band 0.39 µs vs the 8.192 µs residency deadline → **20.8× margin**
+       (2.5× even at 10 GB/s); B tile 23.3 µs vs 2.097 ms → 90×; cold-start
+       ~23 µs (pre-sequence, no deadline, 0.3% of the GEMM). Aggregate demand
+       ~4.8 GB/s read = ~5% of one GDDR7 channel — latency-bound, not
+       BW-bound, and latency clears.
+    6. **Config interface** — v1 descriptor-free / closed-form; per-GEMM
+       `{ea_a,ea_b,ea_dst,dim_k}` latched at `ea_valid`; a CSR block
+       (`VEC_BYTES`, `ROW_STRIDE`, grid/tile/pass params, `B_LAYOUT`, `CTRL`,
+       `STATUS`, `IRQ_EN`) — topology in CSR + the closed form, never a
+       hardcoded burst table. v2 32-B descriptor ring deferred (format reused
+       from `gcb-spec/docs/streaming_dma_architecture.md`).
+    7. **A/B arbitration** — one shared GDDR7 read port; strict priority to A,
+       B preemptible at page boundaries; worst-case A latency ~2.2 µs ≪
+       8.192 µs; B set back ~100 µs / 2.097 ms pass; page- not beat-level
+       preemption (no partial-burst state, avoids a `tRP+tRCD` re-activate).
+    8. **Underrun/error** — sticky `UNDERRUN` (missed deadline, informational —
+       controller already stalls-on-`!rdy`), `ERR` + IRQ (GDDR7 read error →
+       DMA withholds `*_load_done`, no silent bad data), `CFG_ERR` + IRQ
+       (misaligned base / inconsistent CSR).
+    9. **Reuse call** — `cs_lane_fifo` **KEEP verbatim** (CDC FIFO);
+       `dma_walker` **ADAPT for v2 only** (stride-nest arithmetic);
+       `dma_axi_master` **ADAPT skeleton, replace protocol** (bank-array +
+       CDC pattern kept, AXI4 burst layer replaced by the GDDR7 burst
+       engine). 1 KEEP / 2 ADAPT / 0 verbatim protocol reuse.
+    10. **Non-goals** restated — PHY/controller/QoS, the DMA RTL, the
+        compute-stream consumer, `dst` write-back + softmax traffic, the v2
+        descriptor ring.
+  * `gcb-wiki/README.md` — index row 11 added (L1).
+  * `gcb-workspaces/README.md` — TKT-008 index row → `done | green`.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `green`
+
+**Vector Summary:** In-spec architecture deliverable, delivered with trade-study
+rigour, removing a hard blocker. All ten Green-Target criteria met in one
+`gcb-wiki/11` spec: closed-form EA→GDDR7 addressing (worked examples, single
+translation), an explicit DRAM layout contract (B transposed), a defended
+alignment decision (64 B mandatory / 2 KiB recommended), a BL32 coalescing +
+bank-group activate-pipeline scheduling policy, and a quantified latency model
+proving the A prefetch beats the 8.192 µs ping-pong deadline 20× (2.5× at a
+pathological 10 GB/s) — i.e. a real no-starve proof, not an assertion. Strict-
+priority-A / page-preemptible-B arbitration on one shared port with a
+worst-case A latency of ~2.2 µs. Component-level keep/adapt/discard on
+`greencoyote_streaming_dma` (1 KEEP, 2 ADAPT). No RTL (correctly — that is the
+follow-on). **PBG vector T = (spec 1.0, quality 0.5, emergence 0.5)**,
+‖T‖₂ = √1.5 ≈ 1.225; derived dominant spoke = green (argmax |axis| = X).
