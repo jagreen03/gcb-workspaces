@@ -2,8 +2,12 @@
 id: TKT-010
 title: "DMA parameter / CSR wrapper generator — Python + Jinja2 -> SystemVerilog"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.0
 tags:
   - backlog
   - software
@@ -117,13 +121,102 @@ hand-written RTL, committed with the DO-NOT-EDIT banner, idempotent on re-run.
 
 ---
 ## Execution Log
-*(To be populated during execution)*
-* **Agent ID:**
+
+* **Agent ID:** Claude Sonnet 5 (Lead Python Developer) — session
+  `session_01Rpa9VJGe7xypzp5FkukSco`
+
 * **Commands Run:**
+  * `python scripts/gen_dma_params.py` → wrote both `.sv` (LF, DO-NOT-EDIT
+    banner).
+  * `python scripts/gen_dma_params.py --check` → **exit 0** immediately after a
+    generate (byte-identical).
+  * appended junk to `gcb_tensor_dma_params_pkg.sv`, `--check` → **`STALE …`,
+    exit 1**; regenerate → `--check` exit 0 again. Two consecutive generates →
+    identical md5 (idempotent).
+  * `python scripts/gen_dma_params.py --source /tmp/bad.yaml` (M_BANDS=8) →
+    **refused, exit 1**: "Doc 11 sec.6: M_BANDS must exceed GRID_DIM…" — the
+    generator runs the same guards it emits.
+  * `verilator --lint-only -sv -Wall` on `params_pkg + arbiter + csr_wrapper`
+    (with and without `+define+SIMULATION`) → **exit 0**.
+  * `bash sim/lint.sh` with the two generated files added to the RTL list and
+    `gcb_tensor_dma_csr_wrapper` added as a lint top → **exit 0** (26 tops).
+  * `sv2v params_pkg + arbiter + csr_wrapper | yosys -p 'hierarchy -check; proc;
+    opt; check -assert; select -assert-none t:$latch; synth -flatten'` →
+    **exit 0, 0 problems, no latches** (Surelog/UHDM not installed in this env;
+    `sv2v → Yosys 0.52` is the synthesizability gate, as for TKT-009).
+
+* **Design notes:**
+  * The elaboration guards cannot live in a `package` (SV forbids procedural
+    code there — Verilator: "syntax error, unexpected initial"). They are
+    emitted into the generated **wrapper's** `initial` block instead; the
+    datapath keeps its own copy. Noted in both generated headers.
+  * `dma_params.yaml` `derived:` is an ordered list of `{name, expr}` — `expr`
+    is a Python expression evaluated in order against the running namespace plus
+    `clog2()` / `width()` helpers matching SV `$clog2` semantics
+    (`width(n) = 1` for `n<=1`). This keeps the source declarative without a
+    second expression language.
+  * The wrapper overlays 7 read-only geometry-mirror registers
+    (`DMA_VEC_BYTES` … `DMA_B_LAYOUT`, offsets 0x20–0x38) on top of the
+    arbiter's own CSR space (0x00–0x10), registered 1-cycle to match the
+    arbiter's read latency; `mir_sel_q ? mir_val_q : arb_rdata`. Writes to the
+    mirror block are dropped (RO); the arbiter already ignores unknown offsets,
+    so `csr_we` passes straight through.
+
 * **Artifacts Touched:**
+  * `gcb-python-orchestrator/scripts/gen_dma_params.py` — **new**, Jinja2
+    driver: load YAML → evaluate params/derived → run self-consistency guards →
+    render two templates → write or `--check` (exit 1 on stale) / `--print`.
+    Doc 10 cited in the header; `CHECKOUT_ROOT`-relative output like
+    `gcb-spec/regen.py`.
+  * `gcb-python-orchestrator/scripts/dma_params.yaml` — **new**, source of
+    truth: `parameters` (Doc 11 §0 independent knobs), `derived` (VEC_BYTES,
+    ROW_STRIDE, LPB, widths, …), `asserts` (§0/§6 guards), `csr` (`core` =
+    what the arbiter decodes; `mirror` = the RO geometry block).
+  * `gcb-python-orchestrator/scripts/templates/gcb_tensor_dma_params_pkg.sv.j2`
+    and `…/gcb_tensor_dma_csr_wrapper.sv.j2` — **new** Jinja2 templates
+    (standard SV only: `package` / `localparam int` / `module` / `unique
+    case` / `initial` guard).
+  * `gcb-python-orchestrator/requirements.txt` — **+`jinja2`**.
+  * `gcb-wdm-transceiver/rtl/generated/gcb_tensor_dma_params_pkg.sv` — **new
+    (generated)**, `package gcb_tensor_dma_params_pkg` — 12 independent + 18
+    derived `localparam int`, `DMA_SPEC_VERSION_BCD`.
+  * `gcb-wdm-transceiver/rtl/generated/gcb_tensor_dma_csr_wrapper.sv` — **new
+    (generated)**, `gcb_tensor_dma_csr_wrapper` — imports the package,
+    instantiates `gcb_tensor_dma_arbiter` with params bound from it, adds the
+    RO mirror block + `SIMULATION` elaboration guards.
+  * `gcb-wdm-transceiver/sim/lint.sh` — added the two generated files to the
+    RTL list and `gcb_tensor_dma_csr_wrapper` to the lint-top loop (cross-repo,
+    Green item 5).
+
+**Deviations from the literal "Green" checklist** (documented, no drift):
+item 5's Surelog/UHDM run → `sv2v → Yosys` + Verilator elaboration (Surelog not
+installed here); the package-level `initial` guard block in item 2's spirit →
+moved to the generated wrapper because SV forbids procedural code in a
+`package`.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `Green` — one Jinja2 driver + one YAML source + two `.sv.j2`
+templates emit two committed, banner-carrying, Verilator-lint-clean,
+Yosys-synth-clean SystemVerilog files; `--check` is CI-ready (exit 1 on stale);
+re-run is byte-identical; no HDL DSL introduced. The derived `localparam`s and
+the DMA CSR register file are now generated from Doc 11's numbers, not
+hand-maintained.
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence 0.0)`;
+`‖T‖₂ = √2 ≈ 1.414`; dominant spoke resolves **X+ → Green** by the Doc 09
+tie-break (`|x| = |y|`, X > Y > Z).
+* **Specification +1.0** — every Green-target artifact delivered: Jinja2
+  (not string-concat), committed generated files (not build-time), DO-NOT-EDIT
+  banner, `--help` + `--check`(exit 1), idempotent, lint- and synth-clean, in
+  `sim/lint.sh`, `requirements.txt += jinja2`, Doc 10 cited, standard SV only.
+  The two substitutions (Surelog→sv2v+Yosys; package→wrapper guard placement)
+  are an unavailable tool and an SV legality fix, not spec gaps.
+* **Quality +1.0** — real templates + real YAML source-of-truth + dependency-
+  ordered derived-param evaluation with SV `$clog2` semantics + self-consistency
+  guards that refuse a bad geometry before emitting; matches the `regen.py`
+  precedent shape; idempotency and stale-detection both demonstrated.
+* **Emergence 0.0** — single-purpose anti-drift tooling (a general RTL-codegen
+  framework is explicitly Purple / out of scope); mild positive for making
+  "data + template → committed SV" a second repo idiom after `regen.py`.
