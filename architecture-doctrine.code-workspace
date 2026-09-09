@@ -26,7 +26,7 @@
                 "name": "PBG: Parse backlog telemetry -> pgvector (gcb-workspaces)",
                 "type": "debugpy",
                 "request": "launch",
-                "program": "${workspaceFolder:gcb-workspaces}/scripts/parse_pbg_telemetry.py",
+                "program": "${workspaceFolder:gcb-workspaces}/../gcb-python-orchestrator/scripts/parse_pbg_telemetry.py",
                 "args": [
                     "--backlog",
                     "${workspaceFolder:gcb-workspaces}/backlog",

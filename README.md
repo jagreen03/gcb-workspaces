@@ -99,4 +99,4 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-004 | Address-translation mechanism trade study for tensor-memory addressing | done | green |
 | TKT-005 | Formalize the PBG telemetry taxonomy as a 3D bipolar vector space | done | green |
 | TKT-006 | Plumb the dispatcher [119:112] reserved byte to the BPR base-select override | done | green |
-| TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | open | pending |
+| TKT-007 | PBG telemetry scraper — backlog frontmatter to pgvector JSONL | done | green |
