@@ -103,7 +103,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 
 | Ticket | Title | Status | Color |
 |---|---|---|---|
-| TKT-001 | Migrate RTL schematic rendering off netlistsvg to a headless chip-scale layout engine | open | pending |
+| TKT-001 | Migrate RTL schematic rendering off netlistsvg to a headless chip-scale layout engine | done | green |
 | TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports | done | green |
 | TKT-003 | Widen tensor-memory addressing past 4 GiB with a formal translation layer | done | green |
 | TKT-004 | Address-translation mechanism trade study for tensor-memory addressing | done | green |
