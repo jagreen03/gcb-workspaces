@@ -53,7 +53,9 @@ gcb-workspaces/
     ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
     ├── GCB-027-max-reduce-physical-measurement.md
     ├── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
-    └── GCB-028-max-reduce-pipeline-integration.md
+    ├── GCB-028-max-reduce-pipeline-integration.md
+    ├── GCB-029-max-reduce-physical-validation.md
+    └── GCB-029-FINDINGS.md                      ← GCB-027 vs GCB-029 transfer function
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
@@ -134,6 +136,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-026 | Namespace migration — deprecate the legacy `TKT-###` prefix, adopt the enterprise `GCB-###` project key | done | blue |
 | GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — first unoptimized OpenROAD / ASAP7 pass of `gcb_max_reduce`: **TIMING-BOUND** (WNS −665 ps @ 1 ns; 619 µm²; 0 DRC). See `GCB-027-FINDINGS.md` + `eda/GCB-027/` | done | **orange** |
 | GCB-028 | **Architecture-from-measurement (GCB-027 loop, CLOSED)** — `gcb_max_reduce` now instantiated `REG_STAGES=2` inside `gcb_tile_requantize` (`MAXRED_REG_STAGES`, default 2) + operand alignment; `test_compute_e2e.py` still 40/40 bit-exact with `stall_count == 0`; latch-free on Yosys 0.68 | done | green |
+| GCB-029 | **Story 2 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-028 pipeline: same ASAP7 flow, `REG_STAGES=2`. Transfer function: **WNS −665 → −442 ps (+34 %)**, TNS −34 %, power −19 %, area +0.4 %; timing **still open** (output-only pipeline, no retiming). See `GCB-029-FINDINGS.md` | done | **orange** |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 

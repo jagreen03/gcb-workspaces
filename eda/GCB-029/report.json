@@ -1,0 +1,44 @@
+{
+  "_comment": "GCB-029 - EPIC TKT-018 Measurement Epoch Story 2, per TKT-000. Physical validation of the GCB-028 pipeline response: gcb_max_reduce with REG_STAGES=2 through the EXACT same ORFS/ASAP7 flow as GCB-027 (1 ns target, default recipe, no tuning). Only config diff vs GCB-027: VERILOG_TOP_PARAMS = REG_STAGES 2. Raw measurement, not a signed-off result.",
+  "schema": "gcb.eda.measurement/v1",
+  "ticket": "GCB-029",
+  "epic": "TKT-018",
+  "compares_against": "GCB-027",
+  "date": "2026-09-10",
+  "design": "gcb_max_reduce",
+  "params": "WIDTH=16 N_ELEMENTS=64 MODE=MAX OUTPUT=BOTH SIGNED_CMP=1 TIE_LOW=1 REG_STAGES=2 (GCB-028: 2 OUTPUT pipeline stages after the tournament tree)",
+  "flow": {
+    "identical_to": "GCB-027 (same sv2v netlist, same constraint.sdc @ 1000 ps, same CORE_UTILIZATION=40 / PLACE_DENSITY=0.55, same platform asap7, default recipe, no tuning)",
+    "only_diff": "VERILOG_TOP_PARAMS = REG_STAGES 2  (ORFS chparam -set REG_STAGES 2 gcb_max_reduce before synth)",
+    "openroad": "26Q3-1953-gc6c0900a16",
+    "yosys": "ORFS-bundled 0.68+ (isolated)",
+    "stages_completed": ["synth","floorplan","place","cts","route","fillcell","finish"],
+    "target_clock_ps": 1000
+  },
+  "transfer_function": {
+    "_note": "GCB-027 (REG_STAGES=0, combinational) -> GCB-029 (REG_STAGES=2)",
+    "synth_cell_area_um2":      {"gcb027": 618.75, "gcb029": 621.41, "delta": 2.66,  "delta_pct": 0.43},
+    "synth_cell_count":         {"gcb027": 6240,   "gcb029": 6230,   "delta": -10},
+    "synth_sequential_area_um2":{"gcb027": 0.0,    "gcb029": 17.44,  "delta": 17.44, "note": "46x DFFASRHQNx1 - the 2 output pipe stages of the WIDTH-16 value + 6-bit index; 2.81% of chip area"},
+    "post_route_design_area_um2":{"gcb027": 901,   "gcb029": 884,    "delta": -17},
+    "post_route_utilization_pct":{"gcb027": 59,    "gcb029": 57,     "delta": -2},
+    "wns_ps":                   {"gcb027": -665.45,"gcb029": -442.09,"delta": 223.36, "delta_pct": 33.6, "direction": "improved (less negative)"},
+    "tns_ps":                   {"gcb027": -14420.39,"gcb029": -9570.50,"delta": 4849.89,"delta_pct": 33.6,"direction": "improved"},
+    "setup_violation_count":    {"gcb027": 22,     "gcb029": 22,     "delta": 0},
+    "hold_violation_count":     {"gcb027": 0,      "gcb029": 0},
+    "power_total_W":            {"gcb027": 0.0220, "gcb029": 0.0178, "delta": -0.0042, "delta_pct": -19.1},
+    "routed_wirelength_um":     {"gcb027": 24841,  "gcb029": 24927,  "delta": 86},
+    "via_count":                {"gcb027": 84742,  "gcb029": 83025,  "delta": -1717},
+    "drc_violations":           {"gcb027": 0,      "gcb029": 0},
+    "antenna_violations":       {"gcb027": 0,      "gcb029": 0},
+    "layers_used":              {"gcb027": "M2-M7","gcb029": "M2-M7"}
+  },
+  "critical_path": {
+    "worst_path_type": "input -> output, COMBINATIONAL (Startpoint: a data input; Endpoint: max_val[*]) - same as GCB-027, still 22 violating paths",
+    "wns_segment": "the input -> val_pipe[0] segment (inputs into the first pipeline register) still carries ~1.44 ns of the tournament cone; +223 ps of headroom came from resizing + the shorter net loads once the cone terminates at a register instead of a top-level port",
+    "new_register_paths": "yes - val_pipe[0][b] -> val_pipe[1][b] (stage0->stage1, pure flop-to-flop, no logic between): reported slack (MET) +29.98 ps; vld_pipe[1] -> out_valid (vclk): MET; rst_n -> vld_pipe async removal: MET (+178 ps). None of the new register paths violate.",
+    "verdict": "The 2 stages are an OUTPUT pipeline (after the tree, per TKT-016's REG_STAGES). They did NOT split the ~1.67 ns combinational cone - they moved its endpoint from a port to a flop. Default ORFS synth does not run register retiming, so the promised 'retiming distributes the registers into the tree' did not happen. Result: -34% WNS/TNS, -19% power, +0.4% area, but timing NOT closed at 1 ns."
+  },
+  "orange_verdict": "Measured transfer function: +2 OUTPUT pipeline stages -> WNS -665 ps -> -442 ps (+34%), TNS -34%, power -19%, area +0.4% / +46 flops, congestion/DRC unchanged (0). Timing NOT closed - the reduce tree itself is still a ~1.44 ns single-segment cone. To break it needs registers INTERSPERSED in the tree levels (retiming enabled, or a mid-tree REG_STAGES placement), more stages, or the 4-ary variant. This falsifies the assumption that REG_STAGES=2 alone closes 1 ns.",
+  "infra": "Same as GCB-027: 'make -j 2' from cold races (ran 'make synth' serially first); kepler-formal CTS-LEC needs the LD_LIBRARY_PATH -> uv CPython 3.12.14 runtime shim (read-only). RTL Baseline drift tripwire after the run: PASS (manifest diff empty, sim/lint.sh exit 0, R1 cov_violation=1)."
+}
