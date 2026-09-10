@@ -58,7 +58,9 @@ gcb-workspaces/
     ├── GCB-029-FINDINGS.md                      ← GCB-027 vs GCB-029 transfer function
     ├── GCB-030-max-reduce-retiming-remeasure.md
     ├── GCB-030-FINDINGS.md                      ← retiming closes it, at 818 flops
-    └── GCB-031-max-reduce-midtree-pipeline.md   ← RTL response: mid-tree pipeline cuts (no retiming)
+    ├── GCB-031-max-reduce-midtree-pipeline.md   ← RTL response: mid-tree pipeline cuts (no retiming)
+    ├── GCB-032-max-reduce-midtree-physical-validation.md
+    └── GCB-032-FINDINGS.md                      ← mid-tree closes 1 ns w/o retiming, 372 flops
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
@@ -142,6 +144,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-029 | **Story 2 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-028 pipeline: same ASAP7 flow, `REG_STAGES=2`. Transfer function: **WNS −665 → −442 ps (+34 %)**, TNS −34 %, power −19 %, area +0.4 %; timing **still open** (output-only pipeline, no retiming). See `GCB-029-FINDINGS.md` | done | **orange** |
 | GCB-030 | **Story 3 of the Measurement Epic (`TKT-018`)** — synth retiming enabled (one config line, RTL frozen): **WNS −442 → 0 ps, timing CLOSED**, cone broken into reg→reg segments — but retiming replicates 46 → **818 flops** (+63 % area, 57 slew DRVs). Points to a mid-tree pipelined RTL variant. See `GCB-030-FINDINGS.md` | done | **orange** |
 | GCB-031 | **Architecture-from-measurement (GCB-030 loop)** — mid-tree pipelined `gcb_max_reduce`: `REG_STAGES>0` now places its registers *between* tournament levels (genvar-elaborated segments), **~442 flops** (N=64, REG_STAGES=2) vs GCB-030 retiming's 818 — no register replication, combinational cells unchanged. `REG_STAGES=0` byte-identical; `K`-cycle latency contract preserved → **no consumer edits**; `test_compute_e2e.py` 40/40 bit-exact, `stall_count == 0`; Yosys 0.68 latch-free (+ `max_reduce_p2` bless). Physical re-measure is GCB-032 | done | green |
+| GCB-032 | **Story 4 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-031 mid-tree pipeline through the exact GCB-029 ASAP7 flow, **`SYNTH_RETIME_MODULES` unset**. **WNS 0.00 ps @ 1 ns, 0 setup violations, fmax 1.519 GHz — closes without retiming.** vs GCB-030 retiming: **372 flops (−54.5 %)**, synth area −29 %, power −23 %, wirelength −20 %, argmax cone intact; 38 max-slew DRVs remain (predicted 0 — falsified). 0 DRC. See `GCB-032-FINDINGS.md` + `eda/GCB-032/` | done | **orange** |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
