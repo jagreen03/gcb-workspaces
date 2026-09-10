@@ -133,7 +133,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 |---|---|---|---|
 | GCB-026 | Namespace migration — deprecate the legacy `TKT-###` prefix, adopt the enterprise `GCB-###` project key | done | blue |
 | GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — first unoptimized OpenROAD / ASAP7 pass of `gcb_max_reduce`: **TIMING-BOUND** (WNS −665 ps @ 1 ns; 619 µm²; 0 DRC). See `GCB-027-FINDINGS.md` + `eda/GCB-027/` | done | **orange** |
-| GCB-028 | **Architecture-from-measurement (GCB-027 loop)** — instantiate `gcb_max_reduce` with `REG_STAGES=2` inside `gcb_tile_requantize`, re-align the requantizer, and re-prove `test_compute_e2e.py` still bit-exact + `0` read stalls with the pipelined path | open | pending |
+| GCB-028 | **Architecture-from-measurement (GCB-027 loop, CLOSED)** — `gcb_max_reduce` now instantiated `REG_STAGES=2` inside `gcb_tile_requantize` (`MAXRED_REG_STAGES`, default 2) + operand alignment; `test_compute_e2e.py` still 40/40 bit-exact with `stall_count == 0`; latch-free on Yosys 0.68 | done | green |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 

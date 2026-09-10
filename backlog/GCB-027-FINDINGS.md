@@ -75,6 +75,17 @@ Clean route, half the metal stack unused. **Not routing-bound.**
 
 ## Orange Team interpretation
 
+> **Feedback loop CLOSED by [[GCB-028]] (done | green, 2026-09-10).**
+> `gcb_tile_requantize.sv` now instantiates its internal `gcb_max_reduce` with
+> `REG_STAGES = 2` (param `MAXRED_REG_STAGES`, default 2) + a matching
+> operand-alignment delay — functionally identical, +2 cycles latency only.
+> `MAXRED_REG_STAGES = 0` is bit/cycle-identical to the pre-GCB-028 RTL (proven
+> every vector). `test_compute_e2e.py` still **40/40 tiles bit-exact with
+> `SRAM read stalls = 0` unchanged** — the latency is downstream of the SRAM
+> read port and the MAC grid, so it does not perturb the stall-free feed.
+> Hypotheses 1 (below) is now done for the requantize path; 2/3/4 remain open as
+> their own `GCB-###`.
+
 **`gcb_max_reduce` is TIMING-BOUND, and only timing-bound.**
 
 * Not area-bound (619 µm²), not routing-bound (0 DRC, 0 antennas, M8/M9 free),
