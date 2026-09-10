@@ -1,0 +1,75 @@
+{
+  "_comment": "GCB-027 - EPIC TKT-018 Measurement Epoch, per TKT-000. First deliberately-unoptimized OpenROAD/ASAP7 physical pass of gcb_max_reduce (TKT-016). Raw measurement - NOT a signed-off result. Source reports under ./reports/; full P&R artifacts (6_final.{gds,def,v,spef}) left in the isolated P&R env at ~/eda/OpenROAD-flow-scripts/flow/results/asap7/gcb_max_reduce/base/.",
+  "schema": "gcb.eda.measurement/v1",
+  "ticket": "GCB-027",
+  "epic": "TKT-018",
+  "date": "2026-09-10",
+  "design": "gcb_max_reduce",
+  "params": "WIDTH=16 N_ELEMENTS=64 MODE=MAX OUTPUT=BOTH SIGNED_CMP=1 TIE_LOW=1 REG_STAGES=0 (combinational, as elaborated by the RTL-Baseline sv2v)",
+  "flow": {
+    "platform": "asap7",
+    "process_node_label": "7 (ASAP7 educational; 4x-upscaled DBU, ~7/5nm-class)",
+    "orfs": "OpenROAD-flow-scripts (local build, TKT-021)",
+    "openroad": "26Q3-1953-gc6c0900a16",
+    "yosys": "ORFS-bundled 0.68+ (a5af9d690) - ISOLATED from the RTL Baseline's system Yosys 0.68",
+    "klayout": "0.30.12",
+    "recipe": "default ORFS, NO tuning (no floorplan opt, no timing-driven sweeps, no ECOs, no clock relaxation)",
+    "stages_completed": ["synth", "floorplan", "place", "cts", "route", "fillcell", "finish"],
+    "target_clock_ps": 1000,
+    "io_delay_pct": 0.20
+  },
+  "area": {
+    "synth_cell_area_um2": 618.75,
+    "synth_cell_count": 6240,
+    "synth_sequential_pct": 0.0,
+    "post_route_design_area_um2": 901,
+    "post_route_utilization_pct": 59,
+    "filler_instances": 8838,
+    "notable_cells": {"HAxp5_half_adder": 1008, "INVx1": 897, "OA21x2": 623, "AO21x1": 601, "AND2x2": 412, "BUFx2": 277, "NAND2x1": 283}
+  },
+  "timing": {
+    "corner": "typical (TT FF-libs as ORFS default report corner)",
+    "target_clock_ps": 1000,
+    "wns_ps": -665.45,
+    "tns_ps": -14420.39,
+    "setup_violation_count": 22,
+    "hold_violation_count": 0,
+    "implied_min_period_ps": 1665,
+    "implied_fmax_asap7_MHz": 600,
+    "met_target": false,
+    "worst_path": "input vec_flat -> output max_val, ~1.67 ns combinational cone: compare-select chain interleaved with HAxp5 index-arithmetic (OUTPUT=BOTH tracks the max INDEX alongside the max VALUE through all ceil(log2 64)=6 tournament levels)"
+  },
+  "drv": {
+    "max_slew_violations": 0,
+    "max_fanout_violations": 0,
+    "max_cap_violations": 0
+  },
+  "power": {
+    "corner": "typical, ORFS-default switching activity",
+    "total_W": 0.0220,
+    "internal_W": 0.0122,
+    "switching_W": 0.00985,
+    "leakage_W": 6.22e-07,
+    "sequential_W": 0.0,
+    "clock_W": 0.0,
+    "note": "100% combinational; the ~22 mW is against ORFS's default (high) activity factor for a comb block and is an upper-ish bound, not a datasheet figure"
+  },
+  "routing": {
+    "drc_violations": 0,
+    "drc_report_bytes": 0,
+    "antenna_net_violations": 0,
+    "antenna_pin_violations": 0,
+    "detailed_route_converged": true,
+    "detailed_route_iterations_allowed": 64,
+    "total_wirelength_um": 24841,
+    "via_count": 84742,
+    "layers_used": "M2-M7 (M8/M9 unused)",
+    "congestion": "route converged with no overflow; utilization 59%; not congestion-bound"
+  },
+  "verdict": "TIMING-BOUND. Not area-bound (619 um2 synth, 59% util). Not routing-bound (0 DRC, 0 antennas, M8/M9 free). WNS -665 ps at a 1 ns target - the combinational tournament tree is a ~1.67 ns cone in ASAP7.",
+  "infra_findings": [
+    "ORFS 'make -j 2' from cold races its recursive-make generated-includes graph (fails at 1_2_yosys.sdc / 2_1_floorplan.sdc 'No rule to make target'). Workaround: 'make synth' serially first, then 'make -j 2' for the rest.",
+    "kepler-formal (ORFS CTS logical-equivalence check) is broken by the same TKT-021 drift as the RTL baseline - linked against libpython3.12.so.1.0 which the system Python 3.12->3.14 move removed. Worked around with LD_LIBRARY_PATH -> the uv-managed CPython 3.12.14 runtime lib (read-only, no install, RTL Baseline venv untouched). This is a P&R-environment defect to fix (rebuild kepler-formal, or bundle its 3.12 runtime).",
+    "Peak route memory 1.84 GB single-threaded - comfortably within the 8 GB host; the -j 2 throttle was for the OpenROAD *build*, the flow itself never approached the ceiling."
+  ]
+}

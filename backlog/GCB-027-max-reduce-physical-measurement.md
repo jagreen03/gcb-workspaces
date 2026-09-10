@@ -2,8 +2,11 @@
 id: GCB-027
 title: "Story 1 of the Measurement Epic (TKT-018) — gcb_max_reduce through the isolated OpenROAD / ASAP7 flow"
 date_created: 2026-09-10
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: orange
+telemetry:
+  pbg_o: orange
+  disposition: physical-falsifiability
 tags:
   - backlog
   - eda
@@ -123,10 +126,101 @@ The P&R environment is the isolated side per [[TKT-000]].
 
 ---
 ## Execution Log
-*(To be populated during execution.)*
+
+### 2026-09-10 (session 01Rpa9VJGe7xypzp5FkukSco) — Physical Design Engineer + Orange Team Auditor
+
+Full detail + all numbers: **[[GCB-027-FINDINGS]]**. Artifacts:
+`gcb-workspaces/eda/GCB-027/` (`report.json`, `floorplan.png`, `congestion.png`,
+`layout_all.png`, `config/`, `reports/`); `6_final.{gds,def,v,spef}` left in the
+isolated P&R env (`~/eda/OpenROAD-flow-scripts/flow/results/asap7/gcb_max_reduce/base/`).
+
+* **Config.** `DESIGN_NAME=gcb_max_reduce`, `PLATFORM=asap7`, source =
+  RTL-Baseline `sv2v` output handed over at a file boundary (nothing written
+  under `gcb-wdm-transceiver`). Stated target **1000 ps**; default ORFS recipe,
+  **zero tuning**. Ran `-j 2` per the mandate (after `make synth` serially — see
+  finding 1).
+* **Flow completed** synth → floorplan → place → CTS → route → fillcell →
+  **finish**. `6_final.gds` (11 MB) produced.
+* **The measurement (unoptimized, ASAP7, 1000 ps target):**
+  * **Area — not the bottleneck.** Synth **618.75 µm², 6 240 cells, 0 %
+    sequential**; post-route 901 µm² @ **59 % utilization**.
+  * **Timing — the bottleneck. `WNS = −665.45 ps`, `TNS = −14 420.39 ps`,
+    22 setup-violating paths, 0 hold.** Implied min period ≈ **1 665 ps
+    (≈ 600 MHz** ASAP7-scaled**)** — the target is **missed**. Worst path is a
+    ~1.67 ns combinational cone: compare-select through 6 tournament levels
+    interleaved with `OUTPUT="BOTH"` index arithmetic (**1 008 `HAxp5`**
+    half-adders). 0 slew/cap/fanout violations — pure logic depth.
+  * **Power** 22.0 mW, 100 % combinational (ORFS default activity — upper-ish).
+  * **Routing — not the bottleneck. 0 detailed-route DRC violations**
+    (`5_route_drc.rpt` = 0 bytes), **0 antenna** net/pin, route converged,
+    24 841 µm wirelength, M2–M7 only (M8/M9 free).
+* **Orange Team verdict: TIMING-BOUND, and only timing-bound.** This
+  **falsifies** the standing "drop-in single-cycle" assumption for
+  `gcb_max_reduce` — functionally a verified `REG_STAGES=0` primitive, but
+  physically a ~1.67 ns cone. Hypotheses filed in [[GCB-027-FINDINGS]]:
+  (1) `REG_STAGES ≥ 2` on every timed instantiation (retiming distributes it);
+  (2) `OUTPUT="VALUE"` where the index is unused (~half the cost);
+  (3) TKT-019 must budget the QAM-slice max-reduce as a 2–3 cycle pipelined
+  block; (4) a 4-ary tournament variant is a later trade study.
+* **Infrastructure findings:** (1) ORFS `make -j 2` races from cold — `make
+  synth` serially first. (2) **`kepler-formal` (ORFS CTS LEC) is broken by the
+  same TKT-021 Python 3.12→3.14 drift** (linked against
+  `libpython3.12.so.1.0`); worked around with a **read-only** `LD_LIBRARY_PATH`
+  → the uv-managed CPython 3.12.14 runtime lib — no install, `~/.venvs/cocotb19`
+  untouched. A real fix is a P&R-environment hardening ticket. → TKT-021's
+  un-isolated drift reached *both* sides of the split; [[TKT-000]]'s isolation
+  mandate is retroactively validated and the P&R env still needs its own pin.
+
+### Task 3 — RTL Baseline drift tripwire (post-P&R) — **PASS**
+
+The OpenROAD/ASAP7 run **did not corrupt the RTL Baseline**:
+
+| check | result |
+|---|---|
+| toolchain manifest diff | **EMPTY** (Verilator 5.032 / sv2v 0.0.12 / Yosys 0.68 / node v22.22.1 / venv Python 3.12.14 / cocotb 1.9.2 / numpy 2.5.3 — all unchanged) |
+| `~/.venvs/cocotb19` | intact |
+| `bash sim/lint.sh` | **exit 0**, 34 tops |
+| cocotb smoke — TKT-020 R1 `Makefile.sram_partial` | `TESTS=5 PASS=2 FAIL=0`, **`cov_violation=1`**, `%Error TKT-020/R1` fires |
+
+ORFS ran on its own bundled Yosys/OpenROAD, no package manager, no `PATH`
+overlap. Only cross-touch: the read-only `LD_LIBRARY_PATH` shim above. The
+[[TKT-000]] toolchain split held.
+
+### Artifacts touched
+
+* `gcb-workspaces/eda/GCB-027/` (new) — `report.json`, `floorplan.png` +
+  `congestion.png` + `layout_all.png` (ORFS `.webp` → PNG via Pillow),
+  `config/{config.mk,constraint.sdc}`, `reports/` (synth_stat, 6_finish,
+  5_route_drc, 5_global_route, 4_cts_final, 2_floorplan_final, 3_resizer).
+* `gcb-workspaces/backlog/GCB-027-FINDINGS.md` (new).
+* **Nothing** in `gcb-rtl` / `gcb-wdm-transceiver`; `gcb_max_reduce.sv`
+  untouched; no ASAP7/PDK material in any RTL repo. The ORFS design config
+  (`flow/designs/{asap7,src}/gcb_max_reduce/`) and full outputs live in the
+  isolated P&R env, out of git.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution — expected grade: `orange`, per [[TKT-000]].)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `orange`
+
+**Vector Summary:** `PBG-O = orange` (Physical Falsifiability) — **SATISFIED**.
+
+Per [[TKT-000]], Orange is a disposition orthogonal to the R³ PBG axes: *has the
+artifact been confronted with physical reality, and can it be falsified by it?*
+
+* **The pass extracted a falsifiable measurement that contradicts an
+  architectural assumption** — `gcb_max_reduce` at `WNS = −665 ps` against a
+  1 ns target is a multi-cycle block, not the single-cycle combinational
+  primitive it has been reused as. That negative number is a **positive Orange
+  result** — the silicon feedback the datapath planning has never had.
+* The R³ axes are **deliberately not optimized** (a manufacturable timing-closed
+  GDSII was explicitly *not* the goal). For the record only, not the grade:
+  X ≈ 0 (no spec closed), Y ≈ +0.5 (the *measurement process* was clean —
+  default recipe, honest numbers, RTL frozen, tripwire green), Z = 0.
+* **What makes this a *valid* Orange measurement** and not a botched run: the
+  flow used no tuning, `gcb_max_reduce.sv` was not touched, the target clock was
+  stated up front and not relaxed to the result, and the RTL Baseline tripwire
+  came back clean.
+
+Cyclopter scavenger (TKT-013) ingests this as the first `orange`-graded child of
+EPIC TKT-018 — the seed of the architecture-from-measurement cluster.

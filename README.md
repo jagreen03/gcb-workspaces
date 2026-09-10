@@ -51,8 +51,12 @@ gcb-workspaces/
     ├── TKT-024-operand-staging.md
     ├── TKT-025-compute-e2e-integration.md
     ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
-    └── GCB-027-max-reduce-physical-measurement.md
+    ├── GCB-027-max-reduce-physical-measurement.md
+    └── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
 ```
+(Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
+reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
+environment, out of git, per [[TKT-000]].)
 
 ## Workspaces
 
@@ -127,7 +131,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | Ticket | Title | Status | Color |
 |---|---|---|---|
 | GCB-026 | Namespace migration — deprecate the legacy `TKT-###` prefix, adopt the enterprise `GCB-###` project key | done | blue |
-| GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — push `gcb_max_reduce` through the isolated OpenROAD / ASAP7 flow, deliberately unoptimized, for the first physical `report.json` / `floorplan.png` | open | pending |
+| GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — first unoptimized OpenROAD / ASAP7 pass of `gcb_max_reduce`: **TIMING-BOUND** (WNS −665 ps @ 1 ns; 619 µm²; 0 DRC). See `GCB-027-FINDINGS.md` + `eda/GCB-027/` | done | **orange** |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
