@@ -61,7 +61,9 @@ gcb-workspaces/
     ├── GCB-031-max-reduce-midtree-pipeline.md   ← RTL response: mid-tree pipeline cuts (no retiming)
     ├── GCB-032-max-reduce-midtree-physical-validation.md
     ├── GCB-032-FINDINGS.md                      ← mid-tree closes 1 ns w/o retiming, 372 flops
-    └── GCB-033-retire-synth-retime-consolidate-ppa.md  ← retiming retired, PPA burn-down rolled up
+    ├── GCB-033-retire-synth-retime-consolidate-ppa.md  ← retiming retired, PPA burn-down rolled up
+    ├── GCB-034-optical-transport-contract.md    ← EPIC TKT-019 Story 1: what the optical layer must carry (provisional; open)
+    └── GCB-034-LOOK-AROUND.md                   ← orthogonal-discovery pass: constraints D4 full-K-local silently accepts
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-0NN/` per run; `eda/gcb_max_reduce/` is the standing
@@ -148,6 +150,8 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-031 | **Architecture-from-measurement (GCB-030 loop)** — mid-tree pipelined `gcb_max_reduce`: `REG_STAGES>0` now places its registers *between* tournament levels (genvar-elaborated segments), **~442 flops** (N=64, REG_STAGES=2) vs GCB-030 retiming's 818 — no register replication, combinational cells unchanged. `REG_STAGES=0` byte-identical; `K`-cycle latency contract preserved → **no consumer edits**; `test_compute_e2e.py` 40/40 bit-exact, `stall_count == 0`; Yosys 0.68 latch-free (+ `max_reduce_p2` bless). Physical re-measure is GCB-032 | done | green |
 | GCB-032 | **Story 4 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-031 mid-tree pipeline through the exact GCB-029 ASAP7 flow, **`SYNTH_RETIME_MODULES` unset**. **WNS 0.00 ps @ 1 ns, 0 setup violations, fmax 1.519 GHz — closes without retiming.** vs GCB-030 retiming: **372 flops (−54.5 %)**, synth area −29 %, power −23 %, wirelength −20 %, argmax cone intact; 38 max-slew DRVs remain (predicted 0 — falsified). 0 DRC. See `GCB-032-FINDINGS.md` + `eda/GCB-032/` | done | **orange** |
 | GCB-033 | **Consolidation** — retired `SYNTH_RETIME_MODULES` for `gcb_max_reduce` (superseded by the GCB-031/032 mid-tree pipeline); promoted the GCB-032 config as the standing `eda/gcb_max_reduce/` P&R config; rolled the GCB-027 → GCB-032 physical arc + transfer function into `gcb-wdm-transceiver/docs/PPA_burndown.md`; "Resolved" note on `GCB-030-FINDINGS.md` + bless SUMMARY cross-link. Doc-only, no RTL change, no new flow run | done | green |
+| GCB-034 | **Story 1 of EPIC `TKT-019` (Optical WDM Transport)** — Orange-**method** data-movement contract (authored under it; *not* a PBG grade). From the ASAP7 measurements: what leaves a compute tile (→ the requantised INT4 `q_tile` + `q_scale`, ~140 B), width/cadence at 1 GHz (one tile per `K_STEPS` = 512 cycles → ~0.27 GB/s, ~1000× below the 256 GB/s electrical operand bus), continuity (deterministically periodic), reduction (`K_TOTAL:1` + `32b:4b` electrical). **Provisional decisions D1 = POST-REQUANTIZATION, D4 = FULL-K LOCAL REDUCTION** (D2/D3 open) — a testable hypothesis, *not* a fact. **Purple candidate:** the electrical compute domain as an enormous compression boundary. Stays **`open`** until EPIC `TKT-019` runs the falsification pass. See `GCB-034-LOOK-AROUND.md` | open | pending |
+| GCB-034-LOOK-AROUND | **Orthogonal-discovery pass on GCB-034** — what architectural constraints we silently accept because the ~1000× compression looks so good (C1–C11). D4 deep-dive: strict full-K-local eliminates K-parallelism, sizes the node by the model not the fabric, serialises K-latency, and caps single-request horizontal scale — likely correct only as a *workload-class mode*, with Alternative B kept live. Feeds `TKT-019` V5 | open | pending |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
@@ -176,7 +180,7 @@ closing at 4096 MAC/cycle / 0 stalls — EPIC `TKT-017`).
 | TKT-016 | Shared gcb_max_reduce macro — one verified max/argmax primitive for QAM slicing and softmax | done | green |
 | TKT-017 | EPIC — Compute execution units: verified INT4 matrix-multiply tiles between the SRAM macros and the Softmax/QAM blocks (Stories TKT-022–025; e2e proven at 4096 MAC/cycle, 0 read stalls) | done | green |
 | TKT-018 | EPIC — OpenROAD physical layout (**Measurement Epoch**, per TKT-000): extract area / timing / congestion / power / DRC on `gcb_max_reduce` — deliberately unoptimized — before optical scale-up | open | pending |
-| TKT-019 | EPIC — Optical WDM transport: scale the WDM PHY and transceiver logic on the bitplane doctrine | open | pending |
+| TKT-019 | EPIC — Optical WDM transport (**re-chartered 2026-09-10, Orange method**): first validate or **falsify** the provisional `GCB-034` transport contract (V1–V5 + the Alternative B counterfactual — K-split + partial sums → substantially wider transport); only a surviving contract earns the WDM-PHY-scaling build on the `gcb-wiki/13` bitplane doctrine | open | pending |
 | TKT-020 | Red/Yellow foundation audit — adversarial + tech-debt review of the locked baseline before the Epics | open | pending |
 | TKT-021 | OpenROAD physical-design toolchain — from-source compilation on a constrained WSL2 host (**unblocks EPIC TKT-018**) | done | green |
 | TKT-022 | **Story 1 of EPIC TKT-017** — `gcb_mac_tile_array`: verified INT4 MAC tile array (SRAM operands → dot-product grid → wide accumulators) | done | green |
