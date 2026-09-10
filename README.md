@@ -132,7 +132,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-020 | Red/Yellow foundation audit — adversarial + tech-debt review of the locked baseline before the Epics | open | pending |
 | TKT-021 | OpenROAD physical-design toolchain — from-source compilation on a constrained WSL2 host (**unblocks EPIC TKT-018**) | done | green |
 | TKT-022 | **Story 1 of EPIC TKT-017** — `gcb_mac_tile_array`: verified INT4 MAC tile array (SRAM operands → dot-product grid → wide accumulators) | done | green |
-| TKT-023 | **Story 2 of EPIC TKT-017** — `gcb_tile_requantize`: block-float requantization of the INT32 MAC tile to INT4/INT8 via the frozen `gcb_max_reduce` | open | pending |
+| TKT-023 | **Story 2 of EPIC TKT-017** — `gcb_tile_requantize`: block-float requantization of the INT32 MAC tile to INT4/INT8 via the frozen `gcb_max_reduce` | done | green |
 
 **Epic linkage:** TKT-021 is an out-of-band enablement ticket for **EPIC
 TKT-018** (OpenROAD physical layout) — it provisions the P&R / signoff back end

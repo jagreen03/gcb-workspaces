@@ -2,8 +2,12 @@
 id: TKT-023
 title: "Story 2 of EPIC TKT-017 — gcb_tile_requantize: block-float requantization of the INT32 MAC tile to INT4/INT8 via the frozen gcb_max_reduce"
 date_created: 2026-09-10
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.0
 tags:
   - backlog
   - rtl
@@ -189,10 +193,118 @@ trap) gate this story.
 
 ---
 ## Execution Log
-*(To be populated during execution.)*
+
+### 2026-09-10 (session 01Rpa9VJGe7xypzp5FkukSco) — Lead Hardware Engineer
+
+* **Toolchain pre-check.** Manifest diff (`sim/toolchain_manifest.json`) came
+  back **empty**: Verilator 5.032 / sv2v 0.0.12 / Yosys 0.68 / Node 22.22.1 /
+  Python 3.12.14 / cocotb 1.9.2 / numpy 2.5.3 — all match the TKT-022 pin. No
+  Yellow-Team baseline re-gate needed; the venv (`~/.venvs/cocotb19`) survived.
+
+* **`gcb-wdm-transceiver/rtl/gcb_tile_requantize.sv`** (NEW, ~245 lines).
+  Parameters: `GRID_M`, `GRID_N`, `IN_W` (= 32), `OUT_W` (= 4 INT4 / 8 INT8),
+  `SCALE_MODE` (0 PER_TILE / 1 PER_ROW / 2 PER_COL), `ROUND` (0 RTZ / 1 RNE /
+  2 RNA), `EXP_W`, `SIGNED_ACC`, `REG_STAGES` (0 = combinational). No
+  tile-specific literal; grid dims need not be powers of two; an `initial`
+  guard `$fatal`s on `ACC_W`-style misconfig (`OUT_W < 2`, `IN_W <= OUT_W`,
+  out-of-range mode codes).
+  * **Datapath.** Per-element two's-complement `|acc|` (with the `-2^(IN_W-1)`
+    edge handled as `~raw + 1`); one **frozen `gcb_max_reduce`** instance per
+    reduction channel (`MODE="MAX"`, `OUTPUT="VALUE"`, `SIGNED_CMP=0`,
+    `REG_STAGES=0`) over the channel's magnitudes — its side outputs
+    (`out_valid`, `max_idx`) explicitly swallowed; a priority-encode of the
+    channel max → smallest shift `s = max(0, msb(max_abs) + 2 − OUT_W)`, capped
+    at `min(2^EXP_W−1, IN_W−1)` and emitted on `q_scale`; per element a
+    magnitude shift + `ROUND`-selected rounding (RNE ties to even via `qm[0]`,
+    RNA ties away, RTZ truncates) + sign restore + saturating clamp to
+    `[OUT_MIN, OUT_MAX]`; a sticky `q_clip` set when any element saturates
+    after shift+round. Outputs registered iff `REG_STAGES > 0`, else pure comb
+    with `q_valid = in_valid`.
+  * **Wires strictly to the frozen contracts** — consumes only the
+    `gcb_mac_tile_array` output contract (`acc_tile` + `tile_valid`) and
+    instantiates `gcb_max_reduce` unmodified. No port change to either; no
+    change to `gcb_mac_tile_array`, `gcb_tensor_sram_controller`,
+    `gcb_tensor_operand_sram`, `gcb_max_reduce`.
+
+* **Unit proof** — `sim/cocotb/tile_requantize_tb_top.sv` (four instances:
+  PER_TILE/RNE/INT4, PER_ROW/RNE/INT4, PER_COL/RTZ/INT8, PER_TILE/RNA/INT4) +
+  `test_tile_requantize.py` + `Makefile.tile_requantize`:
+  **`TESTS=1 PASS=1 FAIL=0`**. 16 INT32 tiles (zeros, single non-zero,
+  `INT32_MAX`, `INT32_MIN`, an RNE round-to-even tie, `[-8,7]*5000`, and 10
+  random full-range / MAC-range seeds) × 4 param sets = **64 requantized
+  blocks, every `q_tile` / `q_scale` / `q_clip` bit-exact** vs a NumPy
+  block-float reference (including the `INT32_MAX` positive-clip path, which
+  RNE/INT4 flags and RTZ/INT8 does not).
+
+* **Chained integration proof** — `sim/cocotb/mac_requant_chain_tb_top.sv`
+  (frozen `gcb_tensor_operand_sram` + `gcb_tensor_sram_controller` +
+  `gcb_mac_tile_array` + `gcb_tile_requantize`) + `test_mac_requant_chain.py` +
+  `Makefile.mac_requant_chain`: **`TESTS=1 PASS=1 FAIL=0`**. 5 INT4 matmuls
+  (directed + 4 random seeds) streamed GDDR7-loader → SRAM → MAC → requantize;
+  all **20 emitted output tiles** have `q_tile` bit-exact against the
+  block-float model of the true INT32 tile, `q_scale` / `q_clip` matched, and
+  `dequant(q_tile, q_scale) = q_tile << q_scale` within **one block ULP
+  (`2^s`)** of the integer matmul.
+
+* **`bash sim/lint.sh`** → **exit 0**, `gcb_tile_requantize` added to the RTL
+  list and the top loop (33 tops). Verilator-5 `-Wall` clean at the repo bar
+  (`-Wno-DECLFILENAME -Wno-UNUSEDPARAM` only) — `PINCONNECTEMPTY` on the
+  `gcb_max_reduce` side pins resolved by wiring them to named, `_unused`-swallowed
+  nets.
+
+* **`sv2v`→Yosys 0.68 elaboration** (`chparam` GRID 8×8, `SCALE_MODE=1`):
+  `hierarchy -check` + `proc` + `check -assert` → **0 problems**;
+  `select -assert-count 0 t:$dlatch t:$dlatchsr t:$sr` → clean (**latch-free**).
+  8 `gcb_max_reduce` submodule instances (one per row) confirm the
+  one-reducer-per-axis design; the lone `$adff` is the sticky `q_clip`. `stat`
+  + `SUMMARY.md` updated under `gcb-wdm-transceiver/sim/yosys068_bless/`.
+
+* **Artifacts Touched:**
+  * `rtl/gcb_tile_requantize.sv` (new).
+  * `sim/cocotb/{tile_requantize_tb_top.sv, test_tile_requantize.py,
+    Makefile.tile_requantize, mac_requant_chain_tb_top.sv,
+    test_mac_requant_chain.py, Makefile.mac_requant_chain}` (new).
+  * `sim/yosys068_bless/{tile_requantize.stat, SUMMARY.md}`;
+    `sim/toolchain_manifest.json` regression-gate list.
+  * `sim/lint.sh`, `sim/run_tb.sh`, `.gitignore` — wired in the new top /
+    two cocotb stanzas / build dirs.
+  * No change to any frozen-list interface, to `gcb_mac_tile_array`, or to
+    `gcb_max_reduce`.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution.)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence 0.0)`,
+`‖T‖₂ = √2 ≈ 1.414`.
+
+* **X — Specification `+1.0`.** Every Green-Target item met: one fully
+  parameterised SV-2017 requantizer (tile dims, IN/OUT widths, scale
+  granularity, rounding mode, exponent width, pipeline depth — no
+  tile-specific literal); `gcb_max_reduce` **instantiated, not re-implemented**,
+  one instance per reduction axis; a Cocotb unit TB proving `q_tile` +
+  `q_scale` + `q_clip` bit-exact vs a NumPy block-float reference over the full
+  `SCALE_MODE × ROUND × OUT_W` fan and directed corners (64 blocks); a chained
+  `mac_tile_array → tile_requantize` TB on real INT4 matmul tiles with the
+  dequant round-trip inside one block ULP (20 blocks); `sim/lint.sh` exit 0
+  with the new top wired into `sim/lint.sh` and the guarded `sim/run_tb.sh`
+  stanzas; `sv2v`→Yosys 0.68 elaboration clean and latch-free; a `stat` row for
+  the TKT-017 PPA burn-down. Diff confined to new RTL + TBs + sim-list edits +
+  the manifest.
+* **Y — Quality `+1.0`.** Blue-grade: the whole pipe works in magnitude+sign so
+  the three rounding modes are exact and testable; the shift is derived from a
+  priority-encode of the block max, not guessed; `gcb_max_reduce` drops in as a
+  pure instantiation (abs + fan-out only, its side outputs explicitly
+  swallowed); `q_clip` is an honest matched output (the positive-max
+  round-past-`OUT_MAX` case is expected and the reference predicts it, not a
+  bug); strict-`-Wall` lint-clean; latch-free on the blessed Yosys 0.68. No
+  frozen interface or `gcb_mac_tile_array` port touched.
+* **Z — Emergence `0.0`.** Second sub-story of the compute Epic. The
+  `gcb_max_reduce` reuse — its **third** consumer, the Epic's Purple lean
+  realised — is Blue consolidation of an existing primitive, not net-new
+  platform capability; the ticket claimed no Purple lean of its own.
+
+Dominant spoke: `|x| = |y| = 1.0`; tie-break `X > Y > Z` → `X+` → **Green**.
+Cyclopter scavenger (TKT-013) ingests this vector on close; EPIC TKT-017 now
+has two Green child data points (TKT-022 MAC array, TKT-023 requantize).
