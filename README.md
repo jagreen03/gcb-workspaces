@@ -52,7 +52,8 @@ gcb-workspaces/
     ├── TKT-025-compute-e2e-integration.md
     ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
     ├── GCB-027-max-reduce-physical-measurement.md
-    └── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
+    ├── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
+    └── GCB-028-max-reduce-pipeline-integration.md
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
@@ -132,6 +133,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 |---|---|---|---|
 | GCB-026 | Namespace migration — deprecate the legacy `TKT-###` prefix, adopt the enterprise `GCB-###` project key | done | blue |
 | GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — first unoptimized OpenROAD / ASAP7 pass of `gcb_max_reduce`: **TIMING-BOUND** (WNS −665 ps @ 1 ns; 619 µm²; 0 DRC). See `GCB-027-FINDINGS.md` + `eda/GCB-027/` | done | **orange** |
+| GCB-028 | **Architecture-from-measurement (GCB-027 loop)** — instantiate `gcb_max_reduce` with `REG_STAGES=2` inside `gcb_tile_requantize`, re-align the requantizer, and re-prove `test_compute_e2e.py` still bit-exact + `0` read stalls with the pipelined path | open | pending |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
