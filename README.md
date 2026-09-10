@@ -63,7 +63,8 @@ gcb-workspaces/
     ├── GCB-032-FINDINGS.md                      ← mid-tree closes 1 ns w/o retiming, 372 flops
     ├── GCB-033-retire-synth-retime-consolidate-ppa.md  ← retiming retired, PPA burn-down rolled up
     ├── GCB-034-optical-transport-contract.md    ← EPIC TKT-019 Story 1: what the optical layer must carry (provisional; open)
-    └── GCB-034-LOOK-AROUND.md                   ← orthogonal-discovery pass: constraints D4 full-K-local silently accepts
+    ├── GCB-034-LOOK-AROUND.md                   ← orthogonal-discovery pass: constraints D4 full-K-local silently accepts
+    └── GCB-035-optical-line-rate-derivation.md  ← TKT-019 V1+V2: Alt A ≈2.4 Gbps vs Alt B ≈17.9·P Gbps
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-0NN/` per run; `eda/gcb_max_reduce/` is the standing
@@ -152,6 +153,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-033 | **Consolidation** — retired `SYNTH_RETIME_MODULES` for `gcb_max_reduce` (superseded by the GCB-031/032 mid-tree pipeline); promoted the GCB-032 config as the standing `eda/gcb_max_reduce/` P&R config; rolled the GCB-027 → GCB-032 physical arc + transfer function into `gcb-wdm-transceiver/docs/PPA_burndown.md`; "Resolved" note on `GCB-030-FINDINGS.md` + bless SUMMARY cross-link. Doc-only, no RTL change, no new flow run | done | green |
 | GCB-034 | **Story 1 of EPIC `TKT-019` (Optical WDM Transport)** — Orange-**method** data-movement contract (authored under it; *not* a PBG grade). From the ASAP7 measurements: what leaves a compute tile (→ the requantised INT4 `q_tile` + `q_scale`, ~140 B), width/cadence at 1 GHz (one tile per `K_STEPS` = 512 cycles → ~0.27 GB/s, ~1000× below the 256 GB/s electrical operand bus), continuity (deterministically periodic), reduction (`K_TOTAL:1` + `32b:4b` electrical). **Provisional decisions D1 = POST-REQUANTIZATION, D4 = FULL-K LOCAL REDUCTION** (D2/D3 open) — a testable hypothesis, *not* a fact. **Purple candidate:** the electrical compute domain as an enormous compression boundary. Stays **`open`** until EPIC `TKT-019` runs the falsification pass. See `GCB-034-LOOK-AROUND.md` | open | pending |
 | GCB-034-LOOK-AROUND | **Orthogonal-discovery pass on GCB-034** — what architectural constraints we silently accept because the ~1000× compression looks so good (C1–C11). D4 deep-dive: strict full-K-local eliminates K-parallelism, sizes the node by the model not the fabric, serialises K-latency, and caps single-request horizontal scale — likely correct only as a *workload-class mode*, with Alternative B kept live. Feeds `TKT-019` V5 | open | pending |
+| GCB-035 | **TKT-019 falsification V1 + V2** — payload bit-accounting and line-rate derivation. Alt A (post-requant, 140 B / `K_STEPS=512` @ 1 GHz): **2.19 Gbps raw → ≈ 2.4 Gbps** with 64b/66b + KP4 (9.14 % coding, carried at 12 %) → single ≤ 10 G lane. Alt B (INT32 partial, 1024 B): **16.0 Gbps raw → ≈ 17.9 Gbps** → 25 G-class lane; and **`~7.3·P×` per link, `~7.3·P²×` at the accumulator** once the K-split is real (P = 4 → 71.7 Gbps/link, 286 Gbps aggregate). V1 HOLDS; V2 HOLDS for FFN, conditional-fail for small-K layers → escalates D3 | open | pending |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
