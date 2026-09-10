@@ -64,8 +64,9 @@ gcb-workspaces/
     └── GCB-033-retire-synth-retime-consolidate-ppa.md  ← retiming retired, PPA burn-down rolled up
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
-reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
-environment, out of git, per [[TKT-000]].)
+reports — live under `eda/GCB-0NN/` per run; `eda/gcb_max_reduce/` is the standing
+ORFS/ASAP7 config for that block (GCB-033); full P&R outputs stay in the isolated
+P&R environment, out of git, per [[TKT-000]].)
 
 ## Workspaces
 
@@ -146,7 +147,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-030 | **Story 3 of the Measurement Epic (`TKT-018`)** — synth retiming enabled (one config line, RTL frozen): **WNS −442 → 0 ps, timing CLOSED**, cone broken into reg→reg segments — but retiming replicates 46 → **818 flops** (+63 % area, 57 slew DRVs). Points to a mid-tree pipelined RTL variant. See `GCB-030-FINDINGS.md` | done | **orange** |
 | GCB-031 | **Architecture-from-measurement (GCB-030 loop)** — mid-tree pipelined `gcb_max_reduce`: `REG_STAGES>0` now places its registers *between* tournament levels (genvar-elaborated segments), **~442 flops** (N=64, REG_STAGES=2) vs GCB-030 retiming's 818 — no register replication, combinational cells unchanged. `REG_STAGES=0` byte-identical; `K`-cycle latency contract preserved → **no consumer edits**; `test_compute_e2e.py` 40/40 bit-exact, `stall_count == 0`; Yosys 0.68 latch-free (+ `max_reduce_p2` bless). Physical re-measure is GCB-032 | done | green |
 | GCB-032 | **Story 4 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-031 mid-tree pipeline through the exact GCB-029 ASAP7 flow, **`SYNTH_RETIME_MODULES` unset**. **WNS 0.00 ps @ 1 ns, 0 setup violations, fmax 1.519 GHz — closes without retiming.** vs GCB-030 retiming: **372 flops (−54.5 %)**, synth area −29 %, power −23 %, wirelength −20 %, argmax cone intact; 38 max-slew DRVs remain (predicted 0 — falsified). 0 DRC. See `GCB-032-FINDINGS.md` + `eda/GCB-032/` | done | **orange** |
-| GCB-033 | **Consolidation** — retire `SYNTH_RETIME_MODULES` for `gcb_max_reduce` (superseded by the GCB-031/032 mid-tree pipeline); promote the GCB-032 config as the standing `eda/gcb_max_reduce/` P&R config; roll the GCB-027 → GCB-032 physical arc + transfer function into `gcb-wdm-transceiver/docs/PPA_burndown.md`; "Resolved" note on `GCB-030-FINDINGS.md`. No RTL change, no new flow run | open | pending |
+| GCB-033 | **Consolidation** — retired `SYNTH_RETIME_MODULES` for `gcb_max_reduce` (superseded by the GCB-031/032 mid-tree pipeline); promoted the GCB-032 config as the standing `eda/gcb_max_reduce/` P&R config; rolled the GCB-027 → GCB-032 physical arc + transfer function into `gcb-wdm-transceiver/docs/PPA_burndown.md`; "Resolved" note on `GCB-030-FINDINGS.md` + bless SUMMARY cross-link. Doc-only, no RTL change, no new flow run | done | green |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 

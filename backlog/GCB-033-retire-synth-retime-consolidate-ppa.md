@@ -2,8 +2,12 @@
 id: GCB-033
 title: "Consolidation — retire SYNTH_RETIME_MODULES for gcb_max_reduce, promote the GCB-032 mid-tree config as the standing P&R config, and roll the physical arc into docs/PPA_burndown.md"
 date_created: 2026-09-10
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 0.8
+  emergence: 0.0
 tags:
   - backlog
   - measurement-epoch
@@ -137,10 +141,85 @@ untouched. P&R env unchanged (config already in place; no tool / PDK edit).
 
 ---
 ## Execution Log
-*(To be populated during execution.)*
+
+**Executed 2026-09-10 · Release Engineer / Technical Program Manager ·
+session `01Rpa9VJGe7xypzp5FkukSco` · not committed.**
+
+No physical run, no RTL change, no P&R-env tool/PDK edit. Consolidation only.
+
+### `gcb-workspaces`
+
+* **`eda/gcb_max_reduce/{config.mk, constraint.sdc, README.md}`** (new) — the
+  standing, measurement-ticket-independent ASAP7 config = [[GCB-032]]'s:
+  `REG_STAGES 2` via `VERILOG_TOP_PARAMS`, **no `SYNTH_RETIME_MODULES`**,
+  deliberately-ugly recipe (`CORE_UTILIZATION=40`, `PLACE_DENSITY=0.55`,
+  `SKIP_LAST_GASP=1`). `config.mk` header rewritten from a GCB-032 snapshot
+  into a standing banner (closure path, GCB-032 validation numbers, the open
+  38-DRV item). `README.md` carries the GCB-027 → GCB-032 step table and the
+  reproduce recipe. Future Measurement-Epoch stories copy from here.
+* **`backlog/GCB-030-FINDINGS.md`** — a `> RESOLVED` block at the top: retiming
+  closes 1 ns but by 46 → 818 replication; [[GCB-031]] + [[GCB-032]] supersede
+  it; `SYNTH_RETIME_MODULES` retired; standing config pointer. The 46 → 818
+  measurement body is kept verbatim as the record of *why* the RTL path was
+  needed.
+* **`README.md`** — GCB-033 index row `done | green`; layout tree gains the
+  `GCB-033-*.md` ticket and the `eda/gcb_max_reduce/` standing-config dir.
+
+### `gcb-wdm-transceiver` (docs only — no RTL, no `.stat`, no manifest)
+
+* **`docs/PPA_burndown.md`** — the "Physical-measurement feedback" section
+  retitled `(GCB-027 → GCB-032)` and extended: the GCB-029 / GCB-030 / GCB-031
+  / GCB-032 step table, the **GCB-030 retiming → GCB-032 mid-tree**
+  transfer-function table (WNS / flops −54.5 % / synth area −29 % / power
+  −23 % / wirelength −20 % / `HAxp5` cone intact / max-slew DRVs 57 → 38 / DRC
+  0), the verdict, the standing-config pointer, and the open 38-DRV +
+  `OUTPUT="VALUE"` follow-ons. Per-block gate table gains a second
+  `gcb_max_reduce` row for `max_reduce_p2` (`REG_STAGES=2` mid-tree: 987 cells,
+  42 `$adff`, combinational cells unchanged). PDK-material-free — measurement
+  summary only, per [[TKT-000]] (precedent: [[GCB-028]] added this section).
+* **`sim/yosys068_bless/SUMMARY.md`** — one sentence on the `max_reduce_p2` row:
+  GCB-032 physically validated it (WNS 0.00 ps, 372 `DFFASRHQN`, 0 DRC),
+  `SYNTH_RETIME_MODULES` retired. `.stat` files unchanged.
+
+### Isolated P&R environment
+
+`~/eda/OpenROAD-flow-scripts/flow/designs/asap7/gcb_max_reduce/{config.mk,
+constraint.sdc}` synced to the standing `eda/gcb_max_reduce/` copy
+(`grep '^export SYNTH_RETIME'` → none). No ORFS / OpenROAD / Yosys / ASAP7
+tool or PDK change.
+
+### Verification
+
+| gate | result |
+|---|---|
+| `bash sim/lint.sh` | **exit 0**, 32 tops (RTL untouched) |
+| RTL repo diff | `docs/PPA_burndown.md` + `sim/yosys068_bless/SUMMARY.md` only — doc-only, no `.sv` / `.stat` / manifest |
+| cocotb | not re-run — no RTL or TB change (per ticket) |
+| `toolchain_manifest.json` | unchanged |
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution.)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `done | green`
+
+**Vector Summary:** `T = (spec +1.0, quality +0.8, emergence 0.0)`,
+`‖T‖₂ ≈ 1.28`. `telemetry_color: green` (argmax\|axis\| = spec, +X → Green).
+
+* **Spec +1.0** — the Green target met in full: standing
+  `eda/gcb_max_reduce/` config promoted (no `SYNTH_RETIME_MODULES`), the
+  GCB-027 → GCB-032 physical arc + transfer function rolled into
+  `docs/PPA_burndown.md`, `GCB-030-FINDINGS.md` marked resolved, the bless
+  SUMMARY cross-linked, the P&R env config synced. Retiming for this block is
+  now unambiguously retired across config, docs and findings.
+* **Quality +0.8** — Blue-grade tidy: the GCB-030 retiming *measurement* is
+  preserved verbatim (superseded, not deleted), every artifact cross-links, the
+  standing config is reusable (future stories copy it), and the diff is
+  doc-only with zero RTL / `.stat` / manifest churn. Not +1.0 only because the
+  ORFS design config still physically lives in the un-versioned P&R env — the
+  git record is a copy, not the source of truth.
+* **Emergence 0.0** — pure consolidation; no new capability.
+
+### Open follow-ons (own `GCB-###`, per [[GCB-032]]-FINDINGS)
+
+1. `SKIP_LAST_GASP = 0` slew-repair re-measure — clear the 38 max-slew DRVs.
+2. `OUTPUT = "VALUE"` — drop the 1 008-`HAxp5` argmax cone where unused.

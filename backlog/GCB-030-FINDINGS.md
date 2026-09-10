@@ -4,6 +4,16 @@
 Physical Design Engineer + Orange Team Auditor · 2026-09-10 ·
 session `01Rpa9VJGe7xypzp5FkukSco`
 
+> **RESOLVED — superseded by [[GCB-031]] + [[GCB-032]] (GCB-033).**
+> Retiming closes 1 ns but by replicating 46 → 818 flops. [[GCB-031]] moved the
+> pipeline into the RTL (register banks *between* tournament levels), and
+> [[GCB-032]] physically validated it: **WNS 0.00 ps @ 1 ns without
+> `SYNTH_RETIME_MODULES`**, at **372 flops** (−54.5 %), synth area −29 %, power
+> −23 %, argmax cone intact, 0 detailed-route DRC.
+> **`SYNTH_RETIME_MODULES` for `gcb_max_reduce` is retired**; the standing
+> ASAP7 config is `eda/gcb_max_reduce/config.mk`. The 46 → 818 replication
+> measurement below stands as the record of *why* the RTL approach was needed.
+
 **Yes — retiming closes 1 ns. But it does it by replicating the 46 pipeline
 flops 17.8× to 818, at +63 % cell area and 57 new max-slew DRVs.**
 
