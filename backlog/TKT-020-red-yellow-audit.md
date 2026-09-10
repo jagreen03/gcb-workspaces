@@ -293,13 +293,154 @@ Epic demo is scheduled.
 
 ---
 ## Execution Log
-*(Assessment only — no code/RTL change. Findings above are the deliverable.)*
+
+### Audit (assessment only — no code/RTL change)
 * **Auditor:** dual-persona (Red / Yellow), session `01Rpa9VJGe7xypzp5FkukSco`.
 * **Inputs reviewed:** `gcb_sram_sp1w1r.sv`, `gcb_tensor_operand_sram.sv`,
   `gcb_tensor_sram_controller.sv`, `gcb_max_reduce.sv`,
   `gcb_rx_digital_recombiner.sv` (+ dual-mode top), `cyclopter_scavenger.py`,
   `build_visuals.py`, `render/digitaljs_render.mjs`, Doc 09/12 telemetry + SRAM
   strategy.
+
+### R1 hotfix — SRAM X-state / write-coverage (Hardening Sprint, session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-09)
+
+**Status: R1 patched and verified at the RTL level.** `hardware-silicon`
+workspace; `gcb-wdm-transceiver` only. Not committed (Release Engineer to lock).
+
+**RTL patches** (all new logic guarded `` `ifdef SIMULATION `` → compiled out of
+`sim/lint.sh` and the `sv2v`→Yosys path; no frozen interface touched, no new
+port, no reset added to the macro):
+
+* `rtl/gcb_sram_sp1w1r.sv` — simulation-only power-up **poison** of `mem[]`.
+  4-state signoff sim: literal `{DW{1'bx}}` so an unwritten read propagates X.
+  Verilator (2-state, where `'x` folds to 0 and would re-hide the bug):
+  `` `ifdef VERILATOR `` → an address-dependent non-zero sentinel `~(DW'(i))`
+  (`0xFF…` at addr 0, then a ramp) so a never-written read is visibly wrong,
+  never a plausible zero operand.
+* `rtl/gcb_tensor_sram_controller.sv` — per-bank **write-coverage tracker** +
+  assertion. `a_cov[bank][lane][macro-addr]` / `b_cov[…]` bitmaps: cleared for
+  the non-resident (fill-target) bank on each load-request rising edge
+  (prime + steady-state prefetch), set on every accepted write beat with the
+  same `we` qualification and the exact `gcb_tensor_operand_sram` address math
+  (`sub*K_STEPS + k` for B). Combinational `a_rd_covered` / `b_rd_covered`
+  check all `GRID_DIM` lanes of the word the grid is addressing this cycle;
+  on any issued read beat (`advancing`) of an uncovered word a sticky
+  `cov_violation` latches, `cov_events` increments, and a non-stopping
+  `%Error TKT-020/R1 …` line prints. The same condition is also written as a
+  concurrent `assert property (advancing |-> a_rd_covered && b_rd_covered)`
+  with `disable iff (!rst_n)` — live on an event-driven signoff simulator
+  (Verilator `$stop`s on a failing SVA, so the Cocotb proof keys on the
+  `cov_violation` / `cov_events` flags instead).
+
+**Directed test** — `sim/cocotb/test_operand_sram.py` (+ new
+`sram_partial_load_tb_top.sv`, `Makefile.sram_partial`; the module now hosts
+two test sets selected by `GCB_SRAM_TB`). Tiny controller geometry
+`GRID_DIM=2, K_MAX=2, K_STEPS=4, N_SUBTILES=2, M_BANDS=2, N_PASSES=1`:
+
+* `partial_load_read_unwritten_hardfails` — the A loader writes only
+  `K_STEPS-1` of `K_STEPS` beats for `(band 0, row 0)` (omits `k=3`) but still
+  pulses `a_load_done`; B is fully loaded. Result: on the first grid read of
+  macro-addr 3 the guard fires — **`cov_violation=1`, `cov_events=2`,
+  `%Error TKT-020/R1 @78000 … A bank 1 maddr 3 covered=0` in the log** —
+  instead of the pre-fix silent `0`. **PASS.**
+* `full_load_no_coverage_violation` — conformant loader writes every address;
+  the full sequence completes, `done` pulses, `cov_violation=0`,
+  `cov_events=0` (no false positive). **PASS.**
+
+**Verification run (WSL, Verilator 5.032, cocotb 1.9.2):**
+
+| Check | Result |
+|---|---|
+| `make -f Makefile.sram_partial` | `TESTS=5 PASS=2 FAIL=0 SKIP=3` (2 controller tests pass; 3 array tests skip) |
+| `make -f Makefile.sram` (regression) | `TESTS=5 PASS=3 FAIL=0 SKIP=2` (3 array tests unchanged; 2 controller tests skip) |
+| `make -f Makefile.max_reduce` (regression) | `TESTS=5 PASS=5 FAIL=0` |
+| `make` / `dma_tb_top` (regression — instantiates the controller with `-DSIMULATION`) | `TESTS=2 PASS=2 FAIL=0`, coverage guard silent on the conformant flow |
+| `bash sim/lint.sh` | `lint OK`, exit 0 (28 tops; SIMULATION blocks invisible to lint) |
+| `sv2v` → Yosys `hierarchy -check` + `proc` + `check -assert` (all 3 modules) | OK — synth view unchanged (guarded blocks absent) |
+| Yosys `synth -flatten` + `select -assert-count 0 t:$dlatch/$dlatchsr/$sr` | latch-free |
+
+**Also wired:** the new harness into `sim/run_tb.sh` (guarded cocotb stanza,
+after the operand-SRAM one) and `.gitignore` (`sim_build_sram_partial/`,
+`results_sram_partial.xml`).
+
+**Files touched:** `gcb-wdm-transceiver/rtl/gcb_sram_sp1w1r.sv`,
+`rtl/gcb_tensor_sram_controller.sv`, `sim/cocotb/test_operand_sram.py`,
+`sim/cocotb/sram_partial_load_tb_top.sv` (new),
+`sim/cocotb/Makefile.sram_partial` (new), `sim/run_tb.sh`, `.gitignore`.
+
+### Y2 hotfix — presentation-environment hardening (Hardening Sprint, session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-09)
+
+**Status: Y2 patched and verified with two new presentation scripts.**
+`software-control` workspace; `gcb-dashboard` + `gcb-python-orchestrator`. Not
+committed (Release Engineer to lock).
+
+**Y2.1 / Y2.2 — silent-skip visuals → `gcb-dashboard/Makefile` (new) with a
+`doctor` preflight.** `make doctor` refuses to let a demo start on a broken
+render substrate: it exits non-zero (recipe `exit 1`; `make` surfaces it) with a
+coloured, readable `FAIL` line on any of —
+
+1. **`sv2v` / `yosys` / `node` not on `$PATH`** — the headless DigitalJS
+   pipeline can't run (the message points at the WSL toolchain).
+2. **`node_modules/` absent, or missing `node_modules/yosys2digitaljs` /
+   `node_modules/elkjs`** — tells the user to run `npm ci` (matches
+   `build_visuals.py::is_available`).
+3. **`outputs/` missing or empty of `*.svg`** — visuals never generated.
+4. **`outputs/` stale** — newest `*.sv` / `*.v` under the render-input dirs is
+   newer than the oldest generated SVG; prints the offending RTL file and the
+   lag in seconds, then fails.
+
+   *Discrepancy vs. the relayed prompt:* the prompt named
+   `../gcb-wdm-transceiver/rtl/` as the staleness source, but `build_visuals.py`
+   provably reads only `../gcb-rtl/rtl`, `../gcb-rtl/rtl/generated` and
+   `../gcb-photonic-qam-v2/rtl` (its `outputs/` are `greencoyote_*` +
+   `gcb_qam_*`, nothing from wdm-transceiver). Including wdm-transceiver/rtl in
+   the fatal check would false-`STALE` on every wdm RTL edit — e.g. today's R1
+   SRAM patch. The default `RTL_DIRS` is therefore the three real inputs;
+   `make doctor RTL_DIRS="… ../gcb-wdm-transceiver/rtl"` re-adds it if the
+   dashboard ever renders those tops.
+
+   *Verified (WSL, sv2v 0.0.12 / Yosys 0.52 / node 22.22):* clean tree →
+   `doctor: OK`, exit 0. Forced-fail paths all exit non-zero with the right
+   message — PATH without `sv2v`; `touch ../gcb-rtl/rtl/greencoyote_top.sv` →
+   `stale newest RTL: …/greencoyote_top.sv` → `FAIL … outputs/ is STALE`
+   (mtime restored after, `gcb-rtl` left clean). `make visuals` runs `doctor`
+   then `python3 build_visuals.py`.
+
+**Y2.3 / Y2.4 — ephemeral, git-divergent KG DB →
+`gcb-python-orchestrator/deploy/cyclopter/db_up.sh` (new).** One-click,
+repeatable, documented bring-up that uses the **committed, unmodified**
+migration — no more `/tmp` `pgserver` with a hand-patched `vector_norm()`
+`vec_norm` expression:
+
+1. resolves a Compose driver (`docker compose` v2 or `docker-compose` v1; loud
+   `die` with the no-Docker fallback if neither);
+2. `compose -f deploy/cyclopter/docker-compose.yml up -d`
+   (`pgvector/pgvector:pg16`, host `5433`); creates `.env` from `.env.example`
+   if absent so `load_telemetry_pg.py`'s DSN resolution matches;
+3. polls `docker inspect -f '{{.State.Health.Status}}'` until `healthy`
+   (90 s timeout, points at `compose … logs` on failure);
+4. **applies `migrations/001_pbg_telemetry.sql` verbatim** via
+   `docker exec -i cyclopter-db psql -v ON_ERROR_STOP=1 -f -` — the pg16 image
+   has full pgvector, so the Doc 09 `telemetry_vec[i]` STORED `vec_norm`
+   expression runs exactly as checked in;
+5. verifies `extension vector` + `to_regclass('pbg_telemetry')` +
+   `is_generated='ALWAYS'` on `vec_norm` + both HNSW indexes, `die`-ing if any
+   is absent;
+6. `--load` optionally runs `parse_pbg_telemetry.py` + `load_telemetry_pg.py`
+   (venv python preferred) for a full data + KNN bring-up; `--down` /
+   `--wipe` are the teardown modes.
+
+   Idempotent (`compose up -d` no-op if up; migration is all
+   `CREATE … IF NOT EXISTS`). *Verification limit:* this workstation has **no
+   Docker** (the very condition Y2.3 documents), so `db_up.sh` is verified by
+   `bash -n` (syntax clean) + line-by-line inspection + confirmed clean `die`
+   (exit 1) when `docker` is absent; the committed SQL it applies is the same
+   file `load_telemetry_pg.py` already applies successfully against pgvector.
+   `deploy/cyclopter/README.md` bring-up section updated to point at it.
+
+**Files touched:** `gcb-dashboard/Makefile` (new);
+`gcb-python-orchestrator/deploy/cyclopter/db_up.sh` (new),
+`deploy/cyclopter/README.md`.
 
 ---
 ## Telemetry & Evaluation
