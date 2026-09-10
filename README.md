@@ -56,7 +56,8 @@ gcb-workspaces/
     ├── GCB-028-max-reduce-pipeline-integration.md
     ├── GCB-029-max-reduce-physical-validation.md
     ├── GCB-029-FINDINGS.md                      ← GCB-027 vs GCB-029 transfer function
-    └── GCB-030-max-reduce-retiming-remeasure.md
+    ├── GCB-030-max-reduce-retiming-remeasure.md
+    └── GCB-030-FINDINGS.md                      ← retiming closes it, at 818 flops
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
@@ -138,7 +139,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — first unoptimized OpenROAD / ASAP7 pass of `gcb_max_reduce`: **TIMING-BOUND** (WNS −665 ps @ 1 ns; 619 µm²; 0 DRC). See `GCB-027-FINDINGS.md` + `eda/GCB-027/` | done | **orange** |
 | GCB-028 | **Architecture-from-measurement (GCB-027 loop, CLOSED)** — `gcb_max_reduce` now instantiated `REG_STAGES=2` inside `gcb_tile_requantize` (`MAXRED_REG_STAGES`, default 2) + operand alignment; `test_compute_e2e.py` still 40/40 bit-exact with `stall_count == 0`; latch-free on Yosys 0.68 | done | green |
 | GCB-029 | **Story 2 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-028 pipeline: same ASAP7 flow, `REG_STAGES=2`. Transfer function: **WNS −665 → −442 ps (+34 %)**, TNS −34 %, power −19 %, area +0.4 %; timing **still open** (output-only pipeline, no retiming). See `GCB-029-FINDINGS.md` | done | **orange** |
-| GCB-030 | **Story 3 of the Measurement Epic (`TKT-018`)** — enable synthesis register retiming (flow knob, RTL frozen) and re-measure `gcb_max_reduce` `REG_STAGES=2`: does retiming move the pipe regs into the tree and break the ~1.44 ns cone? GCB-029 → GCB-030 transfer function | open | pending |
+| GCB-030 | **Story 3 of the Measurement Epic (`TKT-018`)** — synth retiming enabled (one config line, RTL frozen): **WNS −442 → 0 ps, timing CLOSED**, cone broken into reg→reg segments — but retiming replicates 46 → **818 flops** (+63 % area, 57 slew DRVs). Points to a mid-tree pipelined RTL variant. See `GCB-030-FINDINGS.md` | done | **orange** |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 

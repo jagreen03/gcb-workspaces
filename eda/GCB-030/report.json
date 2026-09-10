@@ -1,0 +1,49 @@
+{
+  "_comment": "GCB-030 - EPIC TKT-018 Measurement Epoch Story 3, per TKT-000. Enable synthesis register retiming (ORFS SYNTH_RETIME_MODULES -> abc -dff -script abc_retime.script) and re-measure gcb_max_reduce REG_STAGES=2. EXACT same flow as GCB-029, ONE config line added: SYNTH_RETIME_MODULES = gcb_max_reduce. RTL frozen. Raw measurement.",
+  "schema": "gcb.eda.measurement/v1",
+  "ticket": "GCB-030",
+  "epic": "TKT-018",
+  "compares_against": "GCB-029",
+  "date": "2026-09-10",
+  "design": "gcb_max_reduce",
+  "params": "WIDTH=16 N_ELEMENTS=64 OUTPUT=BOTH REG_STAGES=2  (2 output pipeline stages, retimed by abc)",
+  "flow": {
+    "identical_to": "GCB-029 (same sv2v netlist, same constraint.sdc @ 1000 ps, same floorplan/place/route knobs, default recipe)",
+    "only_diff": "export SYNTH_RETIME_MODULES = gcb_max_reduce  -> ORFS synth.tcl runs: select gcb_max_reduce; opt -fast -full; memory_map; opt -full; techmap; abc -dff -script scripts/abc_retime.script (st; retime -v -o; retime -M 5 -v -o x3; map)",
+    "stages_completed": ["synth","floorplan","place","cts","route","fillcell","finish"],
+    "target_clock_ps": 1000
+  },
+  "transfer_function": {
+    "_note": "GCB-029 (REG_STAGES=2, NO retiming) -> GCB-030 (retiming ON)",
+    "wns_ps":                  {"gcb029": -442.09, "gcb030": 0.00,   "delta": 442.09, "result": "CLOSED - all setup paths MET"},
+    "tns_ps":                  {"gcb029": -9570.50,"gcb030": 0.00,   "delta": 9570.50},
+    "setup_violation_count":   {"gcb029": 22,      "gcb030": 0,      "delta": -22},
+    "worst_slack_ps":          {"gcb029": -442.09, "gcb030": 31.24,  "note": "tightest path now reg->reg through a tree segment (_09012_ -> out_valid$_DFF); +31 ps"},
+    "max_slew_violation_count":{"gcb029": 0,       "gcb030": 57,     "delta": 57, "note": "NEW DRV - retiming's 818-flop fan-out on data/reset nets, not cleaned by the default (no-last-gasp) recipe"},
+    "max_fanout_violations":   {"gcb029": 0,       "gcb030": 0},
+    "max_cap_violations":      {"gcb029": 0,       "gcb030": 0},
+    "hold_violation_count":    {"gcb029": 0,       "gcb030": 0},
+    "synth_cell_area_um2":     {"gcb029": 621.41,  "gcb030": 1012.83,"delta": 391.42, "delta_pct": 63.0},
+    "synth_sequential_area_um2":{"gcb029": 17.44,  "gcb030": 310.09, "delta_pct_of_chip": {"gcb029": 2.81, "gcb030": 30.62}},
+    "flop_count_DFFASRHQN":    {"gcb027": 0, "gcb029": 46, "gcb030": 818, "factor_vs_gcb029": 17.8, "note": "retiming REPLICATES a register pushed backward through a fan-out node; the 2 output pipe stages fan out across the whole 64-wide tournament tree -> 46 -> 818"},
+    "synth_cell_count":        {"gcb029": 6230,    "gcb030": 8208,   "delta": 1978},
+    "HAxp5_count":             {"gcb029": 1008,    "gcb030": 827,    "delta": -181, "note": "some index arithmetic absorbed/re-optimised once registers land mid-datapath"},
+    "post_route_design_area_um2":{"gcb029": 884,   "gcb030": 1137,   "delta": 253},
+    "post_route_utilization_pct":{"gcb029": 57,    "gcb030": 45},
+    "power_total_W":           {"gcb029": 0.0178,  "gcb030": 0.0122, "delta": -0.0056, "delta_pct": -31.5, "note": "combinational power 17.4->8.6 mW - shorter segments glitch less; +sequential 2.44 mW + clock 1.12 mW for the 818-flop tree"},
+    "routed_wirelength_um":    {"gcb029": 24927,   "gcb030": 29069,  "delta_pct": 16.6},
+    "via_count":               {"gcb029": 83025,   "gcb030": 84232},
+    "drc_violations":          {"gcb029": 0,       "gcb030": 0},
+    "antenna_violations":      {"gcb029": 0,       "gcb030": 0},
+    "cts":                     {"gcb029": "46 sinks, minimal tree", "gcb030": "818 clock sinks, tree depth 2, 41 clusters - a real clock tree now exists"}
+  },
+  "critical_path": {
+    "cone_broken": true,
+    "worst_path_type": "register -> register through a SEGMENT of the tournament tree (e.g. _09012_ -> out_valid$_DFF_PN0_, +31.24 ps slack). No longer input -> max_val combinational.",
+    "async_reset_barrier": "NO - abc retimed straight through the DFFASRHQN async-set/reset flops; all 818 result flops are DFFASRHQN.",
+    "new_paths": "reg->reg tree segments (MET), plus async recovery/removal checks on rst_n -> the retimed flops (MET, +131 to +567 ps)."
+  },
+  "orange_verdict": "Retiming CLOSES 1 ns for gcb_max_reduce @ REG_STAGES=2 (WNS -442 -> 0 ps, 22 -> 0 setup violations, cone broken into reg->reg segments) - it does move the output pipe registers up into the tree. BUT the cost is steep: retiming REPLICATES the 46 flops 17.8x to 818 (register duplication across the 64-wide tree fan-out), +63% cell area, +30 pts sequential-area fraction, +17% wirelength, and 57 NEW max-slew DRVs. Power drops 31% (shorter combinational segments). The GCB-029-falsified assumption is re-validated WITH a large caveat: retiming works but at a register/area/DRV cost that says the pipeline should be expressed in the RTL (mid-tree cuts), not synthesised by replication.",
+  "decision": "Retiming is a valid path but the 818-flop / +63%-area / 57-slew-DRV cost for a shared 3-site primitive argues for hypothesis 2 (a mid-tree pipelined gcb_max_reduce RTL variant: REG_STAGES as tree-cut count -> ~2xWIDTH flops, timing closes without replication). File that as GCB-###. If the 818 flops are acceptable, the alternative is a small GCB-### to set SYNTH_RETIME_MODULES in the shared flow config + a slew-repair pass (SKIP_LAST_GASP=0) and re-measure the DRV/area.",
+  "infra": "Same as GCB-027/029: 'make synth' serial then '-j 2'; kepler-formal LD_LIBRARY_PATH -> uv CPython 3.12.14 shim (read-only). RTL Baseline drift tripwire after the run: PASS (manifest diff empty, sim/lint.sh exit 0, R1 cov_violation=1)."
+}
