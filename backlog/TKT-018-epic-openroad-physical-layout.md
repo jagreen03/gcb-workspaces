@@ -1,6 +1,6 @@
 ---
 id: TKT-018
-title: "EPIC — OpenROAD physical layout: push the verified SV-2017 logic to a 5nm-class GDSII"
+title: "EPIC — OpenROAD physical layout (MEASUREMENT EPOCH): extract silicon feedback on gcb_max_reduce before optical scale-up"
 date_created: 2026-09-09
 status: open
 telemetry_color: pending
@@ -10,20 +10,49 @@ tags:
   - eda
   - physical-design
   - gdsii
+  - measurement-epoch
 ---
 
 # Objective
 
-Stand up the **physical-synthesis flow** that carries GreenCoyote-Bay's
-lint-clean, Yosys-elaborated SV-2017 down to a manufacturable **5nm-class GDSII**
-with a signed-off timing / area / power report. This Epic owns the system
-boundary **RTL freeze set → Yosys synthesis → OpenROAD (floorplan, place, CTS,
-route) → DRC / LVS signoff → GDSII + PPA report**, using an open 5nm-class
-enablement (ASAP7 as the open stand-in for a 5nm node; the flow is
-PDK-parameterised so a real 5nm PDK drops in later). It builds on the same
-`sv2v`→Yosys front end already trusted for elaboration in `gcb-wiki/10`, and
-spawns per-block sub-stories (SDC generation, floorplan config, CTS recipe, DRC
-waiver policy, the PPA regression).
+> **Rescoped 2026-09-10 by [[TKT-000]] (Orange Team epoch guidance —
+> "Physical Reality First").** This Epic is now a **Measurement Epoch**, not a
+> tape-out effort. Its job is to confront the functionally-verified RTL
+> (TKT-001…017: bit-exact math, 0 stalls, peak MAC rate) with physical reality
+> and read the numbers *before* [[TKT-019]] commits optical-transport decisions
+> (wavelength count, serialization width, PHY area) that depend on how much
+> digital area / power / timing headroom actually exists.
+
+**Deliverable of the epoch:** a single **deliberately unoptimized** pass of the
+smallest fully-verified macro — **`gcb_max_reduce`** (TKT-016) — through the
+default OpenROAD-flow-scripts / ASAP7 flow, producing:
+
+* cell area + instance count,
+* `WNS` / `TNS` at a stated clock,
+* estimated power,
+* routing congestion / utilization,
+* DRC violation classes,
+* `report.json` + `floorplan.png`,
+* **a written interpretation** feeding TKT-019 and any
+  architecture-from-measurement tickets.
+
+A negative slack, a congested route, an oversized macro are **successful
+measurements**, not failures (TKT-000). A timing-closed, DRC-clean GDSII is
+**explicitly not required** for this epoch — no floorplan hand-optimization, no
+timing-driven synth sweeps, no congestion ECOs, no clock relaxation to fake
+`WNS ≥ 0`. Default recipe, one block, once.
+
+The full **physical-synthesis flow** still described below — Yosys synthesis →
+OpenROAD (floorplan, place, CTS, route) → DRC / LVS → GDSII + PPA report,
+ASAP7-parameterised so a real 5nm PDK drops in later — is the *vehicle* for the
+measurement, and remains the shape of the eventual tape-out Epic; but a
+**manufacturable 5nm-class GDSII with a signed-off report is deferred** to a
+later Epic planned *from* this one's numbers. It builds on the same `sv2v`→Yosys
+front end trusted for elaboration in `gcb-wiki/10`, run in the **isolated P&R
+environment** the [[TKT-000]] toolchain split defines (never in the locked RTL
+Baseline), and spawns per-block sub-stories (SDC generation, floorplan config,
+CTS recipe, DRC waiver policy, the PPA regression) as the measurement widens
+past `gcb_max_reduce`.
 
 ## "Product Ready for Presentation" — PBG analysis
 

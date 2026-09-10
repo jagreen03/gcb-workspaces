@@ -23,6 +23,7 @@ gcb-workspaces/
 ├── software-control.code-workspace       host stack + Python orchestrator
 ├── architecture-doctrine.code-workspace  spec, wiki, papers, grants, this repo
 └── backlog/
+    ├── TKT-000-orange-team-epoch-guidance.md   ← strategic doctrine (Physical Reality First)
     ├── TKT-001-netlistsvg-chip-scale-rendering.md
     ├── TKT-002-opcode-dispatcher-wiring.md
     ├── TKT-003-tensor-memory-addressing.md
@@ -100,6 +101,10 @@ Each `backlog/TKT-NNN-*.md` follows a fixed template:
     architecture.
   - **Red** — brittle technical debt, high-maintenance, likely to regress.
   - **Light-gray** — low-signal, deferrable, or accept-the-limitation.
+  - **Orange** *(PBG-O, [[TKT-000]])* — Physical Falsifiability: the deliverable's
+    worth is a **measurement that can contradict an architectural assumption**
+    (area, timing, congestion, power, DRC). Orthogonal to the R³ PBG axes; a
+    "bad" number is a *positive* Orange result.
 - **The "Green" Target** — the acceptance definition for a Green outcome.
 - **Execution Log** — populated during execution (agent id, commands, artifacts).
 - **Telemetry & Evaluation** — populated post-execution (final state, vector
@@ -112,6 +117,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 
 | Ticket | Title | Status | Color |
 |---|---|---|---|
+| **TKT-000** | **Orange Team epoch guidance** — Physical Reality First; the RTL/P&R toolchain split; introduces the **Orange** (PBG-O = Physical Falsifiability) grade | done | **orange** |
 | TKT-001 | Migrate RTL schematic rendering off netlistsvg to a headless chip-scale layout engine | done | green |
 | TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports | done | green |
 | TKT-003 | Widen tensor-memory addressing past 4 GiB with a formal translation layer | done | green |
@@ -129,7 +135,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-015 | Bit-plane Tx mapper doctrine — document the INT4↔optical encoding TKT-014 found undocumented | done | green |
 | TKT-016 | Shared gcb_max_reduce macro — one verified max/argmax primitive for QAM slicing and softmax | done | green |
 | TKT-017 | EPIC — Compute execution units: verified INT4 matrix-multiply tiles between the SRAM macros and the Softmax/QAM blocks (Stories TKT-022–025; e2e proven at 4096 MAC/cycle, 0 read stalls) | done | green |
-| TKT-018 | EPIC — OpenROAD physical layout: push the verified SV-2017 logic to a 5nm-class GDSII | open | pending |
+| TKT-018 | EPIC — OpenROAD physical layout (**Measurement Epoch**, per TKT-000): extract area / timing / congestion / power / DRC on `gcb_max_reduce` — deliberately unoptimized — before optical scale-up | open | pending |
 | TKT-019 | EPIC — Optical WDM transport: scale the WDM PHY and transceiver logic on the bitplane doctrine | open | pending |
 | TKT-020 | Red/Yellow foundation audit — adversarial + tech-debt review of the locked baseline before the Epics | open | pending |
 | TKT-021 | OpenROAD physical-design toolchain — from-source compilation on a constrained WSL2 host (**unblocks EPIC TKT-018**) | done | green |
