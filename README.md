@@ -47,7 +47,8 @@ gcb-workspaces/
     ├── TKT-021-openroad-wsl-toolchain-compilation.md
     ├── TKT-022-mac-tile-array.md
     ├── TKT-023-tile-requantize.md
-    └── TKT-024-operand-staging.md
+    ├── TKT-024-operand-staging.md
+    └── TKT-025-compute-e2e-integration.md
 ```
 
 ## Workspaces
@@ -135,6 +136,7 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-022 | **Story 1 of EPIC TKT-017** — `gcb_mac_tile_array`: verified INT4 MAC tile array (SRAM operands → dot-product grid → wide accumulators) | done | green |
 | TKT-023 | **Story 2 of EPIC TKT-017** — `gcb_tile_requantize`: block-float requantization of the INT32 MAC tile to INT4/INT8 via the frozen `gcb_max_reduce` | done | green |
 | TKT-024 | **Story 3 of EPIC TKT-017** — operand staging: the SRAM-read-port → MAC-grid staging / broadcast layer (`gcb_operand_stage`) | done | green |
+| TKT-025 | **Story 4 (capstone) of EPIC TKT-017** — end-to-end integration TB: one real `gcb-wiki/06` tile through SRAM → stage → MAC → requantize → softmax hand-off, prints `MATCH` / `cycles/MAC` / `0 stalls` | open | pending |
 
 **Epic linkage:** TKT-021 is an out-of-band enablement ticket for **EPIC
 TKT-018** (OpenROAD physical layout) — it provisions the P&R / signoff back end
@@ -143,7 +145,10 @@ being delivered as a fan of Green sub-stories: **TKT-022** (Story 1) — the INT
 MAC tile array on the frozen SRAM read port; **TKT-023** (Story 2) — the INT32 →
 INT4/INT8 block-float requantize stage, the third consumer of the TKT-016
 `gcb_max_reduce` primitive; **TKT-024** (Story 3) — the operand-staging /
-broadcast layer between the SRAM read port and the MAC grid (integrate the
-existing `gcb_tensor_broadcast_fabric` or build the minimal adapter). TKT-022
-carried the Yellow-Team AI check that re-pinned the RTL toolchain after
-TKT-021's WSL changes; TKT-023 and TKT-024 inherit that pinned manifest.
+broadcast layer between the SRAM read port and the MAC grid; **TKT-025**
+(Story 4, capstone) — the end-to-end integration TB + `make` artifact that runs
+one real `gcb-wiki/06` tile through the full path and prints
+`MATCH` / `cycles/MAC` / `0 read stalls`. TKT-025 Green lets EPIC TKT-017
+itself be graded. TKT-022 carried the Yellow-Team AI check that re-pinned the
+RTL toolchain after TKT-021's WSL changes; TKT-023/024/025 inherit that pinned
+manifest.
