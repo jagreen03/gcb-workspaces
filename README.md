@@ -43,7 +43,9 @@ gcb-workspaces/
     ├── TKT-017-epic-compute-execution-units.md
     ├── TKT-018-epic-openroad-physical-layout.md
     ├── TKT-019-epic-optical-wdm-transport.md
-    └── TKT-020-red-yellow-audit.md
+    ├── TKT-020-red-yellow-audit.md
+    ├── TKT-021-openroad-wsl-toolchain-compilation.md
+    └── TKT-022-mac-tile-array.md
 ```
 
 ## Workspaces
@@ -127,3 +129,12 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 | TKT-018 | EPIC — OpenROAD physical layout: push the verified SV-2017 logic to a 5nm-class GDSII | open | pending |
 | TKT-019 | EPIC — Optical WDM transport: scale the WDM PHY and transceiver logic on the bitplane doctrine | open | pending |
 | TKT-020 | Red/Yellow foundation audit — adversarial + tech-debt review of the locked baseline before the Epics | open | pending |
+| TKT-021 | OpenROAD physical-design toolchain — from-source compilation on a constrained WSL2 host (**unblocks EPIC TKT-018**) | done | green |
+| TKT-022 | **Story 1 of EPIC TKT-017** — `gcb_mac_tile_array`: verified INT4 MAC tile array (SRAM operands → dot-product grid → wide accumulators) | open | pending |
+
+**Epic linkage:** TKT-021 is an out-of-band enablement ticket for **EPIC
+TKT-018** (OpenROAD physical layout) — it provisions the P&R / signoff back end
+that Epic's sub-stories build on. TKT-022 is **Story 1 of EPIC TKT-017**
+(compute execution units); it carries a Yellow-Team AI check gating execution on
+re-verification of the locked RTL toolchain after TKT-021's WSL environment
+changes.
