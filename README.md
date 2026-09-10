@@ -57,7 +57,8 @@ gcb-workspaces/
     ├── GCB-029-max-reduce-physical-validation.md
     ├── GCB-029-FINDINGS.md                      ← GCB-027 vs GCB-029 transfer function
     ├── GCB-030-max-reduce-retiming-remeasure.md
-    └── GCB-030-FINDINGS.md                      ← retiming closes it, at 818 flops
+    ├── GCB-030-FINDINGS.md                      ← retiming closes it, at 818 flops
+    └── GCB-031-max-reduce-midtree-pipeline.md   ← RTL response: mid-tree pipeline cuts (no retiming)
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-027/`; full P&R outputs stay in the isolated P&R
@@ -140,6 +141,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-028 | **Architecture-from-measurement (GCB-027 loop, CLOSED)** — `gcb_max_reduce` now instantiated `REG_STAGES=2` inside `gcb_tile_requantize` (`MAXRED_REG_STAGES`, default 2) + operand alignment; `test_compute_e2e.py` still 40/40 bit-exact with `stall_count == 0`; latch-free on Yosys 0.68 | done | green |
 | GCB-029 | **Story 2 of the Measurement Epic (`TKT-018`)** — physical validation of the GCB-028 pipeline: same ASAP7 flow, `REG_STAGES=2`. Transfer function: **WNS −665 → −442 ps (+34 %)**, TNS −34 %, power −19 %, area +0.4 %; timing **still open** (output-only pipeline, no retiming). See `GCB-029-FINDINGS.md` | done | **orange** |
 | GCB-030 | **Story 3 of the Measurement Epic (`TKT-018`)** — synth retiming enabled (one config line, RTL frozen): **WNS −442 → 0 ps, timing CLOSED**, cone broken into reg→reg segments — but retiming replicates 46 → **818 flops** (+63 % area, 57 slew DRVs). Points to a mid-tree pipelined RTL variant. See `GCB-030-FINDINGS.md` | done | **orange** |
+| GCB-031 | **Architecture-from-measurement (GCB-030 loop)** — mid-tree pipelined `gcb_max_reduce`: `REG_STAGES>0` places its pipeline registers *between* tournament-tree levels by design, so 1 ns closes with **no retiming** at ~tens of flops (not 818). `REG_STAGES=0` bit/cycle-identical; latency contract preserved → **no consumer edits** (incl. `gcb_tile_requantize` `MAXRED_REG_STAGES`). Physical re-measure is the GCB-032 follow-on | open | pending |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
