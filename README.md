@@ -49,7 +49,9 @@ gcb-workspaces/
     ├── TKT-022-mac-tile-array.md
     ├── TKT-023-tile-requantize.md
     ├── TKT-024-operand-staging.md
-    └── TKT-025-compute-e2e-integration.md
+    ├── TKT-025-compute-e2e-integration.md
+    ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
+    └── GCB-027-max-reduce-physical-measurement.md
 ```
 
 ## Workspaces
@@ -113,7 +115,25 @@ Each `backlog/TKT-NNN-*.md` follows a fixed template:
 Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 `telemetry_color` (`pending` until the work is graded).
 
-### Index
+### GCB-### Namespace (current)
+
+The enterprise Jira-style project key. **All work from `GCB-026` (2026-09-10)
+forward uses the `GCB-###` prefix**, continuing the running counter. The legacy
+`TKT-###` tickets below are the immutable Digital Compute Epoch record — not
+renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
+`TKT-019` keep their numbers; their child stories from `GCB-027` on are
+`GCB-###`.
+
+| Ticket | Title | Status | Color |
+|---|---|---|---|
+| GCB-026 | Namespace migration — deprecate the legacy `TKT-###` prefix, adopt the enterprise `GCB-###` project key | done | blue |
+| GCB-027 | **Story 1 of the Measurement Epic (`TKT-018`)** — push `gcb_max_reduce` through the isolated OpenROAD / ASAP7 flow, deliberately unoptimized, for the first physical `report.json` / `floorplan.png` | open | pending |
+
+### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
+
+Immutable. `TKT-000` is the Physical Reality Epoch boundary marker;
+`TKT-001 … TKT-025` are the Digital Compute Epoch (functional verification,
+closing at 4096 MAC/cycle / 0 stalls — EPIC `TKT-017`).
 
 | Ticket | Title | Status | Color |
 |---|---|---|---|
