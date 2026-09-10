@@ -2,8 +2,12 @@
 id: TKT-024
 title: "Story 3 of EPIC TKT-017 — operand staging: the SRAM-read-port → MAC-grid staging / broadcast layer"
 date_created: 2026-09-10
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: green
+telemetry:
+  spec: 1.0
+  quality: 1.0
+  emergence: 0.0
 tags:
   - backlog
   - rtl
@@ -195,10 +199,137 @@ as a gate.
 
 ---
 ## Execution Log
-*(To be populated during execution.)*
+
+### 2026-09-10 (session 01Rpa9VJGe7xypzp5FkukSco) — Lead Hardware Engineer
+
+* **Toolchain pre-check.** Manifest diff (`sim/toolchain_manifest.json`) **empty** —
+  all seven tools match the TKT-022 pin. No Yellow-Team re-gate.
+
+* **Assessment — Path B.** `gcb_tensor_broadcast_fabric.sv` does **not** fit the
+  `gcb_mac_tile_array` input contract, so the minimal adapter was built:
+  * the fabric emits `NUM_CORES` **per-core unpacked arrays**
+    (`core_valid` / `core_a_flat` / `core_b_flat [NUM_CORES]` — 256
+    already-materialised broadcast feeds for the *optical QAM* array), not the
+    two **packed** `a_row_bus` / `b_col_bus` buses + single `beat_valid` the INT4
+    MAC grid consumes. Feeding the grid from it would mean re-collapsing 256
+    feeds to `GRID_DIM + GRID_DIM` vectors — a net loss.
+  * it has only `REG_OUT ∈ {0,1}` (no `STAGE_REGS` 0..N);
+  * it is locked to `GRID_DIM² == NUM_CORES` (no PE grid wider than the SRAM
+    lane count);
+  * its `sram_rdata` packing (`[r*VEC_W +: VEC_W]` A, `[GRID_DIM*VEC_W + c*VEC_W
+    +: VEC_W]` B) **does** match the controller and the new module — mirrored,
+    not changed. `gcb_tensor_broadcast_fabric.sv` is untouched.
+
+* **`gcb-wdm-transceiver/rtl/gcb_operand_stage.sv`** (NEW, ~170 lines).
+  Parameters: `GRID_DIM` (SRAM lanes/side), `GRID_M`, `GRID_N` (PE grid,
+  multiples of `GRID_DIM`), `K_MAX`, `OPND_W`, `STAGE_REGS` (0 = transparent),
+  `B_RESIDENT` (0 default), `B_DEPTH`. No literal; `initial` guards on
+  `GRID_M/GRID_N % GRID_DIM` and `>= GRID_DIM`.
+  * **bus decode** → `a_lane[GRID_DIM]` / `b_lane[GRID_DIM]`;
+  * **broadcast fan-out** → PE row `i` ← `a_lane[i / (GRID_M/GRID_DIM)]`,
+    PE col `j` ← `b_lane[j / (GRID_N/GRID_DIM)]` (identity when
+    `GRID_* = GRID_DIM`) into the packed `a_row_bus` / `b_col_bus`;
+  * **`STAGE_REGS` skew** — a valid-gated pipe: `valid` always shifts, the
+    operand planes are captured only on a real beat, so a stall bubble leaves the
+    planes **holding their last value** and no spurious `beat_valid` reaches the
+    MAC accumulators;
+  * **`B_RESIDENT`** — a `B_DEPTH`-entry RF: `b_capture && sram_valid` writes the
+    broadcast B plane at `b_addr`; `b_replay` sources `b_col_bus` from the RF
+    instead of live SRAM (forward-compat for a controller variant that streams B
+    once per pass). Zero cost when `B_RESIDENT = 0` (generate not instantiated).
+  * Consumes **only** `sram_valid` + `sram_rdata`; drives `gcb_mac_tile_array` on
+    its existing `beat_valid` / `a_row_bus` / `b_col_bus` contract, unchanged.
+
+* **Unit proof** — `sim/cocotb/operand_stage_tb_top.sv` (four instances:
+  transparent, `STAGE_REGS=2`, 8×8-from-4-lane broadcast, `B_RESIDENT` `B_DEPTH=4`)
+  + `test_operand_stage.py` + `Makefile.operand_stage`: **`TESTS=1 PASS=1
+  FAIL=0`**. (a) transparent output == the raw controller A/B halves; (b)
+  `STAGE_REGS=2` matches an RTL-mirrored valid-gated pipe **through a stall
+  bubble** and drains 4-in/4-out; (c) `k·GRID_DIM = 2` fan-out puts lane `i//2`
+  on PE row/col `i`; (d) `beat_valid` low + operand planes held through a stall;
+  (e) `B_RESIDENT` replays the captured B sets while live A still passes through.
+
+* **Chain integration proof** — `sim/cocotb/stage_mac_requant_chain_tb_top.sv`
+  (frozen SRAM controller → **`gcb_operand_stage` (STAGE_REGS=2)** →
+  `gcb_mac_tile_array` → `gcb_tile_requantize`) + `test_stage_mac_requant.py` +
+  `Makefile.stage_mac_requant`: **`TESTS=1 PASS=1 FAIL=0`**. 5 INT4 matmuls
+  (directed + 4 random seeds) × 4 output tiles = **20 requantized blocks, every
+  `q_tile` / `q_scale` / `q_clip` bit-exact** against the NumPy block-float
+  golden — inserting the stage adds latency only.
+
+* **`gcb_tile_requantize.sv` fix (found by this chain test).** The
+  `stage_mac_requant` chain surfaced a one-cycle lag in `q_clip`: the sticky
+  flag was registered-only, so a reader sampling `q_clip` alongside `q_valid`
+  missed the **first** clipping tile by a cycle. Changed to
+  `q_clip = q_clip_q | (in_valid & any_clip_c)` — asserted the same cycle the
+  qualifying beat is presented, still held sticky until `soft_clear`. The
+  TKT-023 chain TB (`test_mac_requant_chain.py`) and the new TKT-024 chain TB
+  were updated to model `q_clip` as sticky **across** tiles (accumulating the
+  per-tile reference); the TKT-023 unit TB already `soft_clear`s per vector so
+  it was unaffected. All cocotb suites still **`PASS FAIL=0`**.
+
+* **`bash sim/lint.sh`** → **exit 0**, 34 tops (`gcb_operand_stage` added to the
+  RTL list and the top loop). Verilator-5 `-Wall` clean at the repo bar;
+  `PINCONNECTEMPTY` avoided by never leaving a `gcb_max_reduce`/child pin open
+  — n/a here (the stage instantiates nothing) — and by `_unused` guards on the
+  `B_RESIDENT=0` / `STAGE_REGS=0` idle inputs.
+
+* **`sv2v`→Yosys 0.68 elaboration** — `gcb_operand_stage` (`chparam` GRID_DIM=4,
+  8×8, `STAGE_REGS=2`, `B_RESIDENT=1`, `B_DEPTH=8`): `check -assert` **0
+  problems**; `select -assert-count 0 t:$dlatch t:$dlatchsr t:$sr` clean
+  (**latch-free**). `gcb_tile_requantize` re-blessed after the `q_clip` change —
+  still 0 problems, latch-free. `stat` + `SUMMARY.md` updated under
+  `sim/yosys068_bless/`.
+
+* **Artifacts Touched:**
+  * `rtl/gcb_operand_stage.sv` (new); `rtl/gcb_tile_requantize.sv` (q_clip
+    one-line fix).
+  * `sim/cocotb/{operand_stage_tb_top.sv, test_operand_stage.py,
+    Makefile.operand_stage, stage_mac_requant_chain_tb_top.sv,
+    test_stage_mac_requant.py, Makefile.stage_mac_requant}` (new);
+    `test_mac_requant_chain.py` (sticky-clip model).
+  * `sim/yosys068_bless/{operand_stage.stat, tile_requantize.stat, SUMMARY.md}`;
+    `sim/toolchain_manifest.json` regression-gate list.
+  * `sim/lint.sh`, `sim/run_tb.sh`, `.gitignore` — wired in the new top / two
+    cocotb stanzas / build dirs.
+  * `mac_tile_array_tb_top.sv` (TKT-022) left as-is — the direct-wire migration
+    to route through the stage is demonstrated by the new
+    `stage_mac_requant_chain_tb_top.sv`; `gcb_mac_tile_array.sv` untouched.
+  * `gcb_tensor_broadcast_fabric.sv` untouched (assessed, does not fit).
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution.)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `green`
+
+**Vector Summary:** `T = (spec +1.0, quality +1.0, emergence 0.0)`,
+`‖T‖₂ = √2 ≈ 1.414`.
+
+* **X — Specification `+1.0`.** Every Green-Target item met: the fabric was
+  assessed first (Path B, with the precise reason recorded); one fully
+  parameterised SV-2017 staging module — bus decode, `STAGE_REGS` skew,
+  `k·GRID_DIM` broadcast, stall gating, `B_RESIDENT` replay, no literal; a unit
+  TB proving all five behaviours incl. the stall bubble against an RTL-mirrored
+  model; a chain integration TB proving the stage changes nothing functionally
+  (20 blocks bit-exact end-to-end, latency-only); `sim/lint.sh` exit 0 with the
+  new top wired into `sim/lint.sh` and the guarded `sim/run_tb.sh` stanzas;
+  `sv2v`→Yosys 0.68 elaboration clean and latch-free; a `stat` row for the
+  TKT-017 PPA burn-down; `gcb_mac_tile_array` and the frozen read port
+  untouched.
+* **Y — Quality `+1.0`.** Blue-grade: the stall-hold is a genuine valid-gated
+  pipe (a bubble does not advance the planes), proven against an RTL-mirrored
+  Python model rather than a hand-wave; the broadcast is a clean block map
+  usable by a future grid-widening story as a parameter change; `B_RESIDENT` is
+  zero-cost when off. The chain test caught and fixed a real one-cycle
+  `q_clip` visibility bug in the already-committed `gcb_tile_requantize`
+  (cross-story, honestly logged), and the TKT-023 chain TB was tightened to the
+  correct sticky-across-tiles semantics. Strict-`-Wall` lint-clean; latch-free
+  on the blessed Yosys 0.68.
+* **Z — Emergence `0.0`.** Third sub-story of the compute Epic — target-
+  architecture plumbing that unblocks a PE grid wider than the SRAM lane count.
+  Not net-new platform capability; the ticket claimed no Purple lean.
+
+Dominant spoke: `|x| = |y| = 1.0`; tie-break `X > Y > Z` → `X+` → **Green**.
+Cyclopter scavenger (TKT-013) ingests this vector on close; EPIC TKT-017 now has
+three Green child data points (TKT-022 MAC array, TKT-023 requantize, TKT-024
+operand staging).
