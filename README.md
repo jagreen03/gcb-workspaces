@@ -64,7 +64,8 @@ gcb-workspaces/
     ├── GCB-033-retire-synth-retime-consolidate-ppa.md  ← retiming retired, PPA burn-down rolled up
     ├── GCB-034-optical-transport-contract.md    ← EPIC TKT-019 Story 1: what the optical layer must carry (provisional; open)
     ├── GCB-034-LOOK-AROUND.md                   ← orthogonal-discovery pass: constraints D4 full-K-local silently accepts
-    └── GCB-035-optical-line-rate-derivation.md  ← TKT-019 V1+V2: Alt A ≈2.4 Gbps vs Alt B ≈17.9·P Gbps
+    ├── GCB-035-optical-line-rate-derivation.md  ← TKT-019 V1+V2: Alt A ≈2.4 Gbps vs Alt B ≈17.9·P Gbps
+    └── GCB-036-out-w-numeric-consequences.md    ← TKT-019 V3: INT4 fails the 25 dB budget → D2 provisionally INT8
 ```
 (Physical-measurement artifacts — `report.json`, layout PNGs, ORFS config, curated
 reports — live under `eda/GCB-0NN/` per run; `eda/gcb_max_reduce/` is the standing
@@ -154,6 +155,7 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | GCB-034 | **Story 1 of EPIC `TKT-019` (Optical WDM Transport)** — Orange-**method** data-movement contract (authored under it; *not* a PBG grade). From the ASAP7 measurements: what leaves a compute tile (→ the requantised INT4 `q_tile` + `q_scale`, ~140 B), width/cadence at 1 GHz (one tile per `K_STEPS` = 512 cycles → ~0.27 GB/s, ~1000× below the 256 GB/s electrical operand bus), continuity (deterministically periodic), reduction (`K_TOTAL:1` + `32b:4b` electrical). **Provisional decisions D1 = POST-REQUANTIZATION, D4 = FULL-K LOCAL REDUCTION** (D2/D3 open) — a testable hypothesis, *not* a fact. **Purple candidate:** the electrical compute domain as an enormous compression boundary. Stays **`open`** until EPIC `TKT-019` runs the falsification pass. See `GCB-034-LOOK-AROUND.md` | open | pending |
 | GCB-034-LOOK-AROUND | **Orthogonal-discovery pass on GCB-034** — what architectural constraints we silently accept because the ~1000× compression looks so good (C1–C11). D4 deep-dive: strict full-K-local eliminates K-parallelism, sizes the node by the model not the fabric, serialises K-latency, and caps single-request horizontal scale — likely correct only as a *workload-class mode*, with Alternative B kept live. Feeds `TKT-019` V5 | open | pending |
 | GCB-035 | **TKT-019 falsification V1 + V2** — payload bit-accounting and line-rate derivation. Alt A (post-requant, 140 B / `K_STEPS=512` @ 1 GHz): **2.19 Gbps raw → ≈ 2.4 Gbps** with 64b/66b + KP4 (9.14 % coding, carried at 12 %) → single ≤ 10 G lane. Alt B (INT32 partial, 1024 B): **16.0 Gbps raw → ≈ 17.9 Gbps** → 25 G-class lane; and **`~7.3·P×` per link, `~7.3·P²×` at the accumulator** once the K-split is real (P = 4 → 71.7 Gbps/link, 286 Gbps aggregate). V1 HOLDS; V2 HOLDS for FFN, conditional-fail for small-K layers → escalates D3 | open | pending |
+| GCB-036 | **TKT-019 falsification V3** — numeric consequences of `OUT_W` (D2). INT4 block FP has only ~18 dB (~8×) usable in-block dynamic range; against a 25 dB SQNR budget it needs `r_max ≤ 1.56×` while real transformer activation blocks span 4–50× (outlier channels) → **V3 CONTRACT FAILS for INT4 as a general default**. **D2 → provisionally INT8, PER_ROW, RNE** (INT4 opt-in for QAT / verified-narrow-range). INT8 payload 143 B → **~271 B**, line rate 2.4 → **~4.7 Gbps** — still a single ≤ 10 G lane, ~0 dB optical-SNR penalty (spend baud not constellation). Purple compression ratio ~850× → **~432×** (hypothesis holds) | open | pending |
 
 ### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
 
