@@ -50,12 +50,27 @@ model. Sub-stories: the falsification pass (below) first; then λ-count
 parameterisation, link-budget model, deskew scaling, channel/BER model, the
 top-level link TB, a new wiki doctrine page.
 
-## The Falsification Test (Story 1 gate)
+## The Falsification Test (Story 1 gate) — **COMPLETE 2026-09-10**
 
-`GCB-034` is a **testable hypothesis, not a fact**. This section is the test.
-It runs *before* the PHY-scaling sub-stories and its outcome — **contract
-survives** or **contract replaced** — is what moves `GCB-034` off
-`open | pending`.
+`GCB-034` was a **testable hypothesis**. V1–V5 ran ([[GCB-035]] / [[GCB-036]] /
+[[GCB-037]] / [[GCB-038]]); **the contract SURVIVED — as a dual-regime
+contract**, and [[GCB-034]] is **closed `done | green`** (PBG-O flag `orange`).
+
+| V | ticket | verdict |
+|---|---|---|
+| V1 payload | [[GCB-035]] | **HOLDS** — ≈ 143 B, ~2 % over the 140 B contract |
+| V2 cadence | [[GCB-035]] | **HOLDS** for FFN (`1/512 ns`, periodic); small-`K` → D3 aggregation |
+| V3 `OUT_W` | [[GCB-036]] | INT4 **FAILS** the 25 dB SQNR budget → **D2 = INT8, PER_ROW, RNE** |
+| V4 link budget | [[GCB-037]] | **HOLDS** — Mode A closes on 1 λ (+2.5–8 dB); Mode B needs ≈ 60 λ; KP4 load-bearing; 2-PAM/QPSK only |
+| V5 partitioning | [[GCB-038]] | full-K-local **FAILS as a global law** (`K` ceiling ≈ 45 k; batch-1 decode) → **D4 = selectable mode** |
+
+**Ratified:** D1 = post-requantization · D2 = INT8 · D3 = per-tile (`K ≥ ~2 k`) /
+super-tile aggregation (small-`K`) · **D4 = Mode A (full-K local, FFN
+throughput) / Mode B (K-split + INT32 partials, long-context + latency-critical
+decode), header mode bit**. The dual-regime PHY is provisioned for Mode B
+(≈ 60 λ). Full contract: [[GCB-034]] § "The Ratified Dual-Regime Contract".
+
+The section below is the original gate specification, kept as the test record.
 
 ### Required validations
 
