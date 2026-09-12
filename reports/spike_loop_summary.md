@@ -254,3 +254,95 @@ queued RTL action). This may be close to genuine diminishing returns for
 the silicon/RTL tier specifically - worth an honest evaluate-limits check
 at the start of iteration 4 rather than manufacturing a lower-value
 ticket just to keep looping.
+
+---
+
+## Iteration 4 — 2026-09-12
+
+**Target selected:** not a pre-existing ticket - the honest "diminishing
+returns" flag at the end of iteration 3 prompted checking whether the
+backlog scan itself had been complete. It had not: `D:\R\S\H\` contains
+several repos never surveyed this session at all, including two that are
+genuinely **more** silicon-tier than anything touched so far -
+`gcb-pic-core` (Component 4, the actual photonic IC layout) and
+`gcb-analog-rx` (Component 5, the Rx quantizer/analog front-end). Neither
+had ever had a ticket in this backlog. This is exactly the loop's own
+step 1 ("scan for open high-priority tickets... create a new ticket for
+any uncaptured structural gap") working as intended - the gap was the
+scan's own scope, not the backlog's content.
+
+**gcb-pic-core findings (`TKT-030`, new):**
+- `gdsfactory` is not installed system-wide anywhere in this dev
+  environment, but installs cleanly in ~90 s into a dedicated venv
+  (`~/.venvs/gdsfactory`, version `9.50.0`) - a real toolchain-
+  availability fact that was simply unknown before being tested.
+- The existing `layout_homodyne.py` (previously un-run against any
+  confirmed toolchain) builds correctly: a single balanced-homodyne
+  MMI/photodiode cell, `117.75 x 53.75 um`, ports `['A','B']`, valid GDS
+  written.
+- The repo's own stated "K=16 tile" goal is NOT what the current script
+  builds (one cell, not sixteen) - and, checked against this program's
+  own `sim/optical_mesh_dpi.cpp` semantics, a real K=16 tile needs a WDM
+  multi-channel input stage feeding ONE photodiode pair, not sixteen
+  duplicated cells. Flagged as the real next step; not attempted (a
+  materially bigger, more domain-specialized design task than this
+  loop's other iterations).
+
+**gcb-analog-rx findings (`TKT-031`, new) - the most consequential finding
+this loop has produced:**
+- `switched_charge_model.py` runs correctly and its own physics (exact
+  Boltzmann constant, kT/C noise, flash-ADC quantization) checks out in
+  isolation.
+- Cross-checking it against `TKT-026`'s own already-computed nominal
+  photocurrent (112.5 uA) - never done before - found it drives that
+  model's own default 8-bit ADC to full-scale saturation (`255/255`,
+  `V_signal=1125 mV` against `V_FS=600 mV`).
+- Tracing why surfaced something bigger than a constant mismatch:
+  **`TKT-026` assumed a transimpedance-amplifier front-end
+  (`R_f≈13.33 kOhm`, continuous-time, `V=I*R_f`); `gcb-analog-rx`'s own
+  README and model assume a switched-charge-integrator front-end
+  (sampled, `V=I*T_int/C_int`, kT/C noise mechanism).** These are two
+  different circuit topologies for the same physical signal, asserted
+  independently in two different tickets, neither aware of the other.
+  **Not resolved here** - reported for Architect disposition, consistent
+  with this program's own standing discipline for architecture conflicts
+  (`TKT-019.6`/`.7`'s own precedent).
+
+**Work done:**
+1. `backlog/TKT-030-pic-core-homodyne-tile-layout.md` (new) - full ticket
+   with verified toolchain/layout state and the K=16 scope-gap finding.
+2. `backlog/TKT-031-analog-rx-frontend-architecture-conflict.md` (new) -
+   full ticket reporting the TIA-vs-integrator conflict, explicitly held
+   for Architect disposition rather than resolved.
+3. `README.md` (gcb-workspaces) - filetree entries + table rows for both.
+4. No RTL changed - this iteration was discovery + ticket creation, per
+   the loop's own step 1.
+
+**Test results (actual):** `gdsfactory 9.50.0` install verified (exit 0,
+real packages resolved and installed); `layout_homodyne.py` executed
+successfully (real GDS written, size/ports printed and matched);
+`switched_charge_model.py` executed successfully (both its own demo sweep
+and a targeted re-computation at the real 112.5 uA operating point).
+
+**Epistemic status:** the toolchain-availability and both scripts-run
+findings are **PROVEN — DIGITAL SIMULATION/MODEL EXECUTION, TESTED
+CONDITIONS** (each was actually run, not assumed). The architecture-
+conflict finding is **OPEN DEFECT** in the sense that the program's own
+records genuinely disagree with each other right now - it is not a
+silicon or physical claim of any kind, only a cross-document consistency
+finding.
+
+**Commits:**
+- `gcb-wdm-transceiver`: none (no RTL touched)
+- `gcb-workspaces`: PENDING (to be filled before push)
+
+**Ticket status changes:** `TKT-030` created (`open | pending`); `TKT-031`
+created (`open | pending`, held for Architect disposition).
+
+**Next candidate for iteration 5:** `TKT-030`/`TKT-031` are not
+single-iteration-sized (photonics layout design work, and an
+architecture decision respectively) - re-scan the backlog (now including
+the previously-missed repos) for the next right-sized actionable item,
+or treat the Architect-disposition dependency in `TKT-031` as a genuine
+stopping point for the autonomous portion of this loop pending human
+input.
