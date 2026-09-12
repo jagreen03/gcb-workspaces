@@ -50,6 +50,9 @@ gcb-workspaces/
     ├── TKT-023-tile-requantize.md
     ├── TKT-024-operand-staging.md
     ├── TKT-025-compute-e2e-integration.md
+    ├── TKT-026-photocurrent-budget.md           ← Phase-I bench TIA gain-setting calc, task3_physical_bom.md §3.2's open item
+    ├── TKT-027-adc-spi-command-word-verification.md ← verify greencoyote_adc_if.sv's CMD_WORD=16'h0000 default against the selected SAR ADC's real datasheet before procurement
+    ├── TKT-028-dac-modulator-driver-stage.md    ← the DAC-to-modulator analog driver gap task3_physical_bom.md §1 surfaced with no candidate at all
     ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
     ├── GCB-027-max-reduce-physical-measurement.md
     ├── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
@@ -161,10 +164,9 @@ Frontmatter carries `id`, `status` (`open` → `in-progress` → `done`), and
 
 The enterprise Jira-style project key. **All work from `GCB-026` (2026-09-10)
 forward uses the `GCB-###` prefix**, continuing the running counter. The legacy
-`TKT-###` tickets below are the immutable Digital Compute Epoch record — not
-renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
-`TKT-019` keep their numbers; their child stories from `GCB-027` on are
-`GCB-###`.
+`TKT-###` tickets below are the Digital Compute Epoch record (see
+[[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` / `TKT-019` keep their numbers;
+their child stories from `GCB-027` on are `GCB-###`.
 
 | Ticket | Title | Status | Color |
 |---|---|---|---|
@@ -194,11 +196,13 @@ renumbered, not re-committed (see [[GCB-026]]). EPIC ids `TKT-017` / `TKT-018` /
 | TKT-019.9 | **EPIC `TKT-019` story 9 — physical cost evaluation of the `TKT-019.8` mitigations, assuming (not re-verifying) Findings A/B are eventually resolved.** Yosys 0.68 cell-count + elaboration-time comparison, baseline (git `HEAD`, pre-mitigation) vs. the current uncommitted mitigated RTL, at `NUM_COLORS=8`/bring-up and the `NUM_COLORS=60` GCB-034 ceiling. **CRC32 (Sarwate table) is the overwhelming area driver** — `gcb_dwdm_payload_mux` +34,568 cells (5.14×) at bring-up / +45,320 (4.26×) at the ceiling; `gcb_dwdm_payload_demux` +10,375 cells (4.07× / 3.00×), identical absolute delta at both geometries since it scales with `MAX_PAYLOAD_BYTES` not `NUM_COLORS` — because the CRC is computed combinationally, fully unrolled, in one cycle (1,027 byte-steps × a 256-way constant-select table), not iteratively. **Epoch isolation is cheap**: `gcb_dwdm_deskew_cdc` +50 cells (+26.6%) at bring-up / +666 (+23.4%) at the ceiling, linear in `NUM_COLORS` (~11-13 cells/lane), pure combinational compare-and-discard logic plus a register-width-only storage cost (+64 b / +30,720 b) — and secondary to the pre-existing 60-lane skew-FIFO buffering itself, which is 94.9% of the *baseline* CDC's cell count on its own, unrelated to any mitigation. Watchdog: negligible. Latency: epoch tagging and the watchdog cost nothing on the clean path; CRC32 costs 0-1 extra EMIT cycle (the 4-byte trailer). Optical bandwidth: epoch tag never leaves the CDC (zero); CRC32 costs a fixed +4 B/transaction in-band (≈0.39% of Mode B's 1024 B, ≈1.48% of Mode A's ≈271 B). No RTL changed, no mitigation for Findings A/B written, no PBG grade (a measurement, not a build) | open | pending |
 | TKT-019.10 | **EPIC `TKT-019` story 10 — executed to completion this session: Finding A and Finding B both PROVEN closed under every adversarial condition run so far.** **Finding A**: `gcb_dwdm_payload_demux` independently recomputes the expected total word count from decoded `{mode_b, payload_len}` (the exact formula the mux uses for `words_padded`) and compares it to the actual accumulated `word_base` BEFORE CRC is consulted — a mismatch fires a distinctly-named `length_mismatch`, never folded into `integrity_fail`. Two of five `TKT-019.5` corruption categories now report `length_mismatch` (caught deterministically) instead of `integrity_fail` (caught only probabilistically before). **Finding B**: Candidate 1 (deassert `lane_enable_q` at the mux shortly after `done`) was implemented, then a purpose-built real-time real-wire test found it raced `gcb_dwdm_async_skew_fifo`'s own write-to-read synchronizer latency — it could silently strand an ordinary transaction with no recovery path, and broke the already-locked `TKT-019.2` regression (`TESTS=3 PASS=3 -> FAIL=3`). **Candidate 1 was cleanly reverted** (verified: `gcb_dwdm_payload_mux.sv` restored to its exact TKT-019.8 baseline; `TKT-019.2` back to `PASS=3`) before Candidate 2 was attempted — no assumption that Candidate 2 would work substituted for proof. **Candidate 2**, implemented in `gcb_dwdm_deskew_cdc.sv` instead: a `CDC_IDLE`/`CDC_ACTIVE` watchdog-arming FSM — the bounded-wait timer only arms once a REAL, epoch-matched word arrives on a participating lane (`channel_enable` stays quasi-static, exactly as its own header always specified, never toggled per-transaction); a stale/future-epoch word can never arm it (already excluded by the existing `lane_ready` epoch-match requirement) and never touches the watchdog. Regression-confirmed against the exact real-wire idle-gap test that found Candidate 1's flaw (rewritten to assert the new, correct invariant), the exact `TKT-019.5` Ghost Payload sequence, all five corruption categories (individually attributed, not just "payload_valid suppressed"), and the already-locked `TKT-019.2`/`TKT-019.3` standalone suites. Full matrix: `test_wdm_link_integration.py` `TESTS=11 PASS=11`, `test_wdm_deskew_cdc.py` `TESTS=2 PASS=2`, `test_wdm_payload_mux.py` `TESTS=3 PASS=3`, `sim/lint.sh` 38/38. No PBG grade (a design/verification ticket does not self-close without an explicit lock instruction) | open | pending |
 
-### TKT-### — Digital Compute Epoch + TKT-000 (frozen record)
+### TKT-### — Digital Compute Epoch + TKT-000
 
-Immutable. `TKT-000` is the Physical Reality Epoch boundary marker;
-`TKT-001 … TKT-025` are the Digital Compute Epoch (functional verification,
-closing at 4096 MAC/cycle / 0 stalls — EPIC `TKT-017`).
+`TKT-000` is the Physical Reality Epoch boundary marker; `TKT-001 … TKT-025`
+are the Digital Compute Epoch (functional verification, closing at
+4096 MAC/cycle / 0 stalls — EPIC `TKT-017`). `TKT-026` onward continues the
+same `TKT-###` prefix for top-level tickets outside any `GCB-###`-epic's own
+child-story numbering (see `TKT-026`/`TKT-027`/`TKT-028` below).
 
 | Ticket | Title | Status | Color |
 |---|---|---|---|
@@ -228,6 +232,9 @@ closing at 4096 MAC/cycle / 0 stalls — EPIC `TKT-017`).
 | TKT-023 | **Story 2 of EPIC TKT-017** — `gcb_tile_requantize`: block-float requantization of the INT32 MAC tile to INT4/INT8 via the frozen `gcb_max_reduce` | done | green |
 | TKT-024 | **Story 3 of EPIC TKT-017** — operand staging: the SRAM-read-port → MAC-grid staging / broadcast layer (`gcb_operand_stage`) | done | green |
 | TKT-025 | **Story 4 (capstone) of EPIC TKT-017** — end-to-end integration TB: one real `gcb-wiki/06` tile through SRAM → stage → MAC → requantize → softmax hand-off, prints `MATCH` / `cycles/MAC` / `0 stalls` | done | green |
+| TKT-026 | Phase-I bench photocurrent budget — the dB-by-dB loss chain + TIA gain-setting calc `task3_physical_bom.md` §3.2 left unresolved | open | pending |
+| TKT-027 | ADC SPI command-word verification — confirm `greencoyote_adc_if.sv`'s `CMD_WORD=16'h0000` default against the selected SAR ADC's real datasheet before procurement | open | pending |
+| TKT-028 | DAC-to-modulator analog driver stage — `task3_physical_bom.md` §1's no-candidate-at-all gap between `greencoyote_dac_if.sv` and the eventual modulator | open | pending |
 
 **Epic linkage:** TKT-021 is an out-of-band enablement ticket for **EPIC
 TKT-018** (OpenROAD physical layout) — it provisions the P&R / signoff back end
