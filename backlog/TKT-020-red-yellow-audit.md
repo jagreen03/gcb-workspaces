@@ -443,7 +443,76 @@ migration — no more `/tmp` `pgserver` with a hand-patched `vector_norm()`
 `deploy/cyclopter/README.md`.
 
 ---
+
+### R2 closure — live-synthesis integrity, rounding, saturation (session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-12)
+
+**Status: R2 closed at the RTL level, regression-proven, committed.**
+`gcb-wdm-transceiver`. R2's own "Containment" list recommended, before
+TKT-019: *"a noisy/lossy channel model (AWGN + crosstalk + per-λ skew) as a
+TB mode; a BER/eye harness; an end-to-end integrity check... in the digital
+path; explicit rounding policy on `>>> 2`; a saturating (not wrapping)
+final cast with an overflow flag."* TKT-019 shipped without this gate ever
+being executed; this closes it directly, after TKT-019 rather than before,
+since that is where the program actually stood.
+
+**`gcb_rx_digital_recombiner.sv`** (the QAM optical→digital reconstruction
+stage - a *different* datapath from the GCB-034 payload mux/demux
+`TKT-019.8`'s CRC32 protects): the ONLY consistency checks that existed
+(`num_bad` / an INT16-range check) lived entirely inside
+`` `ifdef SIMULATION`` - compiled OUT of the real synthesis path, confirmed
+by direct inspection before writing a single line of fix. Closed, live in
+every build:
+
+1. **Rounding**: `s_ij_c = (num_s + 2) >>> 2` rounds to the nearest
+   multiple of 4 (ties up) instead of the old bare arithmetic shift, which
+   floored toward -∞ for any numerator not already exactly divisible by 4.
+2. **Saturation**, two places, both now live in synthesis: a numerator
+   corrupted enough to round negative clamps `S_ij` to 0 (it is a Boolean
+   AND-sum, never legitimately negative); the final INT16 narrowing
+   saturates at ±32767/-32768 instead of silently wrapping two's-complement.
+3. **`result_fault`** - a new, always-on output (propagated through
+   `gcb_qam_datapath_top` and, per-core, through `gcb_dwdm_dualmode_top` as
+   `qam_result_fault`), high iff rounding, clamping, or saturation was
+   needed this cycle.
+
+**Proof, against an intentionally noisy channel, not merely the lossless
+case every prior test used:**
+
+* `sim/cocotb/test_rx_digital_recombiner_integrity.py` (new) - deterministic
+  LSB-error injection, negative-numerator construction, the exact
+  `k_len`-disagreement bias R2 named, and a 200-trial randomized
+  multi-entry fuzz, every trial's (result, fault) computed independently in
+  Python and compared bit-for-bit against the RTL. `TESTS=6 PASS=6`.
+  `test_overflow_saturates` uses a second, K_MAX=1024 DUT instance
+  specifically because K_MAX=16's own port widths cannot reach INT16
+  overflow at all (traced, not assumed - the weighted-sum's fixed
+  positive-weight total bounds `|Y| <= K_MAX*64` regardless of how
+  adversarially the ports are driven).
+* `tb/tb_rx_digital_recombiner_awgn.sv` (new) - the real
+  `emulate_balanced_homodyne` DPI-C physics channel (the same one
+  `tb_dwdm_dualmode_top` already used, but always at `SNR_DB=30`, its own
+  documented "exact-recovery regime") run instead at `SNR_DB=15`: 300
+  trials, 299 faulted / 1 clean, every single one checked against an
+  independently-written SV re-derivation of the policy. `ALL CHECKS PASS`.
+* `tb_dwdm_dualmode_top.sv`'s own capstone (unaffected at its `SNR_DB=30`
+  regime, confirmed rather than assumed - a new `qam_result_fault`-never-
+  asserted check was added to both its per-beat and Scenario C scoring).
+* Full regression after the change: `sim/lint.sh` 38/38;
+  `sim/run_tb.sh`'s complete 18-testbench plain-SV suite, zero failures;
+  `test_wdm_lambda_sweep.py` (the other direct consumer of this module)
+  unaffected, `TESTS=2 PASS=2`.
+
+**Not claimed**: that rounding + saturation + one aggregate fault bit
+substitutes for real FEC, a parity/CRC code over `l_ij` itself, or a
+BER/eye link-budget study - those remain open, exactly as R2's own
+"Containment" list separated them from the silent-failure defect this
+closes. This is a digital-simulation result only, per `gcb-wiki/14`'s
+standing epistemic boundary - no claim about real optical/silicon BER.
+
+---
 ## Telemetry & Evaluation
 *(To be populated if this audit is itself graded)*
-**Final State:** `pending`
+**Final State:** `pending` — unchanged for the audit as a whole (an
+assessment deliverable, not graded execution, per its own Objective); R2
+specifically is closed, see above.
 **Vector Summary:** [Leave blank for now]
