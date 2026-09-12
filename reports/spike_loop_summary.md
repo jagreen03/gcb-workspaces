@@ -90,3 +90,86 @@ audit deliverable, per its own Objective), disposition note appended.
 small, bounded, elaboration-time guards — good next single-iteration
 targets), or `TKT-020` R3 (Cyclopter scavenger validation — lower priority,
 software/data-pipeline tier, not silicon/RTL).
+
+---
+
+## Iteration 2 — 2026-09-12
+
+**Target selected:** `TKT-029` items 3 and 5 (both small, bounded
+elaboration-time guards, as flagged at the end of iteration 1).
+
+**Item 3 — a real mistake, caught before it shipped.** First draft of the
+guard faithfully encoded `gcb_tensor_operand_sram.sv`'s own in-source
+comment ("DEPTH_K / SUBTILES are powers of two at every real geometry")
+and checked BOTH parameters. Running the real `compute_e2e` cocotb chain
+(this repo's own already-proven TKT-025 production geometry) with that
+guard in place produced an immediate, unexpected `$fatal`:
+`SUBTILES (20) must be a power of 2` — `N_SUBTILES=20` is the real,
+already-shipping B-operand geometry, and 20 is not a power of 2. Traced
+the actual address math (`wr_sub * DEPTH_K + wr_k`) and found the
+in-source comment itself had overclaimed: only `DEPTH_K` (the
+multiplicand) is load-bearing for the multiply-as-shift property —
+`SUBTILES` was never actually required to be a power of 2 for that reason.
+**Corrected both the guard (DEPTH_K only) and the misleading comment**,
+then re-verified in both directions: a deliberately bad `DEPTH_K=17`
+(with the real `SUBTILES=20`) correctly fires; a deliberately bad
+`SUBTILES=3` (with the real `DEPTH_K=256`) correctly does NOT fire; the
+real `compute_e2e` chain passes clean (`TESTS=1 PASS=1`,
+`MATCH | 40 output tiles bit-exact`). This is exactly the kind of mistake
+this program's own discipline ("never assume a mechanism is correct
+before proving it") exists to catch — it was caught in-session, before
+any commit, by actually running the real regression rather than trusting
+the first draft.
+
+**Item 5 — scope narrowed by direct trace, not assumed.** `RD_REG` is not
+an independently-instantiable controller parameter as the original Y1
+finding's phrasing might suggest — it is `SRAM_RD_REG`, a hardcoded local
+constant (`=0`) with an in-source comment instructing a future human to
+manually co-adjust `SRAM_LATENCY` if it's ever changed. No live mismatch
+exists in committed code today. Added a guard locking the currently-
+validated value (`SRAM_RD_REG == 0`) rather than guessing at an unverified
+general cross-adjustment formula for a hypothetical future value —
+consistent with this program's standing "do not assert an equation that
+has not actually been checked" discipline.
+
+**Work done:**
+1. `gcb_tensor_operand_sram.sv` — added the `DEPTH_K` power-of-2
+   elaboration guard; corrected the pre-existing in-source comment that
+   had incorrectly also claimed `SUBTILES` needed to be a power of 2.
+2. `gcb_tensor_sram_controller.sv` — added the `SRAM_RD_REG == 0` lock
+   guard.
+3. `backlog/TKT-029-...md` — full Execution Log for items 3 and 5,
+   including the self-correction, with epistemic labels.
+4. `README.md` (gcb-workspaces) — updated `TKT-029`'s filetree entry and
+   table row.
+
+**Test results (actual):**
+- `sim/lint.sh`: **38/38 clean**
+- `tb_tensor_sram_controller.sv` (plain-SV, direct): **ALL CHECKS PASS**
+- `test_wdm_*` suites: unaffected (this iteration touched no WDM RTL)
+- `Makefile.compute_e2e` (cocotb, the real full chain): **TESTS=1 PASS=1**,
+  `MATCH | 40 output tiles bit-exact | SRAM read stalls = 0`
+- `Makefile.sram`: **TESTS=5 PASS=3 FAIL=0 SKIP=2** (SKIPs pre-existing,
+  unrelated)
+- `Makefile.sram_partial`: **TESTS=5 PASS=2 FAIL=0 SKIP=3** (same)
+
+**Epistemic status:** both guards **PROVEN — DIGITAL SIMULATION, TESTED
+CONDITIONS** for exactly the constructions tested (see `TKT-029`'s own
+Execution Log for the full table). Item 5's guard explicitly does NOT
+prove anything about a future `RD_REG != 0` configuration — that remains
+**UNPROVEN**, now with a loud failure instead of silence guarding the
+boundary. Item 4 (full-default-geometry Yosys run) remains **untouched**.
+
+**Commits:**
+- `gcb-wdm-transceiver`: `a0363e6`
+- `gcb-workspaces`: this commit (see the commit that introduces this file
+  section for its own hash)
+
+**Ticket status changes:** `TKT-029` — items 3 and 5 resolved (Execution
+Log appended, telemetry assigned `spec:0.7 quality:0.7 emergence:0.1` for
+those two items); item 4 remains open; ticket stays `open | pending`
+overall.
+
+**Next candidate for iteration 3:** `TKT-029` item 4 (full-default-
+geometry Yosys run — a measurement task, no RTL change), or re-scan the
+backlog fresh per the loop's own step 1 before committing to that.
