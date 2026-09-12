@@ -52,7 +52,7 @@ gcb-workspaces/
     ├── TKT-025-compute-e2e-integration.md
     ├── TKT-026-photocurrent-budget.md           ← Phase-I bench TIA gain-setting calc, task3_physical_bom.md §3.2's open item
     ├── TKT-027-adc-spi-command-word-verification.md ← RESOLVED: TI ADS786x needs no config/command phase at all — CMD_WORD=16'h0000 confirmed correct, no RTL change; sim/run_pilot_tb.sh IO1/IO2 re-confirmed green (done|pending)
-    ├── TKT-028-dac-modulator-driver-stage.md    ← the DAC-to-modulator analog driver gap task3_physical_bom.md §1 surfaced with no candidate at all
+    ├── TKT-028-dac-modulator-driver-stage.md    ← RESOLVED: modulator decided (linear VOA over LiNbO₃ MZ — bandwidth irrelevant at bench rates, avoids a bias-servo subsystem); DAC (AD9767) + driver (precision op-amp I-to-V+scaling) candidates on file; exact gain blocked on VOA part TBD (done|pending)
     ├── GCB-026-namespace-migration.md          ← GCB-### namespace cutover
     ├── GCB-027-max-reduce-physical-measurement.md
     ├── GCB-027-FINDINGS.md                      ← first physical measurement (Orange)
@@ -234,7 +234,7 @@ child-story numbering (see `TKT-026`/`TKT-027`/`TKT-028` below).
 | TKT-025 | **Story 4 (capstone) of EPIC TKT-017** — end-to-end integration TB: one real `gcb-wiki/06` tile through SRAM → stage → MAC → requantize → softmax hand-off, prints `MATCH` / `cycles/MAC` / `0 stalls` | done | green |
 | TKT-026 | Phase-I bench photocurrent budget — the dB-by-dB loss chain + TIA gain-setting calc `task3_physical_bom.md` §3.2 left unresolved | open | pending |
 | TKT-027 | ADC SPI command-word verification — confirm `greencoyote_adc_if.sv`'s `CMD_WORD=16'h0000` default against the selected SAR ADC's real datasheet before procurement — **RESOLVED**: TI ADS786x needs no command phase, default confirmed correct, no RTL change | done | pending |
-| TKT-028 | DAC-to-modulator analog driver stage — `task3_physical_bom.md` §1's no-candidate-at-all gap between `greencoyote_dac_if.sv` and the eventual modulator | open | pending |
+| TKT-028 | DAC-to-modulator analog driver stage — `task3_physical_bom.md` §1's no-candidate-at-all gap between `greencoyote_dac_if.sv` and the eventual modulator — **RESOLVED**: linear VOA decided over LiNbO₃ MZ; AD9767 DAC + op-amp driver candidates on file | done | pending |
 
 **Epic linkage:** TKT-021 is an out-of-band enablement ticket for **EPIC
 TKT-018** (OpenROAD physical layout) — it provisions the P&R / signoff back end
