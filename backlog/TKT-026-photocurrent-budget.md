@@ -87,3 +87,26 @@ No PBG grade — build-prerequisite calculation ticket, not a verified RTL
 deliverable.
 
 **Status:** `done`.
+
+---
+## Role update — TKT-031 Architect Disposition (2026-09-12)
+
+**This ticket's TIA math is no longer the Phase I baseline front-end
+architecture.** `TKT-031` surfaced that this ticket's own `R_f ≈ 13.33
+kΩ` transimpedance-amplifier derivation and `gcb-analog-rx`'s switched-
+charge-integrator model were two independently-asserted, mutually
+exclusive front-end topologies for the same photocurrent node, never
+reconciled. The Architect's disposition (recorded in full in `TKT-031`):
+**adopt the switched-charge integrator as the Phase I baseline for the
+multi-channel receive path; retain this ticket's TIA math as the
+fallback specification for benchtop calibration and continuous-wave
+optical link testing** — not retired, re-scoped.
+
+Nothing in this ticket's own numbers changes: the 112.5 µA nominal
+photocurrent derivation above is unaffected (it is a photon-budget
+result, independent of which downstream front-end consumes it), and is
+in fact the exact value `TKT-031`'s own verification used as the real
+operating point for the switched-integrator's switchable-capacitor
+bank. This ticket's `R_f` figure remains correct for its own retained
+use case (a continuous-time TIA bench setup), just no longer the
+multi-channel production-path assumption.

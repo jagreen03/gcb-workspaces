@@ -346,3 +346,82 @@ the previously-missed repos) for the next right-sized actionable item,
 or treat the Architect-disposition dependency in `TKT-031` as a genuine
 stopping point for the autonomous portion of this loop pending human
 input.
+
+---
+
+## Iteration 5 — 2026-09-12
+
+**Target selected:** `TKT-031`'s Architect disposition arrived (human
+input, the exact dependency iteration 4 flagged as a stopping point):
+adopt the switched-charge integrator as the Phase I baseline, retain
+`TKT-026`'s TIA math as a benchtop/continuous-wave fallback. This
+iteration implements that directive.
+
+**What was done, and what it found:** claims 1/2 (cadence alignment,
+thermal/power efficiency) are the Architect's own systems-level
+engineering judgment, accepted as given - not independently checkable by
+this program's digital-simulation tooling. Claim 3 (dynamic-range scaling
+via switchable `C_int`/integration-window) IS a checkable, quantitative
+claim, and checking it (rather than taking it on faith) found it only
+PARTIALLY true as first implemented: a new switchable-capacitor bank
+(`C_INT_BANK`, 10-50 fF - the file's own already-documented realistic
+on-die range) covers `TKT-026`'s nominal 112.5 uA operating point and a
+-50% insertion-loss variation, but genuinely does NOT cover a +50%
+variation (168.8 uA would need ~70 fF, beyond that range) using the
+capacitor alone. Reported honestly rather than silently widened past the
+documented range. The Architect's OWN disposition had named a second
+knob ("variable integration intervals") that had not yet been
+implemented - added it (`T_INT_BANK`, a joint `select_c_int_t_int()`
+search) and re-verified: the +50% case closes using both knobs together
+(`C_int=40 fF`, `T_int=100 ps`), with `+32.4 dB` margin vs. the 30 dB
+budget. `phase1_baseline_check()` (new, runs as part of the script's own
+`__main__`, exits nonzero on any uncovered point) now reports
+`PHASE I BASELINE VERIFIED` for all three test points.
+
+**Work done:**
+1. `gcb-analog-rx/switched_charge_model.py` - `C_INT_BANK`,
+   `T_INT_BANK`, `select_c_int()`, `select_c_int_t_int()`,
+   `phase1_baseline_check()` (new); header updated recording the
+   Architect's disposition verbatim; `__main__` now runs the baseline
+   check and exits nonzero on failure.
+2. `gcb-analog-rx/README.md` - records the Phase I baseline decision.
+3. `backlog/TKT-031-...md` - full Execution Log with the Architect's
+   disposition recorded verbatim, the partial-failure-then-fix narrative,
+   the verification table, and epistemic labels; moved to `done | blue`.
+4. `backlog/TKT-026-photocurrent-budget.md` - appended a role-update
+   section (not overwritten): TIA math retained as benchtop/CW fallback,
+   no longer the Phase I baseline; its own 112.5 uA figure unaffected and
+   confirmed as the exact value `TKT-031`'s verification used.
+5. `README.md` (gcb-workspaces) - updated `TKT-026`/`TKT-031` entries.
+
+**Test results (actual):** `switched_charge_model.py` executed end to
+end, `phase1_baseline_check()` returns `True` / script exits 0 - all
+three test points (nominal, -50%, +50% insertion-loss variation) covered
+by a real, run-verified `(C_int, T_int)` combination within each bank's
+documented range.
+
+**Epistemic status:** **PROVEN — DIGITAL SIMULATION (Python/numpy
+behavioral model), TESTED CONDITIONS** for claim 3 exactly as implemented
+(both knobs together). Explicitly NOT claimed: that the Architect's
+systems-level claims 1/2 were independently verified (they weren't - they
+are accepted engineering judgment, correctly not something this program's
+tooling can check); that +-50% is a measured insertion-loss uncertainty
+(it is a round stand-in, flagged as such); that `T_INT_BANK`'s specific
+divider ratios are a committed clock-tree decision; or any physical/
+silicon measurement of any kind.
+
+**Commits:**
+- `gcb-analog-rx`: `5290e72`
+- `gcb-workspaces`: PENDING (to be filled before push)
+- `gcb-wdm-transceiver`: none (no RTL touched)
+
+**Ticket status changes:** `TKT-031` — `open | pending` → **`done | blue`**.
+`TKT-026` — stays `done`, role annotated (not re-graded).
+
+**Next candidate for iteration 6:** `TKT-030` (the gcb-pic-core K=16 WDM-
+tile layout) remains the most substantial still-open item from this
+loop's own discoveries, but is explicitly flagged as too large/domain-
+specialized for this loop's pace - a fresh backlog re-scan (including a
+check of the remaining un-surveyed repos: gcb-host, gcb-grants,
+gcb-papers, vortex, sv2v-Linux, AI-session) is the honest next step
+before committing to anything further.
