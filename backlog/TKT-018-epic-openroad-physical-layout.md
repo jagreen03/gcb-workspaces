@@ -2,8 +2,12 @@
 id: TKT-018
 title: "EPIC — OpenROAD physical layout (MEASUREMENT EPOCH): extract silicon feedback on gcb_max_reduce before optical scale-up"
 date_created: 2026-09-09
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: blue
+telemetry:
+  spec: 0.8
+  quality: 0.6
+  emergence: 0.0
 tags:
   - backlog
   - epic
@@ -152,11 +156,81 @@ regressable flow that produces a real GDSII per block, not a one-off manual run.
    + the wiki pointer; no RTL edit.
 
 ---
-## Execution Log
-*(To be populated during execution — spawns sub-stories TKT-018.x)*
+## Execution Log — closed 2026-09-12, status corrected from a stale blank
+
+**This epic's own stated "Deliverable of the epoch" was already fully
+satisfied** — not by `TKT-018.x` sub-stories as this ticket's own text
+anticipated, but by the `GCB-027` → `GCB-033` chain (the `GCB-###`
+namespace cutover, `GCB-026`, happened the day after this epic opened, so
+the sub-stories landed under that prefix instead). Confirmed by direct
+inspection of the isolated P&R environment
+(`~/eda/OpenROAD-flow-scripts/flow/{results,logs,reports}/asap7/gcb_max_reduce/`)
+before writing this, not assumed from the tickets' own text alone:
+
+* A **complete, real flow run** exists: `6_final.gds`, `6_final.def`,
+  `6_final.v`, `6_final.spef`, and `6_report.json` all present, `
+  finish__flow__errors__count: 0`.
+* **`GCB-032`'s own claimed numbers match the actual report file exactly**:
+  `WNS/TNS = 0.00 ps`, `0` setup/hold violations, `fmax = 1.519 GHz`,
+  `372` sequential cells, `9.37 mW` total power (`0.00936753` in the raw
+  report) — cross-checked, not re-typed from the ticket.
+  `docs/PPA_burndown.md` (`gcb-wdm-transceiver`) already carries the full
+  `GCB-027→032` transfer-function table; `GCB-033` (done|green) already
+  retired `SYNTH_RETIME_MODULES` for this block and promoted the mid-tree
+  RTL pipeline as the standing closure path.
+* **What this means for this epic specifically**: the narrow "Measurement
+  Epoch" objective this ticket opened with — confront verified RTL with
+  physical reality, read the numbers, feed them to `TKT-019` *before*
+  wavelength-count/PHY-area decisions were made — is done, and was done
+  well before `TKT-019` itself reached its own current state this session.
+  This ticket's own frontmatter was simply never updated to reflect that;
+  corrected here.
+
+**What remains explicitly open — this is NOT a full "Green" closure**:
+
+1. Only **one** block (`gcb_max_reduce`) has gone through the flow — the
+   Green Target's own item 3 names `gcb_tensor_sram_controller` as a
+   second minimum block; not attempted.
+2. **38 max-slew DRVs remain** on `gcb_max_reduce` (`GCB-032`/`GCB-033`'s
+   own acknowledged open item, a `SKIP_LAST_GASP=0` slew-repair pass) —
+   "clean DRC" in the Green bar's detailed-route sense is met (0 DRC
+   violations), but this DRV item is not closed.
+3. **No CI regression** (`make ppa-check` hard-failing on `WNS<0`/DRC/LVS)
+   exists — the run was a manual, out-of-band invocation in the isolated
+   P&R environment, not a regressable flow.
+4. **SDC is hand-written**, not generated from the block's own Cocotb
+   clock definition (the Blue-grade single-source requirement).
+5. **No confirmed Cyclopter PPA ingest or `TKT-001` GDS-viewer wiring** —
+   not checked in this pass; likely also not done.
+6. The toolchain itself (`~/eda/OpenROAD-flow-scripts`) is **not checked
+   into any `gcb-*` repo** — by design, per `TKT-021`'s own "changes no
+   RTL and no repo code" framing — so the Green bar's "pinned... checked
+   in under an EDA repo" item is not literally met either, though the
+   tool is genuinely present, working, and version-identifiable
+   (`openroad -version` → `26Q3-1953-gc6c0900a16`).
+
+**Disposition**: closing this epic's own narrow, explicitly-stated
+Measurement-Epoch deliverable as done (items 1-6 above are real, separate,
+follow-on engineering work — a CI/regression/multi-block/Cyclopter-wiring
+effort in their own right, not a continuation of "did the measurement
+happen"). A future ticket should own items 1-6 if the full tape-out-grade
+Green flow is still wanted; this epic does not claim to have done that
+work.
 
 ---
 ## Telemetry & Evaluation
-*(To be populated post-execution)*
-**Final State:** `pending`
-**Vector Summary:** [Leave blank for now]
+
+**Final State:** `done` (Measurement Epoch deliverable only — see the 6
+explicitly-open items above, not claimed as closed by this telemetry).
+**Color:** `blue` — solid, validated engineering (a real, working,
+version-pinned toolchain; a real ASAP7 config; a real, cross-checked,
+timing-closed physical measurement feeding `TKT-019`), but not `green`
+(no CI regression, single block only, DRVs open, SDC not single-sourced).
+**Vector summary:** spec 0.8 (the stated Measurement-Epoch deliverable is
+fully met; the separate, broader "Green Target" 7-item checklist is not —
+hence < 1.0), quality 0.6 (the underlying `GCB-027`→`033` work is itself
+rigorous and cross-checked, but this epic's OWN ticket sat with a stale,
+blank Execution Log until this correction — a real process gap, not
+excused by the sub-work's own quality), emergence 0.0 (no new
+architectural surface; this is a ledger-accuracy correction over
+already-completed work, not new capability).
