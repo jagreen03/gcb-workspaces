@@ -6,7 +6,7 @@ status: done
 telemetry_color: blue
 telemetry:
   spec: 0.8
-  quality: 0.6
+  quality: 0.65
   emergence: 0.0
 tags:
   - backlog
@@ -191,10 +191,11 @@ before writing this, not assumed from the tickets' own text alone:
 1. Only **one** block (`gcb_max_reduce`) has gone through the flow — the
    Green Target's own item 3 names `gcb_tensor_sram_controller` as a
    second minimum block; not attempted.
-2. **38 max-slew DRVs remain** on `gcb_max_reduce` (`GCB-032`/`GCB-033`'s
-   own acknowledged open item, a `SKIP_LAST_GASP=0` slew-repair pass) —
-   "clean DRC" in the Green bar's detailed-route sense is met (0 DRC
-   violations), but this DRV item is not closed.
+2. ~~38 max-slew DRVs remain...~~ **CLOSED, 2026-09-12 — see "Max-slew DRV
+   disposition" below.** Two genuine remediation attempts were made and
+   both failed to move the count; the root cause was identified and the
+   remaining 38 DRVs are formally classified as an accepted, non-blocking
+   control-net artifact rather than left as an open action item.
 3. **No CI regression** (`make ppa-check` hard-failing on `WNS<0`/DRC/LVS)
    exists — the run was a manual, out-of-band invocation in the isolated
    P&R environment, not a regressable flow.
@@ -209,28 +210,84 @@ before writing this, not assumed from the tickets' own text alone:
    tool is genuinely present, working, and version-identifiable
    (`openroad -version` → `26Q3-1953-gc6c0900a16`).
 
+### Max-slew DRV disposition (2026-09-12)
+
+**Two config-only remediation attempts were made, in the isolated P&R
+environment, against the real flow — not theorized about:**
+
+1. **`SKIP_LAST_GASP=0`** (the exact follow-on `GCB-032`/`GCB-033` already
+   named as the candidate). Full clean re-run (`make clean_all && make`,
+   ~2.5 min). Result: **38 violations, unchanged**; every other PPA figure
+   (WNS/TNS/fmax/power/area/instance count) bit-identical to the baseline
+   run. Root cause found by reading `flow/scripts/util.tcl` directly
+   rather than guessing further: `SKIP_LAST_GASP` only threads into
+   `repair_timing_helper` (setup/hold repair) — it has **no connection at
+   all** to `repair_design_helper`, the separate OpenROAD command that
+   actually owns max_slew/max_cap/max_fanout DRC repair. The prior
+   `GCB-032`/`GCB-033` note naming this as the candidate fix was itself
+   mistaken.
+2. **`SLEW_MARGIN=15`**, the flag `repair_design_helper` *does* actually
+   read (confirmed from the same source read, not guessed). Re-run from a
+   clean `resize` stage onward. Result: **38 violations, unchanged** again,
+   every other figure again bit-identical.
+
+**Root cause, as far as this investigation can establish it**: all 38
+violating pins are the asynchronous `RESETN` input of flip-flops in
+`g_reg_out.bnk_val[*]`/`bnk_idx[*]` — i.e., every single violation sits on
+the reset tree, none on any clock or data path. OpenROAD's standard
+`repair_design` buffering pass is built around the combinational/data
+timing graph; it did not touch this net under either setting tried, which
+is consistent with async set/reset nets commonly sitting outside a
+resizer's default buffering scope (clock-tree-style buffering is a
+separate, dedicated step this flow does not invoke for non-clock nets).
+Actually fixing it would most likely need either a dedicated reset-tree
+buffering step (not confirmed to exist in this ORFS build) or restructuring
+the reset fanout in the RTL itself.
+
+**Disposition (direct Architect steer, 2026-09-12): the 38 remaining DRVs
+are formally classified as a non-critical control-net artifact, not
+pursued further.** Basis: (a) confined entirely to the async reset tree —
+zero occurrences on any clock or data path; (b) the flow's own STA run
+shows zero resulting setup or hold violations at either corner checked
+(`setup_violation_count = 0`, `hold_violation_count = 0`,
+`WNS/TNS = 0.00 ps`, `fmax = 1.519 GHz` — all unchanged by either repair
+attempt); (c) an RTL-level reset-fanout refactor is explicitly out of
+scope for this measurement-epoch ticket (TKT-018's own "no RTL change to
+close timing" constraint) and is not opened as a rabbit hole here. This is
+a disposition **decision**, not a claim that the underlying slew
+characteristic is irrelevant to a real silicon pass — `PROVEN — DIGITAL
+SIMULATION (ORFS/OpenROAD flow), TESTED CONDITIONS` covers exactly what
+was measured (zero STA timing impact in this flow), not a physical/
+silicon claim about reset-net signal integrity in general.
+
 **Disposition**: closing this epic's own narrow, explicitly-stated
-Measurement-Epoch deliverable as done (items 1-6 above are real, separate,
-follow-on engineering work — a CI/regression/multi-block/Cyclopter-wiring
-effort in their own right, not a continuation of "did the measurement
-happen"). A future ticket should own items 1-6 if the full tape-out-grade
-Green flow is still wanted; this epic does not claim to have done that
-work.
+Measurement-Epoch deliverable as done (items 1, 3-6 above are real,
+separate, follow-on engineering work — a CI/regression/multi-block/
+Cyclopter-wiring effort in their own right, not a continuation of "did the
+measurement happen"; item 2, the DRVs, is closed via the classification
+above, not left open). A future ticket should own items 1, 3-6 if the full
+tape-out-grade Green flow is still wanted; this epic does not claim to
+have done that work.
 
 ---
 ## Telemetry & Evaluation
 
-**Final State:** `done` (Measurement Epoch deliverable only — see the 6
-explicitly-open items above, not claimed as closed by this telemetry).
+**Final State:** `done` (Measurement Epoch deliverable only — see the 5
+explicitly-open items above — items 1, 3-6 — not claimed as closed by this
+telemetry; item 2, the max-slew DRVs, is closed via the documented
+classification, not left open).
 **Color:** `blue` — solid, validated engineering (a real, working,
 version-pinned toolchain; a real ASAP7 config; a real, cross-checked,
-timing-closed physical measurement feeding `TKT-019`), but not `green`
-(no CI regression, single block only, DRVs open, SDC not single-sourced).
+timing-closed physical measurement feeding `TKT-019`; the DRV item closed
+by two genuine remediation attempts plus a documented root-cause and
+disposition, not by silently dropping it), but not `green`
+(no CI regression, single block only, SDC not single-sourced).
 **Vector summary:** spec 0.8 (the stated Measurement-Epoch deliverable is
 fully met; the separate, broader "Green Target" 7-item checklist is not —
-hence < 1.0), quality 0.6 (the underlying `GCB-027`→`033` work is itself
-rigorous and cross-checked, but this epic's OWN ticket sat with a stale,
-blank Execution Log until this correction — a real process gap, not
-excused by the sub-work's own quality), emergence 0.0 (no new
-architectural surface; this is a ledger-accuracy correction over
+hence < 1.0), quality 0.65 (the underlying `GCB-027`→`033` work is itself
+rigorous and cross-checked, and the DRV item's closure is backed by two
+real flow re-runs, not assumed — revised up slightly from 0.6 for that;
+this epic's OWN ticket still sat with a stale, blank Execution Log until
+the earlier correction, which is why this isn't higher), emergence 0.0 (no
+new architectural surface; this is a ledger-accuracy correction over
 already-completed work, not new capability).
