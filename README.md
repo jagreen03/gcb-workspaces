@@ -208,7 +208,7 @@ child-story numbering (see `TKT-026`/`TKT-027`/`TKT-028` below).
 |---|---|---|---|
 | **TKT-000** | **Orange Team epoch guidance** — Physical Reality First; the RTL/P&R toolchain split; introduces the **Orange** (PBG-O = Physical Falsifiability) grade | done | **orange** |
 | TKT-001 | Migrate RTL schematic rendering off netlistsvg to a headless chip-scale layout engine | done | green |
-| TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports — **status corrected 2026-09-12**: the glue was real (`gcb_tensor_command_wiring.sv`) but had zero dedicated testbench coverage and this ticket's own frontmatter was never updated; now functionally verified, `TESTS=2 PASS=2` | done | green |
+| TKT-002 | Wire opcode-dispatcher decoded control signals into the tensor memory engine control ports — the glue was real (`gcb_tensor_command_wiring.sv`), its own frontmatter was just never updated. **Correction, same day**: `tb/tb_tensor_command_wiring.sv` already existed and already covered it comprehensively (confirmed still passing) — the earlier "zero testbench coverage" claim here was wrong, a search that missed this repo's `tb/`+`sim/run_tb.sh` convention; the new cocotb test is a correct but redundant duplicate, not a gap closure | done | green |
 | TKT-003 | Widen tensor-memory addressing past 4 GiB with a formal translation layer | done | green |
 | TKT-004 | Address-translation mechanism trade study for tensor-memory addressing | done | green |
 | TKT-005 | Formalize the PBG telemetry taxonomy as a 3D bipolar vector space | done | green |

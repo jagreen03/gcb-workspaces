@@ -6,7 +6,7 @@ status: done
 telemetry_color: green
 telemetry:
   spec: 1.0
-  quality: 1.0
+  quality: 0.5
   emergence: 0.0
 tags:
   - backlog
@@ -28,6 +28,38 @@ instantiates both; the decoded command interface currently terminates in mid-air
 This ticket creates the structural glue that routes the dispatcher's decoded
 signals into the memory engine's control ports and closes the `command_ready`
 handshake back from engine status.
+
+## CORRECTION (2026-09-12, later same day) — the testbench claim below was wrong
+
+**The "What was genuinely missing" claim two paragraphs down is false and
+is left in place, struck through in spirit but not in fact, so this
+record is honest about the error rather than quietly edited away.**
+`tb/tb_tensor_command_wiring.sv` already existed, already covered this
+exact module comprehensively — non-GEMM filtering, the `gemm_start` pulse,
+BPR translation **including the >32-bit reach** (which the new cocotb test
+below did NOT check), the override field reaching `BASE_SCRATCH`, and
+multi-pulse counting — and, confirmed by actually building and running it
+just now, **still passes (`ALL CHECKS PASS`) against the current RTL.**
+
+The search that produced the "no dedicated functional testbench existed"
+claim only checked `sim/cocotb/*.py` — it never checked this repository's
+**separate, older `tb/` + `sim/run_tb.sh` convention**, which is where
+`gcb_tensor_command_wiring.sv` (and `gcb_tensor_address_translation.sv`,
+and most of the control-plane/compute RTL) actually carries its test
+coverage. This is a real process error, not a harmless one: it produced a
+false "gap closed" narrative, committed to git, in both repos.
+
+**Disposition:** the new cocotb test (`test_tensor_command_wiring.py`)
+itself is correct and still passes — it is not reverted, since deleting
+working, harmless, already-pushed test code over a documentation error
+would be more disruptive than leaving it. But it is **not** a gap closure;
+it is a redundant, alternate-convention duplicate of coverage that already
+existed. The telemetry above is revised down (quality 1.0 → 0.5) to
+reflect that this ticket's own record was wrong until this correction, not
+because the RTL or either test is actually broken. Going forward: this
+repository requires checking **both** `sim/cocotb/` and `tb/`+
+`sim/run_tb.sh` before any future ticket claims "no test exists" for an
+RTL module here.
 
 ## Resolution (2026-09-12) — status corrected, gap was stale not real
 
