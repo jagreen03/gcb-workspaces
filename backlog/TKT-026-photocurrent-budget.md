@@ -2,7 +2,7 @@
 id: TKT-026
 title: "Phase-I bench photocurrent budget — unblocks TIA gain selection"
 date_created: 2026-09-12
-status: open
+status: done
 telemetry_color: pending
 tags:
   - backlog
@@ -57,9 +57,33 @@ setting no longer marked "not yet calculated."
   figure and flag it, don't block on it.
 - Any RTL change. This is a physical-layer bench calculation only.
 
+## Findings (resolved 2026-09-12)
+
+Nominal-point calc, Tap 0 (reference leg), verified by recompute:
+
+| Stage | Value |
+|---|---|
+| Laser (`GCB-LSR-01`) | +3 dBm ≈ 2 mW |
+| Isolator + VOA + splitter loss | 0.5 + 2.0 + 9.5 = 12.0 dB |
+| Received power | −9 dBm ≈ 125 µW |
+| Photocurrent (0.9 A/W InGaAs) | ≈112.5 µA |
+| **R_f** | **1.5 V / 112.5 µA ≈ 13.33 kΩ** |
+
+**Deliverable:** 13.3 kΩ nominal; **10–20 kΩ adjustable stage
+recommended** over a fixed resistor, since every upstream figure (laser
+power, each insertion loss) is still `[CANDIDATE]`/`[TBD]` itself —
+trimmable gain absorbs real-part variance without a board re-spin.
+`task3_physical_bom.md` §3.2 updated with the full table and this
+recommendation.
+
+**Known gap, not closed by this ticket:** computed for Tap 0 only. Tap K's
+`GCB-SPLT-1X8` leg loss is not guaranteed equal (carry-save-weighted
+combination vs. a pass-through reference) — flagged in the BOM as an open
+item for whoever finalizes the splitter-network topology (§2).
+
 ## Telemetry
 
-No PBG grade — this is a build-prerequisite calculation ticket, not a
-verified RTL deliverable.
+No PBG grade — build-prerequisite calculation ticket, not a verified RTL
+deliverable.
 
-**Status:** `open | pending`.
+**Status:** `done`.
