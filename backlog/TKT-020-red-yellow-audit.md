@@ -291,6 +291,45 @@ Epic demo is scheduled.
    seed (closes R3); `make doctor` preflight + committed reproducible DB
    bring-up (closes Y2).
 
+   **Disposition check (session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-12) - item 3
+   above was a RECOMMENDATION, not a retrospective claim, and TKT-018 as
+   actually executed did not fulfill it as written. Verified directly, not
+   assumed:** `TKT-018`'s real work was `gcb_max_reduce`'s `REG_STAGES`
+   mid-tree pipeline + its ASAP7 physical validation (`GCB-031`/`.032`) and
+   `SYNTH_RETIME_MODULES` retirement (`GCB-033`) - genuinely closing item 2
+   (the `REG_STAGES` timing study, now a real physical-validation result,
+   not merely a study: `WNS 0.00 ps`, `fmax 1.519 GHz`). It did **not**
+   produce "a single-clock-domain declaration" for this repo's actual
+   multi-clock CDC RTL, nor "one full-geometry Yosys run" of the
+   tensor-compute chain at its own default parameters (`M_TOTAL=4096` etc.
+   - `TKT-012`/`.016`'s Yosys runs remain `-chparam`-shrunk, exactly as Y1
+   item 4 itself describes) - confirmed by `find . -iname "*.sdc" -o -iname
+   "*.xdc"` returning **zero files** anywhere in `gcb-wdm-transceiver`
+   before this disposition note was written. Items 1 and 4 were **not**
+   actually closed by `TKT-018`.
+
+   **Item 1 - partially closed this session** (the slice that has real,
+   committed RTL to constrain): `gcb_dwdm_async_skew_fifo.sv`'s six 2-flop
+   CDC synchronizer register pairs (gray-code pointers + `TKT-019.21`'s
+   cross-coupled reset tree) are now marked `(* ASYNC_REG = "TRUE" *) (*
+   keep = "true" *)`, and `constraints/gcb_dwdm_async_skew_fifo_cdc.tcl`
+   (new - the first `.sdc`/constraint artifact of any kind in this repo)
+   provides a sourceable `set_clock_groups -asynchronous` constraint for
+   the `wr_clk`/`rd_clk` boundary. Regression-confirmed unaffected (the
+   change is synthesis-attribute-only, zero behavioral change): `sim/lint.sh`
+   38/38, `test_wdm_deskew_cdc.py` `TESTS=10 PASS=10`,
+   `test_wdm_link_integration.py` `TESTS=22 PASS=22`,
+   `test_wdm_payload_mux.py` `TESTS=3 PASS=3`.
+
+   **Item 1 - still genuinely open**: the GDDR7 PHY and optical-line-rate
+   SerDes clock domains `TKT-018`/`TKT-019` introduce have no committed
+   RTL yet and therefore cannot be constrained yet either; no chip-level
+   SDC exists (only this one module's own reusable constraint snippet).
+   **Items 3, 4, 5 remain entirely open** (power-of-two address-math guard,
+   full-default-geometry synthesis run, `SRAM_LATENCY`/`RD_REG` consistency
+   check) - tracked as `TKT-029` (new), since none of this had its own
+   ticket before now.
+
 ---
 ## Execution Log
 
