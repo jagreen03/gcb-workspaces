@@ -455,3 +455,86 @@ an already-long run. Updated `README.md`'s filetree/table entries.
 
 **STOPPING HERE.** See the Conclude & Handoff report delivered in-chat
 for the full rollup, stopping reason, and Gemini handoff prompt.
+
+---
+
+## Iteration 7 — 2026-09-12
+
+**Target selected:** independent re-verification of `TKT-031`'s
+`phase1_baseline_check()` (requested directly), then `TKT-030`
+(gcb-pic-core K=16 layout) - routed by name as "the primary open
+technical target" after a fresh backlog scan confirmed nothing
+higher-priority had appeared.
+
+**Re-verification:** re-ran `switched_charge_model.py` fresh (the exact
+`--run-verification` flag requested does not exist - the script has no
+argparse, `phase1_baseline_check()` already runs unconditionally in
+`__main__`; used the real `~/.venvs/gdsfactory` venv since plain `python`
+does not resolve in this environment). Confirmed independently:
+`PHASE I BASELINE VERIFIED`, exit 0, the +50% insertion-loss case lands
+at ADC code `180/255` - comfortably inside the [10%,80%] window, no
+clipping, no rail saturation.
+
+**TKT-030 first real attempt - a genuine diagnostic advance, not a
+working layout:** identified `gf.components.awg()` (a real Arrayed
+Waveguide Grating) as the architecturally correct component (wavelength-
+selective combining, not an MMI power-splitter). Read its docstring
+before using it: the library default is non-dispersive
+(`length_increment=0`); confirmed no real channel-spacing value exists
+anywhere in this program's own docs to derive a correct value from
+(`gcb-wiki/16`'s own "Missing" list names it explicitly) - used a clearly
+-labeled placeholder `length_increment=0.1` for feasibility only. Built
+`awg(arms=20, outputs=16, length_increment=0.1)`: it returned without
+raising, but the library's own internal router threw 15/16 arm-to-FPR
+routing failures (minimum-bend-radius violation) - a `Component` object
+without a Python exception is NOT the same as a valid layout, caught by
+reading the actual warnings. First fix attempt (`arm_spacing=25.0`)
+verified to have **zero effect** - identical failures, identical output
+size, re-run and compared directly rather than assumed to have worked;
+traced why: the docstring already on hand says `arm_spacing` is "used
+when `length_increment == 0`," which a dispersive AWG cannot use. Traced
+the real likely lever (the free-propagation-region's own `width1`/
+`width2`/`length`) but did not try it - stopped at the exact photonics-
+layout-domain-expertise threshold `TKT-030` itself predicted in advance,
+rather than guessing further through unfamiliar AWG internals.
+
+**Work done:**
+1. `backlog/TKT-030-...md` - Execution Log appended with the full
+   diagnostic narrative (component choice, the two checked-and-verified
+   attempts, the one genuinely FAILED construction, the next untried
+   lever), epistemic labels (`FAILED` for the attempted construction,
+   `UNPROVEN` for the untried fix).
+2. `README.md` (gcb-workspaces) - updated `TKT-030`'s entries with the
+   same honest accounting.
+3. No change to `gcb-pic-core` itself - no file was written there (the
+   attempts were interactive Python calls, not saved to
+   `layout_homodyne.py` or a new script, since none produced a valid
+   result worth committing).
+
+**Test results (actual):** `switched_charge_model.py` re-run, confirmed
+`PHASE I BASELINE VERIFIED`, exit 0 (independent re-verification).
+`gf.components.awg()` calls: both returned `Component` objects (no
+exception) but with confirmed, logged internal routing failures - NOT a
+passing result, reported as such.
+
+**Epistemic status:** the re-verification is **PROVEN — DIGITAL
+SIMULATION (model execution), TESTED CONDITIONS**, confirmed
+independently. The AWG attempt is **FAILED** for the specific
+construction tried (not a working layout); **UNPROVEN** for whether the
+untried FPR-geometry fix would resolve it.
+
+**Commits:**
+- `gcb-workspaces`: PENDING (to be filled before push)
+- `gcb-analog-rx`, `gcb-wdm-transceiver`, `gcb-pic-core`: none this
+  iteration (re-verification only; the AWG attempts produced nothing
+  worth committing)
+
+**Ticket status changes:** `TKT-030` stays `open | pending` - real
+diagnostic progress recorded, the K=16 layout itself remains unresolved.
+
+**Next step:** `TKT-030`'s remaining path (adjust
+`free_propagation_region_output_function`'s `width1`/`width2`/`length`)
+is a plausible next lever but requires either dedicated photonics-
+layout-domain attention or continued careful iteration - this loop has
+now hit a genuine domain-expertise boundary on its one remaining
+substantial open target. Honest stopping point.

@@ -99,9 +99,86 @@ construction.
   ticket.
 - `TKT-019.19` and anything in that neighborhood - unrelated.
 
+---
+## Execution Log - first attempt (2026-09-12), a real diagnostic advance, NOT a working layout
+
+**Attempted the real K=16 multiplexer this session, per the Architect's
+own routing of this as "the primary open technical target." Result: hit
+a genuine, well-characterized photonics-layout-domain limit, exactly as
+this ticket's own "Required work" section predicted - reported honestly
+as a concrete diagnostic finding, not papered over as success.**
+
+1. Surveyed `gdsfactory`'s generic-PDK component library for a real
+   wavelength-selective (not power-splitting) N-to-1 combiner:
+   `gf.components.awg()` - a real Arrayed Waveguide Grating - is the
+   architecturally correct choice (an MMI splitter tree, the other
+   available option, combines same-wavelength power with an unavoidable
+   splitting-loss penalty; an AWG routes DIFFERENT wavelengths into one
+   output with low loss, matching this tile's actual physics).
+2. **Read the component's own docstring before using it, not after**:
+   confirmed the library's DEFAULT (`length_increment=0.0`) produces a
+   non-dispersive shape with zero wavelength selectivity - a nonzero
+   `length_increment` is required for the arms to actually function as a
+   grating. No real channel-spacing value exists anywhere in this
+   program's own docs to derive a correct `length_increment` from -
+   confirmed directly: `gcb-wiki/16_hardware_parts_systems_specification.md`
+   line 477 lists "channel spacing" explicitly under **Missing**. Any
+   value used is therefore an `ESTIMATE-ASSUMPTION`, not a design input -
+   used `length_increment=0.1` purely to get a non-degenerate,
+   dispersive SHAPE for this feasibility check, not as a real design
+   commitment.
+3. Built `awg(arms=20, outputs=16, length_increment=0.1,
+   cross_section="strip")` (outputs=16 used in reverse, as this tile's 16
+   wavelength-channel INPUTS). **It returned a Component object without
+   raising, but the returned layout is NOT valid** - the library's own
+   internal auto-router (`route_single`) threw 15 of 16 arm-to-free-
+   propagation-region connections as `Routing failed: ... too small to
+   safely place bends ... < b90r=10000` (a minimum-bend-radius
+   violation at the default FPR fan-out geometry). A `Component` that
+   "builds" without a Python exception is not the same as a
+   `Component` with a complete, DRC-clean waveguide layout - caught by
+   reading the actual warnings, not by the absence of a crash.
+4. **First fix attempt (`arm_spacing=25.0`, up from the 1.0 um default)
+   had ZERO effect - identical failures, identical output size, verified
+   by direct re-run, not assumed to have worked.** Re-reading the
+   docstring already on hand explained why: `arm_spacing` is documented
+   as "used when `length_increment == 0`" - since a nonzero
+   `length_increment` is required for step 2's own reason, `arm_spacing`
+   was never even consulted. A plausible-sounding first guess, checked
+   and found wrong, reported as such rather than silently dropped.
+5. Traced the real likely lever: the FPR fan-out geometry comes from
+   `free_propagation_region(width1=2.0, width2=20.0, length=20.0, ...)`,
+   which `awg()`'s own
+   `free_propagation_region_output_function` partial only overrides
+   `inputs`/`width1`/`width2` for, not `length` - `width1`/`width2`/
+   `length` together are the more likely real fix, **not yet attempted**.
+
+**Disposition: stopping here, not guessing further through unfamiliar
+AWG-layout internals.** This is the exact threshold this ticket's own
+"Required work" section named in advance ("do not attempt the full K=16
+WDM-tile layout without real photonics-layout domain grounding"). The
+diagnostic state above - which component, which specific failure, which
+fix does NOT work and the documented reason why, and where the next
+attempt should start - is real, verified advancement for whoever (human
+or AI) picks this up next with either deeper `gdsfactory`/AWG-design
+expertise or a willingness to iterate through the FPR geometry
+parameters properly, rather than a five-minute autonomous-loop guess.
+
+**Epistemic status: FAILED** (the specific `awg(outputs=16,
+length_increment=0.1, arm_spacing=25.0)` construction does not produce a
+valid layout) for the attempted construction; **UNPROVEN** for whether
+adjusting `free_propagation_region_output_function`'s own `width1`/
+`width2`/`length` would resolve it (plausible, not yet tried). No claim
+of any kind about real insertion loss, channel spacing, or physical
+feasibility - this is a `gdsfactory` auto-router feasibility check only.
+
 ## Telemetry & Evaluation
 
-No PBG grade - this ticket documents a verified current state and a
-scoped next step; it does not itself execute the K=16 layout.
+No PBG grade - this ticket documents a verified current state, a real
+diagnostic attempt at the K=16 extension that found and honestly
+reported a concrete routing-feasibility failure (not a success), and a
+specific next lever to try. It does not itself deliver a working K=16
+layout.
 
-**Final State:** `open | pending`
+**Final State:** `open | pending` - genuine diagnostic progress recorded;
+the K=16 layout itself remains unresolved.
