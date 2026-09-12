@@ -173,3 +173,84 @@ overall.
 **Next candidate for iteration 3:** `TKT-029` item 4 (full-default-
 geometry Yosys run — a measurement task, no RTL change), or re-scan the
 backlog fresh per the loop's own step 1 before committing to that.
+
+---
+
+## Iteration 3 — 2026-09-12
+
+**Target selected:** fresh backlog re-scan (per step 1) confirmed `TKT-029`
+item 4 remains the best available silicon/RTL-tier target — the
+`TKT-019.6`-`.18` chain is already executed-in-substance (confirmed in an
+earlier session pass), `TKT-019.19` is off-limits, and `TKT-020` R3 /
+`GCB-034`-`039` are software/architecture-tier, lower priority.
+
+**What was done:** identified the real top-level modules
+(`gcb_tensor_sram_controller`, `gcb_tensor_memory_engine` +
+`gcb_tensor_broadcast_fabric`) and confirmed their RTL defaults are still
+exactly what `TKT-020` Y1 item 4 described (`M_TOTAL=N_TOTAL=K_TOTAL=4096`,
+`N_TILE=1024`, `GRID_DIM=16`, `NUM_CORES=256` - no drift). Ran the
+identical `sim/yosys068_bless/` pipeline used throughout this repo, with
+**zero `chparam` overrides** - i.e. at the real, un-shrunk default
+geometry, bounded by a documented 10-minute timeout so a non-completion
+would itself be a valid result.
+
+**Result — a genuine surprise, reported as measured:** both elaborations
+completed almost instantly (`gcb_tensor_sram_controller` alone: **0.08 s**;
+the full `gcb_tensor_memory_engine` incl. the 256-core broadcast fabric:
+**1.13 s**), 0 problems, latch-free. Cross-checked the memory-bit figure
+(3.41×10⁷) by hand against the documented 64 KiB (A) + 4 MiB (B) sizing -
+matches exactly, confirming this was genuinely the full geometry, not
+something silently reduced. A notable secondary finding: the controller's
+own LOCAL cell count at full scale (741) is nearly identical to its
+already-blessed SHRUNK-geometry figure (740, from the pre-existing
+`sim/yosys068_bless/` baseline) - because `stat`'s cell count tracks
+control-plane logic width (logarithmic in geometry), not the memory bits
+that actually scale with it.
+
+**What this closes, and what it explicitly does not:** closes the
+specific `TKT-020` Y1 item 4 claim that "no run has ever actually been
+attempted at the real default size" for Yosys elaboration. Does **NOT**
+close Y1's own separate, heavier claim about OpenROAD place-and-route at
+this scale - that remains untouched and exactly as open as before; no
+synthesis-to-gates, timing, or physical-layout claim is made here. Also
+not claimed: that the *original* "too slow" finding was never true -
+only that, with the current committed RTL, right now, it measurably is
+not.
+
+**Work done:**
+1. `backlog/TKT-029-...md` — Execution Log for item 4, with the full
+   before/after table and the cross-checked memory-bit arithmetic; all
+   three items (3, 5, 4) now closed, ticket moved to `done | blue`
+   (`spec:0.85 quality:0.85 emergence:0.2`).
+2. `README.md` (gcb-workspaces) — updated `TKT-029`'s filetree entry and
+   table row to `done | blue`.
+3. No RTL changed this iteration - item 4 is a measurement only, per the
+   `TKT-019.9` no-RTL-change precedent this ticket itself cited.
+
+**Test results (actual):** two real Yosys runs (not estimates), both
+exit code 0, `check -assert` clean, `select -assert-count 0
+t:$dlatch t:$dlatchsr t:$sr` clean (0 latches) at both scopes.
+
+**Epistemic status:** **PROVEN — DIGITAL SIMULATION (Yosys elaboration
+only), TESTED CONDITIONS**, for exactly the two runs tabulated in
+`TKT-029`'s own Execution Log. No claim of any kind about OpenROAD P&R,
+timing closure, or physical layout at this scale.
+
+**Commits:**
+- `gcb-wdm-transceiver`: none (no RTL touched this iteration)
+- `gcb-workspaces`: PENDING (to be filled before push)
+
+**Ticket status changes:** `TKT-029` — `open | pending` → **`done | blue`**
+(all three items closed). No new tickets created this iteration (the
+fresh re-scan did not surface an uncaptured gap ranking above the already
+-queued work).
+
+**Next candidate for iteration 4:** a fresh backlog re-scan is needed
+before picking anything further - with `TKT-029` fully closed and the
+`TKT-019.6`-`.18` chain already substantively done, the remaining
+silicon/RTL-tier candidates visible right now are thin (`TKT-020` R3 is
+software-tier; `GCB-034`-`039` are architecture-only findings with no
+queued RTL action). This may be close to genuine diminishing returns for
+the silicon/RTL tier specifically - worth an honest evaluate-limits check
+at the start of iteration 4 rather than manufacturing a lower-value
+ticket just to keep looping.
