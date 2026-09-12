@@ -425,3 +425,33 @@ specialized for this loop's pace - a fresh backlog re-scan (including a
 check of the remaining un-surveyed repos: gcb-host, gcb-grants,
 gcb-papers, vortex, sv2v-Linux, AI-session) is the honest next step
 before committing to anything further.
+
+---
+
+## Iteration 6 — 2026-09-12 (brief)
+
+**Target selected:** the remaining un-surveyed repos, per iteration 5's
+own flagged next step. `gcb-grants`, `gcb-papers`, `AI-session` are
+funding/academic/session-log content - correctly out of scope under this
+program's own Silicon > RTL > hardware-connectivity > software/tooling
+priority. `vortex` and `sv2v-Linux` are upstream third-party projects
+(license/changelog/contributing-file structure, not GCB-authored
+components) - out of scope as dependencies, not program deliverables.
+`gcb-host` ("C++ pilot driver, FastAPI MMIO proxy, model manifest
+tooling") IS genuinely hardware-connectivity tier and had never been
+ticketed.
+
+**Work done:** created `backlog/TKT-032-gcb-host-intake.md` as a
+**deliberately lightweight placeholder**, not a completed survey (unlike
+`TKT-030`/`TKT-031`) - a real C++ driver + FastAPI proxy deserves the same
+actually-build-and-run verification those two got, which is its own
+bounded task for a future iteration, not a rushed add-on at the end of
+an already-long run. Updated `README.md`'s filetree/table entries.
+
+**Commits:**
+- `gcb-workspaces`: PENDING (to be filled before push)
+
+**Ticket status changes:** `TKT-032` created (`open | pending`).
+
+**STOPPING HERE.** See the Conclude & Handoff report delivered in-chat
+for the full rollup, stopping reason, and Gemini handoff prompt.
