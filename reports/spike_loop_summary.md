@@ -1175,3 +1175,91 @@ family as this correction. Absent that, extending `mode_solve_strip.py`'s
 FEM approach toward the real MMI power-combiner geometry (not just a bare
 waveguide) to get a genuine insertion-loss figure for `mmi_power_tree.py`
 remains the other open thread from `TKT-033` Part B.
+
+---
+
+## Directed continuation — 2026-09-12 (TKT-035: full system hardware inventory reconstruction, Pass 1)
+
+**Context:** the Architect supplied a standing reconstruction prompt
+(`GCB System Hardware Inventory — Gemini + Orange-Team Prompt.md`) and
+asked whether `TKT-034` was close to it; if not, to open it as a new
+ticket and work it. Checked: not close (`TKT-034` is a narrow single-
+component grounding check; the prompt is an 11-section, program-wide
+reconstruction with strict Orange-Team evidence-category discipline).
+Opened `TKT-035` and executed Pass 1 directly.
+
+**Treated the source prompt itself per this program's own standing
+doctrine**: AI-facing framing ("Gemini + Orange-Team," "may be passed to
+another LLM") - a task specification, not evidence. `gcb-wiki/15` and
+`/16` appear to be prior output from this same (or a closely related)
+prompt, and this session already found real ungrounded content in both
+(`TKT-033`) - so this reconstruction was done fresh from repo/`gcb-spec`
+evidence directly, not as a touch-up of the existing docs.
+
+**What was done:**
+1. Surveyed all repos under `D:\R\S\H\` (READMEs + structure) for the
+   functional parts inventory.
+2. Found real, concrete evidence not previously surfaced this session:
+   `gcb-rtl`'s `greencoyote_top` has an actual Vivado 2024.2 post-route
+   checkpoint (`post_route.dcp`) targeting `xcu55c-fsvh2892-2L-e` (Alveo
+   U55C), OOC mode, all timing constraints met (WNS +0.261 ns),
+   real utilization (602 LUT, 8 DSP48E2) and a vectorless power estimate
+   - a materially higher evidence tier than anything else found this
+   session, confirmed by direct read of the checkpoint's own README.
+3. Diffed `gcb_wavelength_router.sv` between `gcb-wdm-transceiver` and
+   `gcb-photonic-qam-v2` (both contain a file of this name) - confirmed a
+   real fork-divergence (124 vs. 99 lines, `N_LAMBDA` parameterization
+   added in one copy only), exactly the "repository names that refer to
+   different architectural generations" contradiction class the source
+   prompt names.
+4. Read `gcb-spec/architecture.md` directly - found it names exactly
+   five canonical repos (`gcb-spec`, `gcb-rtl`, `gcb-host`,
+   `gcb-dashboard`, `gcb-papers`) around a single-wavelength, power-
+   summing optical cascade. **This does not include** `gcb-wdm-
+   transceiver`, `gcb-photonic-qam-v2`, `gcb-pic-core`, `gcb-analog-rx`,
+   or `gcb-python-orchestrator` - five repos with real, substantial work
+   that all self-identify as part of the same program but describe a
+   materially different (WDM/multi-channel) optical mechanism.
+5. **Synthesized this into the session's biggest structural finding**:
+   two largely separate architectural tracks coexist under one program
+   name - Track A (`gcb-spec`-grounded, real FPGA P&R evidence, real host
+   driver) and Track B (`gcb-wiki`-narrated, no dedicated spec repo of
+   its own, no FPGA/ASIC evidence). This plausibly EXPLAINS `TKT-033`'s
+   earlier finding: the 60λ/50GHz-grid figures most likely belong to
+   Track B's `gcb-wdm-transceiver` (a real, separate, regression-tested
+   DWDM component), not `gcb-pic-core`'s tile - two genuinely separate,
+   both-real optical subsystems previously conflated by `gcb-wiki`'s own
+   cross-references.
+6. Built and committed `reports/system_hardware_inventory_pass1.md`: a
+   master hardware inventory (evidence-category-labeled per the source
+   prompt's own taxonomy, both tracks), a 4-entry contradiction register,
+   a system-boundary statement (Vortex confirmed as real, substantial,
+   independently-maintained upstream IP - no GCB-specific files found
+   inside the vendored `vortex/` tree itself), functional-completeness
+   gaps, and a dependency map for Track A.
+7. Created `TKT-035` recording the task, honestly scoped as "Pass 1, not
+   exhaustive" - flagged three repos (`gcb-python-orchestrator`,
+   `gcb-dashboard`, `vortex`'s non-TCU surface) as shallow-pass only, and
+   several prompt deliverable sections (equipment matrix, DFT matrix) as
+   deferred rather than rebuilt from scratch this pass.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** for every concrete claim
+in the report (the Vivado checkpoint's real contents, the file diff, the
+architecture.md text, the repo structure survey) - all read/checked
+directly this pass, not inferred. **UNKNOWN/OPEN**: which of the four
+framings in Contradiction Register entry 1 (Track A/B relationship) is
+correct - explicitly left open per the source prompt's own "do not
+choose a winner silently" rule.
+
+**Commits:**
+- `gcb-workspaces` (this commit) - new ticket `TKT-035`, new report
+  `reports/system_hardware_inventory_pass1.md`, `README.md` entries
+  added, this summary entry appended.
+
+**Ticket status changes:** New ticket `TKT-035`: `open | pending`
+(Pass 1 delivered, explicitly not exhaustive).
+
+**Next candidate:** deepen the three shallow-pass repos, or pursue
+Contradiction Register entry 1 directly with the Architect (is Track B
+superseded by, parallel to, or meant to merge with Track A?) - the
+highest-leverage open question this pass surfaced.
