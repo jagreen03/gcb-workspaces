@@ -3593,3 +3593,60 @@ not something this tick settles.
 **Ticket status changes:** `GCB-043` filed, `open | pending`.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Open-ended loop tick, 2026-09-13 - found a real WSL toolchain gcb-kelvin's own prior assumption had ruled out
+
+**Pulled from `gcb-kelvin`** (the analog Rx noise `CONDITIONAL GO →
+GO` gate research repo) after the core ticket backlog and
+`gcb-lambda`'s Deliverable 1 had already been worked this session.
+`gcb-kelvin`'s own README/briefing assumed no simulator access beyond
+what existing evidence docs already cited — checked directly rather
+than carried forward: `wsl.exe` is available on this host with the
+real `ngspice-44`+OSDI+`bsimcmg.osdi`+ASAP7 toolchain
+(`gcb-spec/docs/spice_setup.md`) already built and working at
+`~/gcb_spice/tb/`.
+
+**Re-confirmed, not assumed stale:** re-ran the real deck testing
+`.noise` against the actual BSIM-CMG device
+(`~/gcb_spice/tb/_noise_cal.cir`) - still returns exactly zero across 4
+decades, matching `AGENT_02_ANALOG_EVALUATOR.md`'s documented finding.
+
+**Found something new, not previously recorded anywhere in this
+program:** a separate `.op`/`.ac` probe against the same real device
+extracts real small-signal parameters cleanly (`gm = 7.79e-4 S`,
+`gds = 3.37e-5 S`, `cgg = 4.28e-16 F`) even though internal noise-
+source synthesis (`.noise`) does not. This moves
+`EXTERNAL_AI_BRIEFING.md`'s own first speculative angle - a manual
+noise model using the real device's real gm instead of a BSIM4
+surrogate's gm-match - from "maybe possible" to "confirmed buildable,"
+without needing Spectre.
+
+**Stated plainly, not overclaimed:** this does **not** close the core
+question. No comparator-circuit noise number was computed - a single
+transistor's gm is not a noise result, and building a correct
+multi-transistor manual noise model for the real 2-stage chopped/
+auto-zeroed preamp + StrongARM latch needs real analog-IC noise-design
+judgment this tick did not attempt. `gcb-kelvin/FINDINGS-2026-09-13.md`
+states this distinction explicitly; `ai-agents/ORANGE_TEAM.md` and
+`EXTERNAL_AI_BRIEFING.md` updated so the next session (human or AI)
+builds on this confirmed-viable path instead of re-deriving whether
+it's possible.
+
+Logged as Research Triage Pass 3 - not ticket-worthy (no architecture
+decision for the Architect here), classified as "needs more research"
+at unchanged P0 for the core question, P1 for the newly-scoped manual-
+noise path.
+
+**Epistemic status: PROVEN — DIGITAL SPICE SIMULATION, TESTED
+CONDITIONS** for both the `.noise` re-confirmation and the `gm`/`gds`
+extraction (both real, reproduced runs). **UNPROVEN**, explicitly and
+unchanged: the real comparator-circuit noise number, and whether a
+full manual model would actually narrow the ±16% band.
+
+**Commits:** `gcb-kelvin@c41906e`, `gcb-workspaces@f59f17d` - both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - a research finding, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop.
