@@ -2056,3 +2056,42 @@ hygiene, not tied to a ticket.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (TKT-035's Finding #3 needed a precision correction, not just confirmation)
+
+**Context:** `TKT-035`'s own "Required work" §3 asked to confirm Finding
+#3's hypothesis (`gcb-wiki/15`'s 60λ figures describe
+`gcb-wdm-transceiver`'s router, not `gcb-pic-core`'s) "by re-reading
+`gcb-wiki/15`'s own citations in full" - a task this ticket itself
+authorized, not a new one invented this tick.
+
+**What was found:** `gcb-wiki/15`'s relevant line (confirmed via `git
+log -L` to predate `TKT-035`'s own Finding #3 entirely - it was in the
+document's *original* 2026-09-11 draft) is more precise than the
+hypothesis it was checked against: **60λ is sourced to `GCB-034`/
+`GCB-037`'s link-budget ESTIMATE** (a separate, higher-level
+transport-layer document), **not** to `gcb-wdm-transceiver`'s RTL at
+all - only the **64-lane** figure is that repo's own RTL-tested ceiling
+(`TKT-019.1`). `gcb-wiki/15` itself already keeps these "deliberately
+distinct, per `14`'s own doctrine." Finding #3's core conclusion still
+stands (neither figure is `gcb-pic-core`'s); its phrasing had conflated
+two different real sources under one description.
+
+**What was done:** corrected item 3 in `TKT-035` (struck through, not
+deleted) and added a dated resolution section explaining the precision
+correction, plus the still-unresolved 50 GHz channel-spacing half
+(unchanged from `gcb-wiki/15`'s own existing maintainer flag).
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (`git log -L` on the
+specific line; the full citation context read before writing the
+correction).
+
+**Commits:** `gcb-workspaces@a7a9e00` (pushed, verified); this entry.
+
+**Ticket status changes:** none flipped - `TKT-035` stays
+`open | pending` (the equipment/DFT matrix item remains the one
+genuinely unstarted item).
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
