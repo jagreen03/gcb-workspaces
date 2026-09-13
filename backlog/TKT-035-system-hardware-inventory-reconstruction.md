@@ -103,6 +103,58 @@ register, system boundary, functional-completeness gaps, dependency map).
   source prompt's own explicit framing.
 - `TKT-019.19` and anything in that neighborhood - unrelated.
 
+---
+## Resolution, simplified (2026-09-12, same day, directed follow-on:
+"simplify this, /loop till you find the best solution... don't throw
+the baby out with the bathwater")
+
+**The simple answer**: Track A (`gcb-spec`'s 5 repos) is **Phase I** -
+the real, already-synthesized, current system. The "Track B" repos are
+mostly **Phase II** - the same program's forward roadmap, not a
+competing architecture. Nothing gets deleted; the confusion was a
+citation gap, not a real conflict.
+
+**Implemented and verified, not just decided in prose**: `gcb-pic-core`
+is CONFIRMED to fold into Track A - `gcb-spec/docs/optical_geometry_spec.md`
+(LOCKED v1.0.0) sizes a Phase-II integrated array at exactly `L=16`
+contraction lanes/channel/fire, single wavelength. That's the real
+number behind `gcb-pic-core`'s "K=16" - the WDM label was wrong, the
+number wasn't. `mmi_power_tree.py` now builds+verifies both the real
+Phase-I (N=8) and Phase-II (N=16) targets, reproduced twice, committed
+(`gcb-pic-core@79e9c58`, `87de269`, pushed). See `TKT-030`'s own
+refinement note.
+
+**Checked, not yet confirmed, for the other four "Track B" repos**:
+- `gcb-python-orchestrator` - plausibly ALSO belongs to Track A (its own
+  README describes a compiler for "the Photonic + Vortex hybrid fabric,"
+  which is exactly Track A's real data path - Vortex TCU feeding an
+  optical cascade). Likely just an uncited repo, not a separate track -
+  not yet confirmed by reading its internals in depth.
+- `gcb-analog-rx` - Track A's real, already-synthesized Rx
+  (`greencoyote_ss_tdc.sv`, single-slope readout) was chosen by ADR-005
+  over a retired alternative ("the Charge-Balancing Delta-Sigma branch is
+  retired," `gcb-spec/architecture.md`). Whether `gcb-analog-rx`'s
+  switched-charge integrator is that retired branch, an unrelated Phase-
+  II candidate, or something else - not checked this pass.
+- `gcb-wdm-transceiver` - real, substantial, regression-tested DWDM
+  RTL, but Track A is explicitly single-wavelength ("no channel mux").
+  Most likely a genuinely separate subsystem (inter-chip/board optical
+  TRANSPORT, a different layer than Track A's on-die compute cascade),
+  not forced into Track A - this is the one repo where "separate but
+  real" is the most likely honest answer, not a citation gap.
+- `gcb-photonic-qam-v2` - complex-valued QAM optical compute; no Track A
+  counterpart found. Most likely a separate, longer-horizon vision, same
+  status as `gcb-wdm-transceiver`.
+
+**Net result**: of five "Track B" repos, one (`gcb-pic-core`) is now
+confirmed to be Track A's own Phase II; one more (`gcb-python-
+orchestrator`) is a plausible match pending a deeper read; two
+(`gcb-wdm-transceiver`, `gcb-photonic-qam-v2`) are most likely genuinely
+separate, real subsystems (transport/longer-horizon vision, not
+discarded); one (`gcb-analog-rx`) needs a direct check against ADR-005.
+This is real progress on Contradiction Register entry #1, not a full
+close - the remaining three checks are `TKT-035`'s own next iteration.
+
 ## Telemetry & Evaluation
 
 No PBG grade - this is a large, explicitly-scoped-as-Pass-1 reconstruction
@@ -110,5 +162,8 @@ task, not a completed, gradable deliverable; matching this program's own
 doctrine that a partial/in-progress survey gets no grade until its own
 scope is actually finished.
 
-**Final State:** `open | pending` - Pass 1 delivered (see the report),
-Required Work items above left for continuation.
+**Final State:** `open | pending` - Pass 1 delivered (see the report);
+one of five Track-B repos (`gcb-pic-core`) now confirmed reconciled into
+Track A, implemented and verified; the other four have a stated best
+guess each, not yet confirmed. Required Work items above left for
+continuation.

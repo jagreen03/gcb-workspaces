@@ -583,3 +583,24 @@ combining component (`mmi_power_tree.py`) is built and verified.
 `wdm_combiner_tree.py`/`k16_tile.py` remain in the repo as real but
 not-currently-targeted WDM code. The "Role"/Invariant-6 grounding
 question is flagged as a new, separate open item, not resolved here.
+
+---
+## Refinement (2026-09-12, same day): "K=16" was real after all - the
+WDM label was wrong, the number wasn't
+
+Found `gcb-spec/docs/optical_geometry_spec.md` (**LOCKED** v1.0.0,
+missed in the original `TKT-033` check): it sizes a **Phase-II
+integrated array** (N=64 channels, single wavelength, "no channel mux")
+at **`L=16` contraction lanes per channel per fire**. This `L=16` is the
+real, `gcb-spec`-grounded number behind this repo's "K=16" framing - not
+a fabricated figure, just mislabeled as a wavelength count instead of a
+per-channel power-sum width. `mmi_power_tree.py` now builds and verifies
+BOTH real targets: `N=8` (Phase-I bench) and `N=16` (Phase-II, the real
+one behind "K=16"), both clean by both checks, reproduced twice
+(`gcb-pic-core@79e9c58`, pushed). `README.md` corrected to match
+(`87de269`).
+
+**This also means `gcb-pic-core` is plausibly NOT an orphaned "Track B"
+repo** (per `TKT-035`'s framing) - it looks like `gcb-spec`'s own
+Phase-II integrated-array work, just never cited from it. See `TKT-035`
+for the fuller reconciliation across all five "Track B" repos.

@@ -1263,3 +1263,45 @@ choose a winner silently" rule.
 Contradiction Register entry 1 directly with the Architect (is Track B
 superseded by, parallel to, or meant to merge with Track A?) - the
 highest-leverage open question this pass surfaced.
+
+---
+
+## Directed /loop — 2026-09-12 (simplify and resolve TKT-035's Track A/B split)
+
+**Context:** the Architect asked for a simpler answer and the best
+solution, implemented and verified, not just decided in prose - while
+keeping existing real work intact ("don't throw the baby out with the
+bath water").
+
+**Simple answer**: Track A is Phase I (the real, current system). The
+"Track B" repos are mostly Phase II (this program's own forward roadmap),
+not a rival architecture - the confusion was a citation gap.
+
+**Implemented and verified**: found `gcb-spec/docs/optical_geometry_spec.md`
+(LOCKED v1.0.0, missed in the earlier check) - it sizes a Phase-II
+integrated array at `L=16` contraction lanes/channel/fire, single
+wavelength, no channel mux. That is the real number behind
+`gcb-pic-core`'s "K=16" - the WDM label was wrong, the number wasn't.
+Updated `mmi_power_tree.py` to build+verify both real targets (N=8
+Phase-I bench, N=16 Phase-II - the real "K=16"), reproduced clean across
+two independent processes, committed (`gcb-pic-core@79e9c58`, `87de269`,
+pushed, `HEAD==origin/main` verified).
+
+Checked (not yet confirmed) the other four "Track B" repos against Track
+A's real architecture: `gcb-python-orchestrator` plausibly matches too
+(its compiler targets "the Photonic + Vortex hybrid fabric" - Track A's
+exact data path); `gcb-wdm-transceiver`/`gcb-photonic-qam-v2` most likely
+genuinely separate, real subsystems (Track A is explicitly single-
+wavelength); `gcb-analog-rx` needs a direct check against ADR-005's
+retired delta-sigma branch.
+
+**Commits:** `gcb-pic-core@79e9c58`/`87de269` (pushed, verified);
+`gcb-workspaces` (this commit) - `TKT-030` refinement, `TKT-035`
+resolution section, `README.md` updated, this entry appended.
+
+**Ticket status changes:** none flipped - `TKT-030` stays `done|blue`
+(refined), `TKT-035` stays `open|pending` (one of five repos confirmed
+reconciled, four with a stated best guess, not yet confirmed).
+
+**Next candidate:** confirm `gcb-python-orchestrator` and `gcb-analog-rx`
+against Track A directly (both plausible, neither confirmed).
