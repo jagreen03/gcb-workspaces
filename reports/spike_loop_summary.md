@@ -1475,3 +1475,27 @@ from the original 11-section prompt).
 **Next candidate:** the equipment/DFT matrices (`TKT-035`'s own last
 open item), or pull the next real priority item from the broader
 backlog per the open-ended directive.
+
+---
+
+## Open-ended continuation — 2026-09-12 (TKT-019.8 stale cross-reference corrected)
+
+**What was done:** picked up `TKT-019.8` (a genuinely open integrity-
+mitigation story, found by checking actual ticket content rather than
+trusting frontmatter status, per this session's own established
+discipline). Its own "Not yet done, pending disposition of Findings A
+and B" text was stale - `TKT-019.10` already resolved both (Finding A:
+a deterministic length-count gate; Finding B: a CDC watchdog-arming FSM,
+Candidate 2, after Candidate 1 was implemented, found by a purpose-built
+adversarial test to introduce a WORSE regression, and cleanly reverted).
+Independently re-ran `test_wdm_link_integration.py` fresh:
+`TESTS=22 PASS=22 FAIL=0 SKIP=0`.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (read `TKT-019.10` in
+full, re-ran the real regression suite myself rather than trusting its
+quoted numbers).
+
+**Commits:** `gcb-workspaces@295c742` (pushed, verified) - `TKT-019.8`
+corrected (status unchanged, per this epic's own convention).
+
+**Next candidate:** continuing open-ended per the Architect's directive.
