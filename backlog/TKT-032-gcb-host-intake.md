@@ -63,10 +63,37 @@ task, not a five-minute add-on to an already-long session.
 - Any RTL change - this ticket is intake/survey only.
 - `TKT-019.19` and anything in that neighborhood - unrelated.
 
+---
+## Roadmap (established 2026-09-12) - work in order; a blocked step is a
+logged finding that advances to the next step, not a reason to stop
+
+- [ ] **Step 1 - read the actual source.** `include`/`src`/`proxy`/
+  `tools`/`tests` directories and `GCB_STATE_COMPRESSION.txt` - understand
+  what the pilot driver and MMIO proxy actually claim to do, from the code
+  itself, not the one-paragraph README.
+- [ ] **Step 2 - attempt the C++ build.** Identify the build system
+  (CMake/Makefile/other - confirm, don't assume) and attempt it; report
+  the real toolchain requirement (compiler version, libraries) and
+  whether it's already available in this dev environment or needs setup
+  (matching the `~/.venvs/gdsfactory`/`~/.venvs/cocotb19` precedent if a
+  new environment is needed).
+- [ ] **Step 3 - attempt the existing `tests/` suite.** Report real
+  pass/fail, not a code-review guess.
+- [ ] **Step 4 - attempt the FastAPI MMIO proxy smoke test.** Identify
+  its own dependencies (likely a Python venv); start it and confirm it at
+  least responds, even if a full hardware-attached test isn't possible in
+  this environment.
+- [ ] **Step 5 - relate to existing RTL.** Confirm or refute whether this
+  driver/proxy's MMIO model actually corresponds to
+  `gcb_dwdm_ctrl_axi.sv`'s real AXI4-Lite CSR map (register addresses,
+  widths) - by reading both sides directly, not by assuming the obvious
+  connection is the real one.
+
 ## Telemetry & Evaluation
 
 No PBG grade - this is an unexecuted intake placeholder, not a completed
 assessment (contrast `TKT-030`/`TKT-031`, which ARE completed surveys for
 their own repos).
 
-**Final State:** `open | pending` - survey not yet performed.
+**Final State:** `open | pending` - survey not yet performed. Roadmap
+above tracks the steps.

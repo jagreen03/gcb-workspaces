@@ -172,6 +172,75 @@ adjusting `free_propagation_region_output_function`'s own `width1`/
 of any kind about real insertion loss, channel spacing, or physical
 feasibility - this is a `gdsfactory` auto-router feasibility check only.
 
+---
+## Roadmap (established 2026-09-12, after the first attempt above) - work
+this in order; a blocked step is a logged finding that advances to the
+next step, not a reason to stop
+
+- [x] **Step 1 - FPR fan-out geometry. ATTEMPTED, NO EFFECT (verified).**
+  Overrode `free_propagation_region_output_function` with `width2=400.0`
+  (up from 20.0) and `length=80.0` (up from 20.0) via a custom
+  `functools.partial`. Re-ran `awg(arms=20, outputs=16,
+  length_increment=0.1)`: the routing-failure warnings were BYTE-IDENTICAL
+  to the un-widened baseline (same 19 failing coordinate pairs, same
+  distances 50-950) - confirmed by direct comparison, not assumed. `width2`/
+  `length` are NOT the controlling parameter for this failure.
+- [x] **Step 2 - isolate N vs. a structural issue. ATTEMPTED, CLEAN ANSWER,
+  NOT THE HYPOTHESIZED ONE.** Swept `outputs` in {4, 8, 12, 16} at fixed
+  `arms=20, length_increment=0.1`: **routing_failures=19 at every single
+  value**, byte-identical warnings regardless of `outputs`. This rules out
+  "16-channel fan-out density" as the cause entirely - the original
+  hypothesis this step was designed to test was wrong, found by actually
+  running it, not assumed confirmed. Followed the lead further (beyond
+  the original roadmap text, since the clean result demanded it): swept
+  `arms` in {4, 8, 12, 16, 20, 30} at fixed `outputs=16` instead - found
+  **`routing_failures = arms - 1` EXACTLY in every case** (4→3, 8→7,
+  12→11, 16→15, 20→19, 30→29). The failure count is a precise linear
+  function of `arms`, completely independent of `outputs`,
+  `free_propagation_region_output_function`'s geometry, and (re-swept
+  `length_increment` in {0.01, 0.05, 0.1, 0.5, 1.0} at fixed arms=20) of
+  `length_increment` too (19 failures at every nonzero value tested).
+  **A real false positive was caught and rejected along the way**: a
+  same-process sweep briefly showed `length_increment=0.10` -> 0 failures,
+  contradicting the arms-sweep's own `arms=20` result (19 failures) at the
+  textually-identical parameters - re-ran `length_increment=0.1` alone in
+  a completely fresh, isolated Python process and got **19 failures**,
+  confirming the "0" result was `gdsfactory`'s own component-level caching
+  returning a stale, already-built object on a repeat-parameter call
+  within the same process, not a real fix. Reported as a caught-and-
+  rejected false positive, not silently trusted.
+  **Conclusion: this is not fixable by any exposed `awg()` constructor
+  parameter tried so far** - it presents as either a version-specific
+  limitation/defect in this `gdsfactory` release's (`9.50.0`) `awg()`/
+  `free_propagation_region` auto-routing for ANY nonzero `length_increment`
+  grating, or a geometry assumption baked into the recipe that none of its
+  own exposed knobs actually control. Proceeding to Step 3.
+- [ ] **Step 3 - fallback construction or alternative architecture.
+  DEFERRED, not attempted this iteration (logged, not a stop).** Steps
+  1-2 exhausted every exposed `awg()` constructor-level parameter
+  (confirmed by direct, repeated, fresh-process testing, not assumption) -
+  neither resolved it. Both remaining options are categorically bigger
+  than a parameter sweep: (a) hand-authoring waveguide geometry bypassing
+  `route_single` entirely is real photonic-layout implementation work,
+  not a quick script edit; (b) evaluating a cascaded ring/MZI filter bank
+  is an architecture-comparison research task, not an afternoon's
+  parameter tuning either. Explicitly deferred rather than rushed - this
+  is the point this ticket's own "Required work" section anticipated
+  ("do not attempt... without real photonics-layout domain grounding").
+  Moved attention to `TKT-032` (gcb-host) this iteration instead, per
+  this loop's own "advance, don't stop" discipline - a blocked roadmap
+  step on one ticket routes to the NEXT active ticket's roadmap, not to
+  ending the loop. If steps 1-2 don't resolve it: either (a) construct
+  the FPR-to-arm
+  waveguides manually (bypassing `gdsfactory`'s `route_single` entirely -
+  straight + bend primitives placed by hand), or (b) research (not
+  commit to) whether a cascaded wavelength-selective filter bank (ring
+  resonators or cascaded asymmetric MZIs - NOT the power-splitting MMI
+  tree already ruled out) is a viable alternative to a monolithic 16-arm
+  AWG for this specific channel count. Report findings; do not silently
+  adopt (b) without flagging it as an architecture change from the
+  AWG-based approach this ticket started with.
+
 ## Telemetry & Evaluation
 
 No PBG grade - this ticket documents a verified current state, a real
@@ -181,4 +250,5 @@ specific next lever to try. It does not itself deliver a working K=16
 layout.
 
 **Final State:** `open | pending` - genuine diagnostic progress recorded;
-the K=16 layout itself remains unresolved.
+the K=16 layout itself remains unresolved. Roadmap above tracks the next
+attempts.
