@@ -280,3 +280,62 @@ never inside the `vortex` tree itself.
 the React gap) - none of this is inferred from naming or absence alone.
 
 This closes both remaining shallow-pass items from the original Pass 1.
+
+---
+## Capstone finding (2026-09-12, same day, continuing open-ended): why
+"16" and "channel spacing" both appear repeatedly, never the same thing,
+and never a coincidence - `gcb-papers`
+
+`gcb-papers` (the fifth Track-A-canonical repo, never actually inspected
+until now despite all the reconciliation work above) holds a real,
+substantial three-paper research arc that directly explains the whole
+pattern this session kept re-discovering in pieces:
+
+- **Paper 1** (`p1-cascaded-reduction`): cascaded optical carry-save
+  reduction - matches Track A's real `gcb-rtl/sim/mmi_tree_model.py`
+  mechanism exactly (power-summing, cascade ADC reset, INT8-equivalent
+  precision via digital reset between 6-bit analog stages).
+- **Paper 2** (`p2-rfi-interconnect`): the **Reduction Fabric Interface**
+  - explicitly an INTERCONNECT standard ("what PCIe is to general
+  computing"), using **coherent optical QAM** over TFLN modulators, WDM
+  ("one wavelength per compute unit, all wavelengths on one fiber"), with
+  its own stated channel plan: **8-channel WDM, 200 GHz spacing in the
+  C-band**. This is a real, independently-derived channel-spacing figure
+  - for the TRANSPORT/interconnect layer specifically, not the on-die
+  compute layer.
+- **Paper 3** (`p3-unified-matmul`): extends the optical domain backward
+  into the multiply stage itself (TFLN MZM modulator arrays), unifying
+  multiply + reduce "through photonic waveguide physics" with the same
+  cascade-ADC mechanism as Paper 1 - explicitly citing Paper 2's QAM
+  interconnect as the thing that moves partial results between compute
+  units, not the thing that does the multiply or the reduce.
+
+**This is the clean, final resolution of the whole "why does 16 keep
+appearing, and why does channel spacing keep appearing, and are they
+ever the same thing" question this session chased across `TKT-030`,
+`TKT-033`, and `TKT-034`:** they are two genuinely different parameters
+for two genuinely different LAYERS of one overall vision, not one
+overloaded number and not a coincidence:
+
+| Layer | Parameter | Real values found this session | Where |
+|---|---|---|---|
+| On-die compute (multiply + reduce) | reduction depth / contraction width | `L_CONTRACT=16` (`gcb-spec`, Track A); `K<=16`/`K_MAX=16` (the QAM Accelerator, `intent.md` + `gcb_dwdm_pkg.sv`) | Two separate programs, coincidentally-or-historically the same number, NEVER a wavelength count in either |
+| Inter-unit/appliance transport | WDM channel count / spacing | `~60lambda`/`50 GHz` (`gcb-wiki/15`, most plausibly `gcb-wdm-transceiver`'s real router); **8 channels/`200 GHz`** (`gcb-papers` Paper 2's RFI, a real designed channel plan) | Genuinely the transport concern - channel spacing belongs HERE, never at the compute layer |
+
+**Revises, not reverses, `TKT-033`'s original finding**: `gcb-pic-core`'s
+K=16 STILL has no WDM/channel-spacing requirement of its OWN (confirmed
+independently twice now, by two different routes - `gcb-spec`'s
+power-summing model and the QAM Accelerator's own SNR-budget derivation).
+What's new here is WHY the broader program keeps producing real channel-
+spacing numbers anyway: a genuinely separate transport layer
+(`gcb-wdm-transceiver` / Paper 2's RFI) needs one, and always did - this
+session's own earlier investigations were repeatedly finding REAL
+numbers for a REAL but DIFFERENT layer than the one being asked about,
+not fabricated figures.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (all three papers read
+directly for their own stated architecture; Paper 2's channel plan is a
+design specification within the paper, not claimed here as built/
+measured hardware - these are draft arXiv papers, not verified silicon,
+and are cited as evidence of INTENT/architecture, not of physical
+results).

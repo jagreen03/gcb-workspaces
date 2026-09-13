@@ -1518,3 +1518,37 @@ re-stated from memory.
 
 **No commits** (verification only, nothing changed). Continuing
 open-ended to the next backlog item.
+
+---
+
+## Open-ended continuation — 2026-09-12 (capstone: gcb-papers resolves the "16 vs channel-spacing" pattern)
+
+**What was done:** checked `gcb-papers` - one of `gcb-spec`'s own five
+canonical Track-A repos, never actually inspected despite all the
+reconciliation work this session. Found a real 3-paper research arc
+that cleanly explains the whole pattern chased across `TKT-030`/`TKT-033`/
+`TKT-034`: Paper 1 (cascaded reduction) matches Track A's real model;
+**Paper 2 (Reduction Fabric Interface) is explicitly a coherent-QAM/WDM
+interconnect replacing PCIe between compute units, with its own real
+channel plan (8 channels, 200 GHz C-band spacing)**; Paper 3 unifies
+multiply+reduce in the photonic domain, citing Paper 2's QAM as the
+transport between units, not the compute mechanism itself.
+
+**Resolution**: reduction-depth ("16," compute layer) and channel
+spacing (transport layer) are two genuinely different parameters for two
+genuinely different layers of one overall vision - never the same
+number, never a coincidence, never fabricated. This revises (does not
+reverse) `TKT-033`'s finding: `gcb-pic-core`'s K=16 still has no WDM
+requirement of its own; the broader program's real channel-spacing
+numbers belong to a genuinely separate transport layer that always
+needed one.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (all three papers read
+directly; cited as evidence of intent/architecture, not verified
+silicon - these are draft arXiv papers).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-035` capstone section,
+`README.md`, this entry.
+
+**Ticket status changes:** none - `TKT-035` remains `open|pending`
+(equipment/DFT matrices still the one stated remaining item).
