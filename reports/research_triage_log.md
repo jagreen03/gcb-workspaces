@@ -55,3 +55,57 @@ Reviewer (checked the response's claims against the real repo) and, in
 writing this log entry, as Triage Coordinator. First real run of all
 three non-PI roles in one pass, not yet split across separate sessions
 or people — that's the next thing to actually try, not simulated here.
+
+---
+
+## Pass 2 — 2026-09-13 — `gcb-lambda`
+
+**Harvested:** `gcb-lambda`'s own Deliverable 1 (reconciliation of
+`gcb-wiki/16` Part 9's laser-bank "zero spec" claim), run directly this
+pass rather than harvested from a prior session's output — the first
+time this workflow has been used to *execute* a Research Scientist
+task, not just triage one brought back from elsewhere.
+
+**What happened:** the repo's own first-draft hypothesis ("two
+different, compatible bench apparatuses") was re-checked against the
+real source files per `ai-agents/ORANGE_TEAM.md`'s own hard rule to
+read them "directly, in full" before trusting a prior pass's framing.
+**The hypothesis was wrong.** Both `bench_emulation_parameters.md` and
+`task3_physical_bom.md` label themselves "Task 3," and
+`02_receiver_architecture.md`'s "Phase I — Guaranteed Bench" section
+states one combined purpose for them (proving summation *and*
+ratiometric-cancellation together) — they describe **the same bench**,
+disagreeing on laser *count* (N independent diodes vs. one diode split
+via a PM splitter), not two different experiments.
+
+**Classification:**
+
+1. **The reconciliation itself** — **resolved**, correctly (the real
+   finding, not the original guess). `gcb-wiki/16` Part 9 corrected
+   (detailed entry, summary table, "Known documentation gaps" item 2);
+   `silicon-and-package-detail.md` and `intent.md` §0 corrected to
+   match; `gcb-lambda`'s own `README.md`/`EXTERNAL_AI_BRIEFING.md`/
+   `ai-agents/ORANGE_TEAM.md` updated to drop the superseded "two
+   compatible experiments" framing everywhere it appeared.
+2. **The laser-count conflict itself** — **ticket-worthy.** A real
+   architecture choice with genuinely different engineering
+   consequences (calibration complexity, failure mode, cost scaling)
+   that this workflow does not get to pick a side on.
+   **Priority: P1** — not blocking anything *today*, but it sits
+   directly upstream of `gcb-lambda`'s own second deliverable
+   (Phase-II scoping) and of any future procurement decision.
+   **Drafted:** `GCB-043`.
+3. **Phase-II laser/modulator scoping** (`gcb-lambda`'s own remaining
+   deliverable) — **still needs more research**, unchanged by this
+   pass. `EXTERNAL_AI_BRIEFING.md`'s question narrowed to this single
+   remaining thread, now that the reconciliation is done. **Priority:
+   P2** — foundational, nothing currently waiting on it.
+
+**Roles exercised this pass:** this session acted as Research
+Scientist (ran the actual reconciliation work), caught its own prior
+pass's wrong hypothesis in the External Reviewer sense (checking a
+finding — even one's own — against the real files before trusting it),
+and as Triage Coordinator in writing this entry. A genuine
+demonstration that "External Reviewer" isn't only useful against a
+different AI's output — re-checking one's own earlier conclusion
+caught a real error here.
