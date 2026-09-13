@@ -24,13 +24,27 @@ subsystem, filed for disposition, not fixed here.**
 
 ## What was found, checked directly at every step
 
-1. `registers.yaml` defines `SS_CAL_IDX` (0xB4), `SS_CAL_DATA` (0xB8),
-   `SS_RAMP_TIMING` (0xBC) with real `signal:`/`output:` names
-   (`r_ss_cal_ch`/`ss_cal_ch`, etc.) — confirmed present in the
-   **generated** package too (`rtl/generated/greencoyote_regmap_pkg.sv`
-   has real `ADDR_SS_CAL_IDX`/`ADDR_SS_CAL_DATA`/`ADDR_SS_RAMP_TIMING`
-   localparams and field masks), so this is not a stale/abandoned spec
-   draft — `regen.py`'s own output is current for these fields.
+1. `registers.yaml` defines the **full `SS_READOUT` block, 0xB0-0xC0** —
+   `SS_TDC_CTRL` (0xB0), `SS_CAL_IDX` (0xB4), `SS_CAL_DATA` (0xB8),
+   `SS_RAMP_TIMING` (0xBC), `SS_TDC_STATUS` (0xC0, read-only/`source:`
+   fields) — with real `signal:`/`output:`/`source:` names
+   (`r_ss_cal_ch`/`ss_cal_ch`, `ss_running`, etc.) — confirmed present in
+   the **generated** package too (`rtl/generated/greencoyote_regmap_pkg.sv`
+   has real `ADDR_SS_TDC_CTRL`/`ADDR_SS_CAL_IDX`/`ADDR_SS_CAL_DATA`/
+   `ADDR_SS_RAMP_TIMING`/`ADDR_SS_TDC_STATUS` localparams and field masks),
+   so this is not a stale/abandoned spec draft — `regen.py`'s own output
+   is current for these fields.
+1b. **Follow-up, same tick — exhaustive, not just spot-checked**: ran a
+    systematic check of all 49 non-stub registers in `registers.yaml`
+    (everything except the 8 `THERMAL_*` registers, which are
+    `implemented: false` in the spec itself — correctly, deliberately
+    flagged there, a real negative control, not a gap) against every
+    `ADDR_*` reference in `gcb-rtl/rtl/*.sv`. **Result: these five
+    `SS_READOUT` registers are the *only* gap of this kind in the entire
+    register map** — every other register's address is referenced
+    somewhere in the RTL (the `r_dma_*` cluster under different local
+    names, as found; everything else directly). This confirms the scope
+    of this finding is complete, not an underestimate.
 2. `greencoyote_pilot_regs.sv` (the hand-written register-decode module
    — see [[GCB-040]] for why it's hand-written, not generated) has
    **zero** implementation of any of these signals — no declaration,
@@ -73,7 +87,7 @@ architectural decision.
 
 ## Why this ticket does not attempt an RTL fix
 
-Implementing the `SS_CAL`/`SS_RAMP_TIMING` register block and wiring
+Implementing the `SS_READOUT` register block (`SS_TDC_CTRL`/`SS_CAL_IDX`/`SS_CAL_DATA`/`SS_RAMP_TIMING`/`SS_TDC_STATUS`) and wiring
 `greencoyote_ss_tdc`/`_calib` into `greencoyote_top.sv` would mean:
 adding a new clock domain (6 GHz Gray-counter / CML island) into the
 integrated pilot top; deciding how 64 channels' worth of `fire[ch]`
@@ -98,7 +112,7 @@ unilaterally during an open-ended documentation/backlog sweep.
 
 ## Out of scope
 
-- Implementing the `SS_CAL`/`SS_RAMP_TIMING` register block.
+- Implementing the `SS_READOUT` register block (`SS_TDC_CTRL`/`SS_CAL_IDX`/`SS_CAL_DATA`/`SS_RAMP_TIMING`/`SS_TDC_STATUS`).
 - Instantiating `greencoyote_ss_tdc`/`greencoyote_ss_calib` into
   `greencoyote_top.sv`.
 - Any claim about whether ADR-005's `CONDITIONAL GO` should change —
