@@ -2095,3 +2095,42 @@ genuinely unstarted item).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (TKT-035's last "genuinely unstarted item" turned out already done)
+
+**Context:** the previous tick's own closing line called the
+equipment/DFT matrix item "the one genuinely unstarted item" in
+`TKT-035`. Checked that claim directly rather than taking it forward
+unverified - re-read `gcb-wiki/15` SS5 (Required Equipment Matrix) and
+SS6 (DFT/Test-Structure Matrix) in full.
+
+**What was found:** both sections already exist with real content, not
+placeholders - SS5 is a deliberately-scoped equipment list (the doctrine
+explicitly does not attempt to build toward physical validation itself,
+only names what would be needed to); SS6 is a 4-row DFT status matrix
+that has itself been kept current past Pass 1 - it already cites
+`TKT-019.11`'s epoch-rollover assertion work, added well after this
+document's original 2026-09-11 draft. `TKT-035`'s own "Required work"
+item 2 and its Telemetry section's "remain genuinely open" clause were
+both stale.
+
+**What was done:** marked `TKT-035`'s Required-work items 1 (already
+done 2026-09-12, never checked off) and 2 (re-verified, nothing to add)
+resolved; added a dated update note to the Telemetry section correcting
+the stale claim, without touching the original grade or `Final State`
+text, and without changing the ticket's own `status`/`telemetry_color`
+- whether this is enough to close `TKT-035` itself is the Architect's
+call, explicitly left undecided here.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (read `gcb-wiki/15`
+SS5/SS6 directly before writing anything; did not take the prior tick's
+own framing as settled without checking).
+
+**Commits:** `gcb-workspaces@7c5750c` (pushed, verified); this entry.
+
+**Ticket status changes:** none - `TKT-035` stays `open | pending`,
+correctly; only its own internal bookkeeping was corrected.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
