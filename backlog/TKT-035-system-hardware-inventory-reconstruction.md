@@ -261,6 +261,22 @@ and NO build/dev/start script for it anywhere. **IMPLEMENTED, but this
 repo currently has no way to actually build or run it** - a real,
 previously-unrecorded gap, not a rejection of the component's substance.
 
+**Fixed and verified, 2026-09-13** (`gcb-dashboard@3689d74`, pushed):
+added `react`/`react-dom` + `vite`/`@vitejs/plugin-react`, a minimal
+`vite.config.js`, `index.html`, and `src/main.jsx` mounting the existing
+component - the missing tooling, not a rewrite. Verified by actually
+running it: `npm install` (64 packages) and `npm run build` both
+succeed, a real production build (30 modules, a real `dist/` bundle,
+728ms). One real, known `esbuild` vulnerability found and reported, not
+silently patched (dev-server-only, fixing it needs a breaking `vite@8`
+upgrade, not applied without a deliberate decision). **Separately
+found, left untouched**: `gcb-dashboard/README.md` has real, dated
+content on disk ("expanded 2026-09-11, GCB-039") that was never
+committed - pre-existing, unrelated stray state, not touched by this
+fix per this program's own standing discipline against bundling
+unrelated changes into one commit; flagged for whoever owns that repo's
+next commit.
+
 **`vortex` - System Boundary question CONCLUSIVELY confirmed, not just
 inferred from file absence.** `git remote -v` shows the real upstream
 origin (`https://github.com/vortexgpgpu/vortex.git`, not a GCB fork);

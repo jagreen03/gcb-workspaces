@@ -1866,3 +1866,48 @@ that same established precedent).
 smaller macros, or a host with more RAM) if the B-operand scale is
 pursued further; otherwise continuing the broader open-ended backlog
 sweep per the Architect's own directive.
+
+---
+
+## Open-ended continuation — 2026-09-13 (fixed the gcb-dashboard React build gap, lower-risk after the memory event)
+
+**Context:** after the B-operand OpenROAD memory event, pivoted to a
+lower-resource-risk task: `TKT-035`'s own flagged-but-unfixed gap -
+`gcb-dashboard`'s React component (514 real lines) had no way to
+actually build or run it.
+
+**What was done:** added the missing tooling (not a rewrite of the
+component): `react`/`react-dom` dependencies, `vite` +
+`@vitejs/plugin-react` dev dependencies, a minimal `vite.config.js`,
+`index.html`, and `src/main.jsx` mounting the existing default export.
+Verified by actually running it, not declaring it: `npm install` (64
+packages, clean) and `npm run build` both succeeded - a real production
+build (30 modules transformed, a real `dist/index.html` +
+`dist/assets/*.js` bundle, 728ms).
+
+**Found and reported, not silently patched**: a real, known `esbuild`
+vulnerability (GHSA-67mh-4wv8-2f99, moderate, dev-server request-
+forwarding issue - does not affect the production build output).
+Fixing it needs a breaking major upgrade to `vite@8`; `npm audit fix
+--force` was available and deliberately not used without a decision.
+
+**Found and left untouched, flagged separately**: `gcb-dashboard/README.md`
+had real, dated content on disk ("expanded 2026-09-11, GCB-039") that
+was never committed - pre-existing, unrelated stray state, excluded
+from this commit per this program's own standing discipline, flagged
+for whoever owns that repo's next commit rather than bundled in
+silently.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** (install + build both
+run for real, not assumed from config alone).
+
+**Commits:** `gcb-dashboard@3689d74` (pushed, verified); `gcb-workspaces`
+(this commit) - `TKT-035` updated, `README.md`, this entry.
+
+**Ticket status changes:** none flipped - this closes a specific gap
+`TKT-035` flagged, not the ticket itself (equipment/DFT sections remain
+the one stated open item there).
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
