@@ -2018,3 +2018,41 @@ timestamps on all five files, read in full before writing anything).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (gcb-wiki's own sibling-repo table was missing 6 real repos)
+
+**Context:** swept `TKT-019.12`-`.16` (the identity-lifetime/retirement-
+architecture chain) for content gaps - found none actionable: each ends
+in an explicit, reasoned "Recommended next action" that is the
+Architect's to ratify, consistent with the chain's own precedent (same
+disposition as `TKT-019.16`'s Case F from an earlier tick). Checking
+`gcb-wiki/14` §7 instead (read in full while verifying `TKT-019.11`'s
+sync last tick) surfaced an already-flagged, never-fixed gap: its own
+sibling-repo index table (`gcb-wiki/README.md`) predated six real,
+long-committed repos (`gcb-wdm-transceiver`, `gcb-photonic-qam-v2`,
+`gcb-analog-rx`, `gcb-pic-core`, `gcb-python-orchestrator`,
+`gcb-workspaces`) - §7 had marked this "out of scope for this doctrine
+to fix; noted for human disposition," but the gap itself is a
+completeness omission (these repos obviously belong, this session has
+worked in all six directly), not an open architectural question
+requiring the Architect's ratification the way `TKT-019.12`-`.16`'s
+findings do.
+
+**What was done:** added the six missing rows to `gcb-wiki/README.md`,
+descriptions drawn from each repo's own README opening lines (verified
+by direct read, not invented); updated `gcb-wiki/14` §7 to mark the item
+fixed rather than leave it flagged-forever.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (read all six repos'
+README.md files before writing table entries; grepped the existing
+table first to confirm the gap was real).
+
+**Commits:** `gcb-wiki@bfceff7`, `gcb-wiki@6b08871` (both pushed,
+verified); this entry.
+
+**Ticket status changes:** none - this is doctrine/documentation
+hygiene, not tied to a ticket.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
