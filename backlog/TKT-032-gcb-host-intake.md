@@ -166,6 +166,18 @@ its own stated scope) - findings recorded here for whoever picks up
 follow-on work (a real `gcb-host` build system, or correcting the
 README's "FastAPI" description).
 
+**Follow-up, same session (2026-09-12 23:21, `79dbba1`):** the README
+correction named above was done - `gcb-host/README.md` now says "Python
+MMIO register simulator," not "FastAPI MMIO proxy." **Follow-up,
+2026-09-13 (this session):** that correction had not propagated past
+`gcb-host` itself - found and fixed the identical stale claim twice in
+`gcb-wiki/16` and twice in `gcb-spec` (`architecture.md`'s "Five
+repositories" table, `docs/MAP.md`'s file index) via a cross-repo grep
+for "FastAPI" after the `gcb-wiki` instances turned up. `gcb-spec`'s own
+two instances are the more significant find - that repo is this
+program's self-declared source of truth, and both predated (2026-09-07)
+the correction by five days, untouched since.
+
 ---
 ## Follow-up (2026-09-12, same day) - directed "build-and-run verification
 pass": re-confirmed this ticket's own closure still holds, then closed
