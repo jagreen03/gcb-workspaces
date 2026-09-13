@@ -1946,3 +1946,42 @@ tied to a specific open ticket.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (gcb-wiki/14 doctrine was never synced with TKT-019.11's own findings)
+
+**Context:** after closing the README-hygiene thread, swept the open
+`TKT-019.x` architecture tickets for content, not frontmatter, gaps.
+`TKT-019.11` (physical-boundary falsification) ends with an explicit,
+unactioned recommendation: "`gcb-wiki/14` should now list [the epoch
+rollover finding] explicitly rather than under a general 'epoch
+rollover: untested' caveat." Checked directly - it hadn't been done;
+`gcb-wiki/14` still called rollover merely unproven and said nothing
+about `TKT-019.11`'s three real closures (clock skew under the
+watchdog-arming gate, multi-lane simultaneous stale-epoch, +10-cell
+physical re-cost of Candidate 2).
+
+**What was done:** added a new `§6.1` to `gcb-wiki/14` (matching `§6`'s
+existing Orange-Team-Reality-Check style), and updated the `§1.2`/`§2`
+claim tables, `§5`'s UNPROVEN list, and `§8`'s summary - every statement
+traced directly to `TKT-019.11`'s own text, nothing invented. Epoch
+rollover aliasing is now documented as a **CONFIRMED OPEN DEFECT, held
+for disposition** (a structural property of the finite-width epoch
+counter, not a Candidate-2 bug) rather than merely "untested."
+`TKT-019.10`'s Findings A/B (`§6`) are unaffected, not reopened; the
+`.17`-`.21` reset-aliasing cluster untouched throughout.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (read `TKT-019.11`
+in full, grepped `gcb-wiki/14` for the claimed update before writing
+anything, confirmed the gap was real before fixing it).
+
+**Commits:** `gcb-wiki@1ad7305` (pushed, verified); `gcb-workspaces`
+(this commit) - `TKT-019.11` doctrine-sync note, this entry.
+
+**Ticket status changes:** none flipped - `TKT-019.11` stays
+`open | pending` (Scope 3 is still genuinely open, awaiting the
+Architect's disposition), `gcb-wiki/14` is a living doctrine document,
+not a ticket.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
