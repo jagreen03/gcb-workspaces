@@ -173,6 +173,66 @@ draw without a fixed seed and record the drawn ids; a `corpus_sane()` pre-flight
 (no NULL/'' vectors, all dimension 3) before any noise artifact is written.
 
 ---
+### R3 disposition (session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-13) - checked
+against the real, current code, not re-asserted; one real fix landed, one
+real gap confirmed still open
+
+**Checked `parse_pbg_telemetry.py`/`load_telemetry_pg.py`/
+`cyclopter_scavenger.py` directly.** A preliminary grep-based pass
+over-claimed "none of this is implemented" - caught and corrected before
+writing it down: `_vector_from_block` already validates each axis is in
+`[-1, 1]` and raises `Skip` (never upserted) on missing/non-numeric
+fields or an out-of-range value. Since `NaN` fails every numeric
+comparison in Python, this range check **already** rejects `NaN` too,
+without a separate `isnan()` call - most of the "confident wrong grade"
+concern in the Containment paragraph above is already mitigated by code
+that exists, just under different names than the recommendation
+expected. Schema validation and quarantine-by-skip: **already present**,
+corrected from the earlier overclaim.
+
+**Genuinely still open, confirmed by direct read (zero matches for
+`corpus_sane`/`NULL`-check/preflight anywhere in `load_telemetry_pg.py`)**:
+nothing independently re-validates the **live database's** current state
+before a KNN query trusts it - `read_rows`/`vec_literal` trust that every
+row came through the validated scraper path, which is true for normal
+operation but not for scenario (c) (a manual DB poke, a migration, or a
+future second producer). **Not fixed** - this needs a live Postgres/
+pgvector instance to write and test against, and `docker` is not
+installed anywhere in this environment (confirmed this session,
+`TKT-035`) - writing unverifiable DB-facing code would violate this
+program's own "verify before claiming" standard. Left open, honestly,
+rather than guessed at.
+
+**Fixed, directly, and verified**: the bare-UTC-date seed (failure
+scenario (b) - a fixed "random" sample for the full 24h day) is a real,
+pure-Python, no-DB-needed fix. `cyclopter_scavenger.py`'s `emit_noise()`
+now defaults to `random.Random().randrange(1, 2**31)` (real OS entropy)
+when `--seed` is not given, per R3's own stated alternative ("draw
+without a fixed seed and record the drawn ids" - the actual seed used
+was already recorded in the emitted artifact; only the deterministic-
+by-date default was the problem). `--seed` still gives exact
+reproducibility when passed explicitly. Verified directly (not just
+syntax-checked): `python3 -m py_compile` clean, and a standalone
+exercise of the exact seed-selection expression confirms an explicit
+seed is preserved exactly and two unseeded calls produce different
+values.
+
+**Epistemic status: PROVEN - DIRECT CODE VERIFICATION** for what exists
+vs. doesn't in the current source (read directly, not grepped-and-
+assumed) and for the seed fix (exercised directly, not just compiled).
+**UNPROVEN/NOT ATTEMPTED**: any end-to-end behavior against a live DB -
+no Docker available to test it. The `corpus_sane()` DB-preflight
+recommendation remains genuinely open, not fixed.
+
+**Final disposition on R3**: `done | yellow` for the parts actually
+closeable from static code alone (seed fix landed and verified;
+schema/range validation found already present, correcting the original
+audit's implicit assumption that it was missing); the live-DB
+`corpus_sane()` preflight remains `open` - R3 as a WHOLE stays open in
+this ticket's own table until that lands, but is now materially
+narrower and more precisely scoped than before this pass.
+
+---
 
 ## Task 2 — Yellow Team: Technical Debt & Integration Friction
 

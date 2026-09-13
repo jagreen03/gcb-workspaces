@@ -1767,3 +1767,53 @@ still open; R3 and Y2 remainder also still open, unrelated to this work).
 lane) is the natural next scale-up, or a tuned timing-closure attempt on
 the already-working A-operand design; alternatively, continuing the
 broader open-ended backlog sweep per the Architect's own directive.
+
+---
+
+## Open-ended continuation — 2026-09-13 (TKT-020 R3: caught my own overclaim, fixed the one real code gap)
+
+**What was done:** picked up `TKT-020`'s R3 finding (Cyclopter scavenger
+data-integrity risks), unaddressed since the original 2026-09-09 audit.
+Checked the real, current code directly rather than re-asserting the
+original finding.
+
+**Caught and corrected my own mistake before writing it down**: a first,
+grep-based pass concluded none of R3's recommended containments were
+implemented. Reading the actual functions showed this was wrong -
+`parse_pbg_telemetry.py`'s `_vector_from_block` already validates each
+axis is in `[-1,1]` and skips (never upserts) malformed/missing fields -
+which also transparently rejects `NaN` (any comparison with NaN is
+`False` in Python). Corrected the claim before it went into any record.
+
+**Genuinely still open, confirmed by direct read**: no DB-side
+`corpus_sane()` preflight exists anywhere in `load_telemetry_pg.py` -
+nothing re-validates the live database's current state independent of
+trusting how a row got there (a manual DB poke, a migration). Not fixed
+- writing DB-facing code with no way to test it against a live Postgres
+(Docker unavailable, confirmed earlier this session) would violate this
+program's own "verify before claiming" standard. Left open, honestly.
+
+**Fixed and verified, the one real no-DB-needed gap**: the bare-UTC-date
+default seed (failure scenario (b) - an identical "random" sample all
+day) in `cyclopter_scavenger.py`'s `emit_noise()`. Changed the default
+(no `--seed` given) to real OS entropy (`random.Random().randrange(...)`),
+per R3's own stated alternative containment. Verified directly, not just
+syntax-checked: `py_compile` clean, and a standalone exercise of the
+exact seed-selection expression confirms an explicit seed is preserved
+exactly and two unseeded calls produce different values.
+
+**Epistemic status: PROVEN — DIRECT CODE VERIFICATION** for what exists
+vs. doesn't (read directly) and for the seed fix (exercised, not just
+compiled). **UNPROVEN/NOT ATTEMPTED**: any live-DB behavior.
+
+**Commits:** `gcb-python-orchestrator` - `cyclopter_scavenger.py` seed
+fix (pending commit, see below); `gcb-workspaces` - `TKT-020` R3
+disposition, `README.md`, this entry.
+
+**Ticket status changes:** none flipped - `TKT-020` remains `open|pending`
+(R3 narrower/more precisely scoped now, not closed - the DB-preflight
+half remains genuinely open).
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive - the full B-operand OpenROAD array, or the next fresh
+backlog item.
