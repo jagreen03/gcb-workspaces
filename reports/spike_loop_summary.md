@@ -2753,3 +2753,38 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Open-ended continuation — 2026-09-13 (broad due-diligence sweep, clean)
+
+**Context:** resumed the standing backlog loop after the lens-portal
+work. Re-checked Docker availability (still unavailable, `TKT-020` R3's
+DB-side gap stays blocked) then ran a broader sweep than usual before
+picking a next item: `TODO`/`FIXME`/`XXX`/`HACK` across every
+non-vendored Python source directory (`gcb-python-orchestrator`'s
+`compiler/`/`scheduler.py`/`deploy/`, `gcb-analog-rx`, `gcb-pic-core`,
+`gcb-host`'s `proxy/`/`tools/`) - the RTL side was already fully swept
+in an earlier tick (`GCB-040`/`GCB-041`); self-consistency of the new
+`gcb-wiki/appendices/manufacturing-pdk.md` against the pre-existing
+`gcb-wiki/16` (it already independently states "No commercial PDK, no
+tapeout" and "never touched a commercial PDK or a physical wafer" -
+the new appendix agrees, not a coincidence worth treating as a
+separate finding, just confirming no drift); the real ADR directory
+against `gcb-spec`'s own "002-004 reserved, never filed" claim;
+`gcb-host`'s `src/`/`tests/` state against `TKT-032`'s prior finding;
+and a branch-divergence check (`git branch -a`) across all 12 repos.
+
+**Result: clean across the board, nothing found.** Recorded as such,
+not stretched into a manufactured finding - a thorough negative result
+is itself worth logging, same as the register-map consistency check
+earlier this session.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (every check run
+directly against real files/git state, not inferred).
+
+**Commits:** none this tick - nothing needed changing.
+
+**Ticket status changes:** none.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive, staying mindful of the host's memory ceiling
+before any more large EDA runs.
