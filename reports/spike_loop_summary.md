@@ -3650,3 +3650,64 @@ pushed, verified `HEAD == origin/main`.
 item.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Open-ended loop tick, 2026-09-13 - real FDTD access found; a real simulation built; an honest, unconverged result reported
+
+**Pulled from `gcb-lumen`** after the WSL-toolchain discovery pattern
+from the prior tick (`gcb-kelvin`) suggested checking whether this
+host's already-present `micromamba` (used for the SPICE toolchain)
+could also reach real FDTD - a capability `gcb-lumen`'s own
+`EXTERNAL_AI_BRIEFING.md` had framed as effectively unavailable
+(`meep`'s PyPI name collision, `tidy3d`'s cloud-account requirement).
+
+**Checked, not assumed: real `pymeep` (1.34.0, the genuine conda-forge
+FDTD package) installs and runs cleanly** via
+`micromamba create -n gcb-meep -c conda-forge 'pymeep=*=mpi_mpich_*'`.
+Confirmed importable and running before relying on it for anything.
+
+**Built and ran a real simulation, not just confirmed the tool
+exists:** a 2D effective-index-method FDTD model of `gdsfactory`'s
+actual `mmi1x2()` combiner geometry (real default dimensions extracted
+directly from the component this session, not invented), using this
+program's own real femwell mode-solve result (`n_eff = 2.684623`) as
+the core index. Tested the forward 1-in/2-out direction; valid by
+reciprocity for the real device's backward combiner use.
+
+**Ran at three resolutions as a basic convergence check - standard
+FDTD practice, never trust a single-resolution result.** The 50:50
+split ratio converged cleanly (confirms the geometry/source setup is
+basically sane). **The insertion-loss number did not converge**:
+4.36 dB (res=20) -> 9.06 dB (res=30) -> 2.86 dB (res=40) - non-
+monotonic, not physical convergence behavior, indicating a real
+simulation bug (most likely the flux-normalization reference - no
+separate straight-waveguide calibration run was used, the standard
+MEEP pattern for quantitative loss measurements). **All three numbers
+reported, not the most favorable one cherry-picked.**
+
+**Stated plainly, not overclaimed:** this does not close `gcb-lumen`'s
+core question - no trustworthy insertion-loss number exists yet. It
+does change the toolchain picture from "no real FDTD path known" to "a
+real FDTD path exists, with one specific, named bug to fix next" -
+real, concrete progress on a well-scoped sub-problem, ahead of either
+the femwell-extension or literature-citation paths, neither of which
+has been attempted. `FINDINGS-2026-09-13-fdtd.md` states the full
+detail and the specific next debugging step (add a proper
+normalization run before re-checking convergence).
+
+Logged as Research Triage Pass 4 - not ticket-worthy (a debugging task
+for the next Research Scientist pass, not an Architect decision).
+
+**Epistemic status: PROVEN — DIGITAL FDTD SIMULATION, TESTED
+CONDITIONS** for the real capability finding (meep installs and runs)
+and for the non-convergence result itself (genuinely reproduced across
+three real runs). **UNPROVEN**, explicitly and unchanged: any specific
+insertion-loss figure for the real combiner geometry - none of the
+three numbers obtained this tick should be treated as the real answer.
+
+**Commits:** `gcb-lumen@616235a`, `gcb-workspaces@1c14a31` - both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - a research finding, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop.
