@@ -2885,3 +2885,101 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - broken cross-document links and missing heading anchors, found by the Architect actually clicking them
+
+**What the Architect reported:** links on the rendered Lens 4
+("Strategic & General Audience Partner") page - specifically to
+`sagas/saga-01-neighbor.md` and `sagas/saga-06-investor.md` - were
+dead once viewed in the deployed SPA, despite being syntactically
+correct, GitHub-valid Markdown links.
+
+**Root causes, both confirmed empirically before touching any fix
+code, via the same Node `vm`-simulation technique used for the
+marked.js CDN bug above:**
+
+1. Lens/appendix Markdown uses repo-relative links - correct for
+   GitHub's own file tree - but the SPA renders every document's
+   Markdown into the *same* page, so a plain `<a href="../sagas/x.md">`
+   resolves against the SPA's own page URL, not the source document's
+   real repo path. Every cross-document link was therefore pointed at
+   a URL that never existed.
+2. The pinned CDN build of `marked.js` does not auto-generate `id`
+   attributes on headings at all - confirmed by running the real
+   downloaded CDN file in a Node `vm` and inspecting its output
+   directly. This meant even the appendix's *own* internal
+   `#part-1-...` fragment links were dead, independent of bug 1.
+
+**Fix, SOLID, two new focused classes composed in `main.ts` (no
+changes to existing renderer/repository classes):** `IHeadingAnchorer`
+/ `SlugHeadingAnchorer` assigns GitHub-style slugs to headings after
+render (self-consistent producer/consumer, not required to byte-match
+GitHub's own algorithm). `ILinkRouter` / `PortalLinkRouter` resolves
+each link against its *source document's* repo path using the native
+`URL` API, matches it against the manifest, and intercepts the click
+to route through the SPA's own hash-based router - external/mailto/
+same-page anchors are left untouched. `portal-router.ts`'s hash
+routing became fragment-aware (`#doc=id&depth=level&frag=id`) with a
+new `navigateToDocument()` entry point for the router's callback.
+
+**Two further gaps found while implementing the fix, not reported by
+the Architect, caught by checking the real artifacts rather than
+trusting the plan:**
+- `appendices/manufacturing-pdk.md` was completely absent from
+  `portal-manifest.json` - the link-router fix alone would have been
+  insufficient for appendix links. Extended `DocumentTier` to include
+  `"appendix"` and added the manifest entry.
+- My own hand-written fragment links in the two lens files used
+  double-hyphen slug guesses (remembered, not computed) that did not
+  match the real, single-hyphen output of `SlugHeadingAnchorer`'s own
+  `slugify()` - caught by actually running the real slugifier against
+  the real heading text in Node before trusting any link text I'd
+  written, then corrected via `sed`.
+
+**A fifth gap, found only by an exhaustive audit built *after* the
+interactive fix passed its own tests - not caught by the jsdom e2e
+test, because that test only checked the specific links it was told
+to check:** a standalone script resolved *every* relative link in
+*every* lens/saga/appendix file the same way the real router does,
+cross-checked against the manifest. It found 5 links - to
+`sagas/README.md`, `lenses/README.md`, the repo root `README.md`, and
+`viewer/` - that exist on disk but are correctly absent from the
+manifest (they're GitHub-only navigation aids, not stakeholder
+documents), so the router correctly left them un-intercepted - which
+meant they'd have 404'd in the deployed SPA exactly like the original
+bug report, just for a different set of links the Architect hadn't
+happened to click yet. Fixed by pointing those specific links at their
+real absolute GitHub URLs, the same convention already used for
+other cross-repo links in this wiki.
+
+**Verification, in order of rigor:** (a) `npm run build` - real `tsc`
+compile, real `build.mjs` assembly; (b) a jsdom-based end-to-end test -
+real compiled app classes (not reimplemented for the test), real
+`marked.js`, real dispatched `MouseEvent` clicks - confirming actual
+cross-document navigation, fragment resolution, a real heading `id`
+existing at the linked fragment, and external links being left
+un-intercepted (10/10 assertions passing; hit and fixed a jsdom-only
+`globalThis` leak quirk along the way via a dedicated diagnostic
+script, and caught a vacuous-pass bug in my own first version of one
+assertion before trusting it); (c) the exhaustive link-audit script
+described above, run against every document, not just the ones
+directly implicated by the bug report; (d) redeployed to the live IIS
+site via `Deploy-CoyoteWiki.ps1` and re-verified over real HTTP - not
+just the local build or the jsdom simulation - that the deployed
+assets, the extended manifest, and the actual fixed link text are
+live at `http://localhost/Coyote/`. Both throwaway test/audit scripts
+were deleted before committing; they are not part of the shipped
+product.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION**, confirmed at three
+independent levels (compiled unit behavior, full simulated-DOM
+interaction, live deployed HTTP) rather than any one of them alone.
+
+**Commits:** `gcb-wiki@c39fe79` (pushed, verified `HEAD == origin/main`
+locally); this entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
