@@ -710,3 +710,98 @@ natural conclusion. This is a genuine stopping point, not a premature one
 - three iterations' worth of real, verified, mostly-successful work
 (TKT-031 and TKT-032 fully closed; TKT-030 materially advanced with two
 characterized paths) separate this stop from iteration 7's.
+
+---
+
+## Post-loop directed continuation — 2026-09-12 (TKT-030, Architect-directed)
+
+**Context:** the extended loop run above concluded at iteration 10 with
+`TKT-030` open, both its roadmap branches (AWG dead-end, MZI-lattice
+single-unit verified) recorded. The Architect then gave an explicit
+follow-on instruction ("try less than 16 which will be greater than 1"),
+directing a specific next step - build and verify an intermediate-N
+binary tree before attempting the full N=16 - rather than a new
+autonomous loop iteration. Executed directly, not via `/loop`.
+
+**Target:** `TKT-030` - generalize the single `lattice_unit()` (already
+clean at 0 routing failures) into a real `binary_tree_n(n)` construction,
+verify at intermediate N, then N=16.
+
+**What was done:**
+1. Built `binary_tree_n(n)` in the session scratchpad: N inputs, N/2
+   `lattice_unit()`s at stage 0, halving each stage via real
+   `route_single` port-to-port routing (not just instantiation) across
+   `log2(n)` stages.
+2. Swept N in {2, 4, 8, 16} with a first placement scheme (Y offset
+   scaled by `pitch * 2**stage`). All four reported `routing_failures=0`
+   by the `route_single`-warning check - re-verified for N=16 alone in a
+   second, fresh process (ruling out the exact component-cache false
+   positive this investigation already caught once, in Iteration 2/Step
+   2 above).
+3. **Ran a second, deeper check not yet used in this ticket:
+   `Component.get_netlist()`.** It immediately threw on the same "0
+   routing failures" N=16 component: `More than two ports overlapping at
+   (101.000, 10.625)`, naming three specific sub-ports. This is a real
+   finding reported immediately, not smoothed over: the `route_single`
+   warning check (which this entire ticket's AWG investigation relied on)
+   only watches for bend-radius violations, not coincident routed
+   segments - "0 routing failures" by that check alone is **not**
+   sufficient to certify a valid, non-overlapping layout.
+4. Root-caused: the scaled-offset placement let a later stage's unit land
+   on the same Y row as an earlier stage's still-occupied unit. Fixed by
+   placing each stage's unit at the average Y of its two feeding ports
+   (standard balanced-tree convention) instead of a scaled offset.
+5. Re-swept N in {2, 4, 8, 16} with BOTH checks (`route_single` warnings
+   AND `get_netlist()`) run together: clean for all four N. Re-verified
+   N=16 alone in its own solo fresh process a second time (size, port
+   count, and netlist instance count all matched the sweep's own result
+   exactly) - ruling out the caching trap again, on the corrected
+   construction this time.
+6. Wrote the verified construction as `wdm_combiner_tree.py` in
+   `gcb-pic-core`, matching `layout_homodyne.py`'s existing docstring/
+   style conventions, running both checks together in its own `__main__`
+   for the same reason found in step 3. Ran the committed file itself
+   (not just the scratchpad copy) fresh, confirmed identical output.
+
+**Test results (actual):**
+```
+N= 2  size= 101.00x  50.75  ports=3  route_single_warnings=0  get_netlist_ok=True
+N= 4  size= 301.00x 200.75  ports=5  route_single_warnings=0  get_netlist_ok=True
+N= 8  size= 501.00x 500.75  ports=9  route_single_warnings=0  get_netlist_ok=True
+N=16  size= 701.00x1100.75  ports=17  route_single_warnings=0  get_netlist_ok=True
+```
+N=16 solo-process re-check: identical size/ports/0-warnings, plus
+`get_netlist()` returning 71 netlist instances with no exception.
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED CONDITIONS**
+for `wdm_combiner_tree(n)` producing a `gdsfactory` `Component` with zero
+`route_single` warnings AND a valid (`get_netlist()`-clean) layout for N
+in {2, 4, 8, 16}. **UNPROVEN**: real channel spacing, insertion loss,
+crosstalk, or any optical-physics property (`delta_lengths` remain
+`ESTIMATE-ASSUMPTION` placeholders, same status as the AWG's
+`length_increment` and `layout_homodyne.py`'s own geometric
+placeholders); whether `get_netlist()` is itself an exhaustive validity
+check (not ruled out that a third, deeper check could still find
+something - reported as the best verification performed, not an absolute
+guarantee); full tile integration with `balanced_homodyne_cell()`
+(not attempted).
+
+**Commits:**
+- `gcb-pic-core@391d6bd` - `wdm_combiner_tree.py` added, pushed,
+  `HEAD == origin/main` verified.
+- `gcb-workspaces` (this commit) - `TKT-030` continuation Execution Log +
+  telemetry, `README.md` TKT-030 entries (filetree + status table)
+  updated, this summary entry appended.
+
+**Ticket status changes:** `TKT-030` remains `open | pending` - the
+combiner-architecture sub-problem is now closed (binary-tree verified
+clean at N up to 16, both checks), but the ticket's overall objective
+(a real, integrated K=16 tile combining this combiner with
+`balanced_homodyne_cell()`) is not yet done.
+
+**Next candidate:** wire `wdm_combiner_tree(16)`'s single `OUT` port into
+`balanced_homodyne_cell()`'s `A`/`B` inputs (two trees would be needed -
+one per operand colour - to form the actual K=16 tile per the original
+scope-gap note), and/or pursue real channel-spacing/`delta_lengths`
+values against `gcb-wiki`'s Invariant #6 once that data exists (still
+listed Missing as of this entry).
