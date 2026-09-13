@@ -2323,3 +2323,36 @@ correctly; this is a propagation fix, not a reopening.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (a second, distinct ungrounded claim about the same file: "sovereign safety supervisor")
+
+**Context:** while re-checking `gcb-spec/architecture.md` (just fixed
+for the FastAPI claim), noticed a second, separate paragraph in the same
+file describing `gcb_proxy.py` as "the sovereign safety supervisor"
+above the MMIO register block - a distinct claim, not a restatement of
+the FastAPI one. Grepped `gcb_proxy.py` directly for "safety"/
+"supervisor"/"sovereign": zero matches - the file never describes
+itself that way, and its actual code (already read this session) is a
+self-checking register simulator, nothing supervisory.
+
+**What was done:** fixed `gcb-spec/architecture.md`'s second paragraph;
+cross-repo grep for the same phrase found one more instance,
+`gcb-wiki/figures/FIG-001-system-data-path.md`'s stage-6 diagram label -
+fixed that too. A final repo-wide grep confirmed every other match
+(`gcb-grants`, `gcb-papers`, `gcb-wiki/README.md`) is unrelated
+"sovereign on-premises inference" / "data sovereignty" business/paper
+language, not a description of this component - thread fully closed.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (grepped the actual
+source file for its own self-description before concluding the claim
+was ungrounded; final sweep confirmed no further false-positive
+misreadings).
+
+**Commits:** `gcb-spec@ea16848` (pushed, verified);
+`gcb-wiki@0312ecf` (pushed, verified); this entry.
+
+**Ticket status changes:** none - documentation accuracy only.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
