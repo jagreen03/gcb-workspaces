@@ -2436,3 +2436,54 @@ conversational reconciliation are the record.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (GCB-040: a real RTL gap, not just a documentation one - found, fixed, verified)
+
+**Context:** after an extended run of documentation/doctrine staleness
+fixes, grepped RTL source directly for `TODO`/`FIXME` markers across
+`gcb-rtl`, `gcb-wdm-transceiver`, `gcb-photonic-qam-v2` - a different
+kind of sweep than anything run so far this session. Found
+`greencoyote_top.sv:670-671` hardcoding `greencoyote_streaming_dma`'s
+two IRQ-enable inputs to `1'b1`, with its own comment: "`TODO: pilot_regs
+IRQ_CTRL[5] (hand RTL predates map 0.6.0)`."
+
+**What was found:** checked directly, not assumed - `registers.yaml`
+genuinely defines both bits (`IRQ_CTRL[5]`/`[6]`, rw, reset 0, real
+signal names, "Added in map_version 0.6.0"), but
+`greencoyote_pilot_regs.sv` (confirmed hand-written, not auto-generated,
+by its own header and lack of a "DO NOT EDIT" banner unlike
+`rtl/generated/greencoyote_regmap_pkg.sv`) never implemented either bit
+at all. The TODO's own framing was accurate, not stale - unlike every
+other staleness finding this session, which was a documentation claim
+trailing behind a real fix, this was a real spec field that shipped
+with zero RTL behind it.
+
+**What was done:** implemented both bits in `greencoyote_pilot_regs.sv`
+(declaration/reset/write-decode/read-decode, matching the existing
+`IRQ_CTRL` enable pattern) plus two new output ports - these need to
+cross the module boundary into the DMA block, unlike the other enables
+which stay internal - then wired them through `greencoyote_top.sv`,
+replacing the hardcodes. **Verified by actually running the existing
+regression**, not assumed clean: `sim/run_pilot_tb.sh` and
+`sim/run_dma_tb.sh` both `ALL CHECKS PASS`, DMA functional counts
+(`fire_seen=1018`/`opv_seen=1018`) unchanged - only the interrupt gating
+changed, not the datapath. Filed as `GCB-040` (a new ticket, not a
+pre-existing backlog item) with the behavioral change stated explicitly:
+both IRQs now reset disabled instead of being unconditionally on,
+matching the spec's own stated reset value; `gcb-host`'s driver was not
+checked against this, flagged as an open follow-up rather than silently
+assumed fine.
+
+**Epistemic status: PROVEN — DIGITAL SIMULATION, TESTED CONDITIONS**
+(both directly-relevant existing testbenches re-run and passing after
+the change, not before-only).
+
+**Commits:** `gcb-rtl@bc4c4fb` (pushed, verified);
+`gcb-workspaces@b17d1dd` (pushed, verified); this entry.
+
+**Ticket status changes:** `GCB-040` created and closed `done | blue` in
+the same tick - a small, fully-verified, non-decision-gated fix.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
