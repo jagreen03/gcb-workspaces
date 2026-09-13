@@ -270,12 +270,25 @@ succeed, a real production build (30 modules, a real `dist/` bundle,
 728ms). One real, known `esbuild` vulnerability found and reported, not
 silently patched (dev-server-only, fixing it needs a breaking `vite@8`
 upgrade, not applied without a deliberate decision). **Separately
-found, left untouched**: `gcb-dashboard/README.md` has real, dated
-content on disk ("expanded 2026-09-11, GCB-039") that was never
-committed - pre-existing, unrelated stray state, not touched by this
-fix per this program's own standing discipline against bundling
-unrelated changes into one commit; flagged for whoever owns that repo's
-next commit.
+found, then fixed 2026-09-13** (`gcb-dashboard@805c39f`, pushed): the
+README expansion ("expanded 2026-09-11, GCB-039") was real, dated
+content already on disk but never committed - deliberately excluded
+from the build-tooling fix above to keep that commit scoped, then
+committed on its own once verified (`make doctor` genuinely passes;
+role 2 is real, per the confirmation directly above this section).
+
+Same pattern, same day, two more repos: `gcb-photonic-qam-v2/README.md`
+and `gcb-python-orchestrator/README.md` were found completely
+untracked (`??`, zero `git log` history) via a routine `git status`
+sweep done deliberately low-risk right after the B-operand OOM event -
+distinct from `gcb-dashboard`'s case (an older version *was* already
+committed, just stale): these two had never been `git add`ed at all.
+Both read in full before touching git, confirmed to match content
+already relied on earlier this session, committed as-is, one commit
+per repo: `gcb-photonic-qam-v2@8168b50`, `gcb-python-orchestrator@d7d2975`
+(both pushed, verified). A full `gcb-*` sweep afterward found no further
+cases - the only remaining stray state anywhere is `gcb-wdm-transceiver`'s
+own pre-existing, explicitly protected, unrelated stray state.
 
 **`vortex` - System Boundary question CONCLUSIVELY confirmed, not just
 inferred from file absence.** `git remote -v` shows the real upstream
