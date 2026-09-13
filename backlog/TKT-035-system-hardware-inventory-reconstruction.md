@@ -86,17 +86,28 @@ register, system boundary, functional-completeness gaps, dependency map).
 
 ## Required work (next iteration, not this one)
 
-1. Deepen the shallow-pass repos (`gcb-python-orchestrator`,
-   `gcb-dashboard`, `vortex`'s actual GCB integration surface).
-2. Complete the remaining prompt sections not fully built in Pass 1
+1. ~~Deepen the shallow-pass repos (`gcb-python-orchestrator`,
+   `gcb-dashboard`, `vortex`'s actual GCB integration surface).~~ **Done,
+   see "Deepened the two remaining shallow-pass repos" below (2026-09-12)**
+   — closes both.
+2. ~~Complete the remaining prompt sections not fully built in Pass 1
    (Required Equipment Matrix, full DFT/test-structure matrix) - Pass 1
    covers these at the depth `gcb-wiki/15` already established, re-
-   verified rather than redone from scratch line-by-line.
+   verified rather than redone from scratch line-by-line.~~ **Re-checked
+   2026-09-13: `gcb-wiki/15` §5/§6 already hold real content (an
+   equipment list scoped to what this doctrine explicitly does not
+   attempt to build, and a 4-row DFT/test-structure status matrix that
+   has itself been kept current post-Pass-1 — it already cites
+   `TKT-019.11`'s epoch-rollover assertion). Nothing to add; re-verified,
+   not redone.
 3. ~~Confirm the Finding #3 hypothesis above (`gcb-wiki/15`'s 60lambda
    figures describing `gcb-wdm-transceiver`, not `gcb-pic-core`) directly
    with the Architect or by re-reading `gcb-wiki/15`'s own citations in
    full.~~ **Done, see "Required work item 3, resolved" below** — confirmed
    with a precision correction (two different sources, not one).
+
+**All three items now resolved; see `Telemetry & Evaluation` below for
+whether this changes `Final State`.**
 
 ## Out of scope
 
@@ -233,6 +244,15 @@ structure, confirmed and simple. This does NOT close the ticket - the
 original Pass-1 deliverable sections not revisited here (equipment/DFT
 matrices, per the source prompt's own 11-section scope) remain genuinely
 open follow-on work.
+
+**Update (2026-09-13):** the "equipment/DFT matrices... remain genuinely
+open" clause above is now out of date - checked directly this session
+(see "Required work" §2 above): `gcb-wiki/15` §5/§6 already hold real,
+maintained content, not placeholders. All three of this ticket's own
+`Required work` items are now resolved. Whether that is sufficient to
+close `TKT-035` itself (the grade above covers only Contradiction
+Register entry #1, explicitly) is the Architect's call, not decided
+here - no `status`/`telemetry_color` change made by this update.
 
 ---
 ## Deepened the two remaining shallow-pass repos (2026-09-12, same day,
