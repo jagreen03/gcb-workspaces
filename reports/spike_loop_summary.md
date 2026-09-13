@@ -2788,3 +2788,50 @@ directly against real files/git state, not inferred).
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive, staying mindful of the host's memory ceiling
 before any more large EDA runs.
+
+## Direct Architect request, 2026-09-13 - add and test the IIS deploy script, real deployment bug found and fixed
+
+**Not a loop tick - a direct request**: add
+`Deploy-CoyoteWiki.ps1` to the project and verify it actually deploys,
+against a real, already-running local IIS instance with a pre-created
+target folder.
+
+**Checked before running, not assumed**: `appcmd list vdir` revealed
+the real IIS config - `Default Web Site/Coyote` maps to
+`C:\inetpub\wwwroot\GreenCoyoteBay`. The script's own IIS
+auto-detection can't find this (`WebAdministration` module not
+installed on this machine) and silently falls back to a *different*
+path (`C:\inetpub\wwwroot\coyote`) - deployed with `-CustomTargetDir`
+pointing at the real vdir's physical path instead of trusting the
+default.
+
+**A real deployment bug found by testing, not assumed**: after the
+first deploy, every `lenses/`/`sagas/`/`appendices/` `.md` file 404'd
+over HTTP despite being physically present (confirmed via
+`Test-Path`) - IIS has no built-in MIME type mapping for `.md` at all
+(`appcmd list config -section:staticContent` showed only `.mdb`/`.mdp`,
+not `.md`). Fixed with `viewer/public/web.config`, wired into
+`build.mjs` so every future build ships it automatically - not a
+one-off fix to this one IIS instance.
+
+**Verified by redeploying and re-checking over real HTTP, not assumed
+fixed**: all 13 deployed markdown files now 200; one file's deployed
+content confirmed byte-for-byte identical to its source via direct
+`Get-Content`/`Invoke-WebRequest` comparison; the manifest fetched over
+HTTP parses with all 12 documents. (`web.config` itself correctly
+404s when requested directly over HTTP - IIS hides that file from the
+URL namespace by design, confirmed as expected behavior, not
+misdiagnosed as a bug.) Site live at `http://localhost/Coyote/`.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** (real IIS deployment,
+real HTTP verification, real content-diff, not inferred from the
+script's own success message).
+
+**Commits:** `gcb-wiki@1040fc1`, `@8d30842` (both pushed, verified);
+this entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
