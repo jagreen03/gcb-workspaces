@@ -339,3 +339,29 @@ design specification within the paper, not claimed here as built/
 measured hardware - these are draft arXiv papers, not verified silicon,
 and are cited as evidence of INTENT/architecture, not of physical
 results).
+
+---
+## Checked, could not verify (2026-09-12, same day): the Cyclopter/
+pgvector deployment's actual execution status
+
+`gcb-python-orchestrator/deploy/cyclopter/` (the `pbg_telemetry`
+PostgreSQL+pgvector persistence layer cited repeatedly this session, and
+the subject of `GCB-039`'s own Objective B) is real, well-documented
+configuration - `docker-compose.yml`, an idempotent migration, a
+one-click `db_up.sh` bring-up script with a thoughtful detail (binds
+host port 5433 specifically "avoids the Windows PG17 on 5432," strongly
+suggesting it was run at least once on a real machine with a real local
+conflict). **Could not verify whether it is currently running, or has
+ever actually been run, in THIS session's environment**: `docker` is not
+installed in either the WSL environment or on the Windows host checked
+this pass, and no exported data, logs, or artifacts from a past run
+exist anywhere in the repo (git-tracked state only shows configuration,
+never output). Did not install Docker to force a check - an environment
+change that large is outward-facing enough to ask first, not assume.
+
+**This matches a pattern recurring across this entire program, found
+independently at several other points this session** (the React
+dashboard with no build script; `gcb-host`'s empty `src`/`tests`): real,
+well-designed configuration/code that has rarely been actually EXECUTED
+and verified end-to-end in a way that leaves evidence. Recorded as
+CONFIG EXISTS / EXECUTION STATUS UNKNOWN, not overclaimed either way.

@@ -1570,3 +1570,27 @@ resolves it. Updated both locations in doc 15 to CONFIRMED.
 (`gcb-python-orchestrator/deploy/cyclopter/`) - referenced repeatedly
 this session as "real" infrastructure - is actually running, not just
 described.
+
+---
+
+## Open-ended continuation — 2026-09-12 (Cyclopter/pgvector execution status: could not verify)
+
+**What was done:** checked whether `gcb-python-orchestrator/deploy/
+cyclopter/`'s PostgreSQL+pgvector deployment (referenced repeatedly this
+session, subject of `GCB-039` Objective B) is actually running or has
+ever actually been run. `docker` is not installed in either WSL or the
+Windows host - could not verify by running it myself. No exported data/
+logs/artifacts from a past run exist anywhere in the git-tracked repo.
+Did not install Docker to force a check (too large an environment
+change to make unilaterally). A real, thoughtful config detail (port
+5433 "avoids the Windows PG17 on 5432") suggests it probably was run at
+least once on a real machine - just not leaving git-tracked evidence.
+
+**Recorded as**: CONFIG EXISTS (real, well-documented) / EXECUTION
+STATUS UNKNOWN - not overclaimed either way. Matches a pattern found
+repeatedly this session: real config/code rarely actually executed
+end-to-end in a way that leaves evidence (the React dashboard build gap,
+`gcb-host`'s empty src/tests).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-035` section, this
+entry. No code changes.
