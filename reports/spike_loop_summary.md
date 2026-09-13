@@ -2692,3 +2692,64 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect follow-up, 2026-09-13 - consolidate 8 sagas into 4 lenses, add 5 manufacturing/test personas, real 3-tier depth
+
+**Not a loop tick - a direct follow-up request**: consolidate the 8
+personas into 4 "lenses," absorb 5 newly-requested manufacturing/test
+personas (chip/tapeout, PCB, board assembly, silicon test, board/
+system test), keep SOLID, give expert pushback where warranted.
+
+**The one real problem handled, not smoothed over**: the 5 new
+personas describe work this program has not done at all. Checked
+directly - zero "Tiny Tapeout" reference anywhere; `ASAP7` is a
+predictive academic PDK no real foundry accepts; no package, PCB,
+board, or silicon-test artifact exists anywhere in this program's real
+evidence base. Rather than invent plausible-sounding tapeout/PCB
+content to fill out the absorbed personas, built a dedicated
+`gcb-wiki/appendices/manufacturing-pdk.md` stating this as a checked
+gap list (Part 2) right next to the real physical-design evidence that
+does exist (Part 1) - both lenses that absorb these personas link to
+it instead of fabricating.
+
+**What was built, committed, pushed, verified `HEAD==origin/main`:**
+`gcb-wiki/lenses/` (4 consolidated documents, kept the Architect's own
+grouping), `gcb-wiki/appendices/manufacturing-pdk.md`, one unified
+`portal-manifest.json` replacing the old per-directory manifest, a
+real 3-level depth system (Executive/System/Foundry, cumulative) via
+`<!-- depth:LEVEL -->` HTML-comment tagging that `marked` passes
+through as real DOM nodes - verified empirically against actual
+`marked.js` output in Node (not assumed from the CommonMark spec)
+before trusting the filter's core assumption. The original 8 sagas
+were left completely unchanged (the Architect's own earlier "do not
+destroy" instruction) and are still the full-depth link-out target
+from each lens - `gcb-wiki@d22b690`.
+
+**Verified by actually building, not assumed**: `npm run build`
+compiled clean on the first try after the refactor; every asset
+(including the new `lenses/`, `appendices/`, and
+`portal-manifest.json`) confirmed reachable over HTTP from a real
+local server; depth-tag comment balance checked across all 4 lenses
+before committing.
+
+**A process note, logged honestly**: the local test server used for
+this verification was left running after an unsuccessful `pkill`
+attempt during the *previous* follow-up - caught this time by actually
+checking with `curl` before trusting `pkill`'s exit, found via
+`netstat` + killed by PID via `taskkill`, confirmed dead by `curl`
+again afterward. Applied the same discipline on this tick's own
+temporary server from the start.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** (real build, real HTTP
+checks, real `marked.js` parse test). No browser extension was
+available in this environment for a live visual render check of the
+depth toggle - still flagged to the Architect as worth doing once
+deployed.
+
+**Commits:** `gcb-wiki@d22b690` (pushed, verified); this entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
