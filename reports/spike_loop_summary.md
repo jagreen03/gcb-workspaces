@@ -1404,3 +1404,31 @@ this turn - continuing into the real topology build next.
 multiply units -> two `mmi_power_tree`-style summing trees -> one shared
 PD pair) in `gcb-pic-core`, verified the same way as every other layout
 this session - continuing now, per the open-ended directive.
+
+---
+
+## Open-ended continuation — 2026-09-12 (built the real topology: qam_reduction_cell.py)
+
+**What was done:** built `gcb-pic-core/qam_reduction_cell.py` -
+16 `multiply_tap()`s (the MMI-coupler half of `balanced_homodyne_cell()`,
+SUM/DIFF outputs left optical, no photodiodes yet) feeding two
+`power_tree()`s (one per SUM/DIFF family, reusing `mmi_power_tree.py`'s
+binary-tree technique) feeding one shared photodiode pair at the end -
+the exact topology `TKT-030`'s own correction hypothesized. Clean on the
+first real attempt (0 `route_single` warnings, `get_netlist()` OK);
+re-verified per this program's own established discipline anyway, not
+trusted on one pass - byte-identical across two independent fresh
+processes and across a full N in {2,4,8,16} sweep.
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** for the route_single + get_netlist() results, reproduced
+twice. **UNPROVEN**: real insertion loss/crosstalk, or Architect
+confirmation this is the final topology.
+
+**Commits:** `gcb-pic-core@50845b6` (pushed, `HEAD==origin/main`
+verified); `gcb-workspaces` (this commit) - `TKT-030` build record,
+`README.md`, this entry.
+
+**Next candidate (continuing open-ended, per the Architect's own
+directive):** deepen the remaining shallow-pass repos from `TKT-035`
+(`gcb-dashboard`, `vortex`'s non-TCU surface).

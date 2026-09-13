@@ -657,3 +657,33 @@ EVIDENCE** (both source documents read in full, the matching mechanism
 confirmed word-for-word, the RTL constant read directly). The topology
 hypothesis above is **UNPROVEN** - a strong, specific, evidence-backed
 lead, not yet built or verified.
+
+---
+## Built and verified (2026-09-12, same day): the corrected topology
+
+`gcb-pic-core/qam_reduction_cell.py` - 16 `multiply_tap()`s (the MMI
+coupler half of `balanced_homodyne_cell()`, with NO photodiodes yet,
+SUM/DIFF outputs left optical) feeding two `power_tree()`s (one per
+SUM/DIFF family, reusing `mmi_power_tree.py`'s own binary-tree
+technique) feeding one shared photodiode pair at the end. Clean on the
+first real attempt (0 `route_single` warnings, `get_netlist()` OK),
+re-verified per this program's own established discipline rather than
+trusted on one pass alone - byte-identical across two independent fresh
+processes, and across a full N in {2,4,8,16} sweep. Committed
+`gcb-pic-core@50845b6`, pushed, `HEAD == origin/main` verified.
+
+`wdm_combiner_tree.py`/`k16_tile.py`/`mmi_power_tree.py` remain in the
+repo, not deleted - each still real work answering a different, still-
+valid question (WDM-combiner layout feasibility; `gcb-spec`'s own
+separate Phase-II array). `qam_reduction_cell.py` is the component that
+actually answers THIS repo's own near-term goal, per the `TKT-034`-
+confirmed grounding.
+
+**Epistemic status: PROVEN - DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** for the route_single + get_netlist() results, N in
+{2,4,8,16}, reproduced twice. **UNPROVEN**: real insertion loss,
+crosstalk, or Architect confirmation that this is the final topology -
+a credible, evidence-backed construction, not a locked design.
+
+**Final State:** `done | blue` - stands; this is additive follow-on
+work on an already-closed ticket, not a reopening.
