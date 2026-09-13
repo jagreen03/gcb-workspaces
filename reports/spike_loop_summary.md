@@ -2487,3 +2487,52 @@ the same tick - a small, fully-verified, non-decision-gated fix.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (closed GCB-040's own flagged follow-up, then swept for more TODOs - found none)
+
+**Context:** continued the TODO/FIXME sweep approach into `gcb-host`,
+`gcb-dashboard`, `gcb-python-orchestrator`, `gcb-pic-core`,
+`gcb-analog-rx` (non-RTL sources this time) - clean, nothing found
+(after excluding vendored `.venv`/`node_modules` noise, which produced
+a slow background grep before the exclude-dir flags were added).
+Directly followed up on GCB-040's own flagged open question instead:
+does `gcb-host` need updating now that the RTL genuinely implements
+`IRQ_CTRL[5]`/`[6]`?
+
+**What was found:** yes - `greencoyote_pilot.hpp`'s `enable_irq()`
+convenience helper, the one realistic software path to these bits,
+never set them, even though the generated `regmap.py` (Python side)
+already had the field definitions. Without this, GCB-040's RTL fix
+would have been correct but practically unreachable by any software
+this helper style represents.
+
+**What was done:** added two new backward-compatible `bool` parameters
+to `enable_irq()`. **Verified by actually compiling**, not assumed:
+wrote a minimal smoke test (outside the repo) exercising both the new
+6-argument call and the existing 0-argument default-args call against
+the real header; `g++ -std=c++17 -Wall`, clean, zero warnings - no
+existing C++ build harness exists to re-run (`src/`/`tests/` remain
+empty, `TKT-032`'s own finding). Checked `gcb_proxy.py` directly by
+grep and confirmed it has no equivalent convenience wrapper at all, so
+there was nothing to fix there. Closed the loop in `GCB-040`'s own
+ticket and the README row.
+
+**Also checked, found benign, not fixed:** `gcb_color_mux.sv`'s own
+`// TODO` (the only other RTL TODO found across the whole program) is
+an intentional unused-port placeholder comment for genuinely
+not-yet-built future deskew/trim stages - no missing functionality
+today, no spec field backing an expectation, unlike the IRQ case.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (real compile against
+the real header; `gcb_proxy.py` checked by grep before concluding it had
+no equivalent gap).
+
+**Commits:** `gcb-host@171f16e` (pushed, verified);
+`gcb-workspaces@6c4fb0c` (pushed, verified); this entry.
+
+**Ticket status changes:** `GCB-040` stays `done | blue` - this closes
+its own flagged follow-up within the same tick it was raised.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
