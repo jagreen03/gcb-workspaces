@@ -1985,3 +1985,36 @@ not a ticket.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (README self-contradicted itself on whether GCB-034 was ratified)
+
+**Context:** swept the `GCB-034`/`GCB-035`-`038` Falsification Test
+family for content, not frontmatter, gaps. `git log` timestamps confirm
+`GCB-034` was ratified (`done|green`) at 20:19 on 2026-09-10, *after*
+all four V-docs locked that same evening (19:57-20:12) and explicitly
+incorporating their results. None of the four V-docs' own closing notes,
+nor `README.md`'s own `GCB-038` table row, had been revisited since -
+the `GCB-038` row still read "`GCB-034` ready for Architect review to
+close | open | pending," directly contradicting `GCB-034`'s own row two
+lines above it showing `done|green`. A real self-contradiction inside
+one file, not just a stale cross-file claim.
+
+**What was done:** fixed the `README.md` contradiction; added a brief
+"Update" note to each of `GCB-035`/`036`/`037`/`038`'s own Telemetry
+section pointing at the ratification, without rewriting their original
+checkboxes/`Final State` lines - same preserve-history-add-a-pointer
+pattern as `TKT-019.10`'s Finding A/B resolution notes. None of these
+four tickets' `Final State` changes; they are validation records, not
+the decision ticket, and don't self-close.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (`git log --follow`
+timestamps on all five files, read in full before writing anything).
+
+**Commits:** `gcb-workspaces@68786f4` (pushed, verified).
+
+**Ticket status changes:** none - `GCB-034` was already `done|green`;
+`GCB-035`-`038` correctly remain `open | pending` as validation records.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
