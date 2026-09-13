@@ -365,3 +365,45 @@ dashboard with no build script; `gcb-host`'s empty `src`/`tests`): real,
 well-designed configuration/code that has rarely been actually EXECUTED
 and verified end-to-end in a way that leaves evidence. Recorded as
 CONFIG EXISTS / EXECUTION STATUS UNKNOWN, not overclaimed either way.
+
+---
+## Correction (2026-09-12, later the same session): the OpenROAD
+"toolchain unavailable" finding above was WRONG - my own check was
+incomplete, not the program's record
+
+**The Architect asked directly: if OpenROAD was never available, how
+did `GCB-027`/`029`/`030`/`032` produce real physical-layout findings?**
+Good question - checking properly (not re-asserting the earlier
+conclusion) found the earlier check in this report was simply
+incomplete: `which openroad` against default `PATH` found nothing, but
+`TKT-021` (read in full only now, having been missed earlier) documents
+a `--local` ORFS build at `~/eda/OpenROAD-flow-scripts`, built deliberately
+**without** touching system `PATH` - it requires `source env.sh` from
+inside that tree first, exactly as `TKT-021`'s own Execution Log states.
+
+**Verified directly, not re-asserted:**
+- `~/.wslconfig` on the Windows host genuinely has `memory=8GB`,
+  `processors=4`, `swap=8GB`, `autoMemoryReclaim=Disabled` - an exact
+  match to `TKT-021`'s documented changes.
+- `source ~/eda/OpenROAD-flow-scripts/env.sh && openroad -version` →
+  a real version string, `26Q3-1953-gc6c0900a16`.
+- `flow/results/asap7/gcb_max_reduce/base/` holds a complete, genuine
+  ORFS output set: real `.odb` database files at every stage, `6_final.gds`,
+  `6_final.def`, `6_final.spef` (parasitics), a final netlist, rendered
+  layout images - not something an LLM could fabricate.
+- `flow/reports/asap7/gcb_max_reduce/base/6_finish.rpt` reads
+  **`wns max 0.00`** - an exact match to `GCB-032`'s claimed "WNS = 0.00 ps."
+
+**Corrects this report's own earlier "OpenROAD... is not installed"
+line and `spike_loop_summary.md`'s matching entry.** OpenROAD is real,
+working, and was genuinely used for `gcb_max_reduce`'s ASAP7 physical
+validation - it was simply never on default `PATH` in a fresh shell, a
+fact this report's own check did not account for before concluding
+unavailability. The ASIC physical-design findings in `GCB-027`/`029`/
+`030`/`032` are confirmed genuine, not fabricated.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (the binary run directly,
+real output files inspected, a real reported number cross-checked
+against a real claim). The earlier "unavailable" claim in this same
+report is the thing that was wrong, corrected here rather than left
+standing.

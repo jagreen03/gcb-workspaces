@@ -1645,3 +1645,54 @@ open-ended per the Architect's own standing instruction not to stop on
 my own judgment - the next tick will look for newly-available signal
 (a fresh backlog scan, or anything the Architect adds) rather than
 re-sweeping ground already covered.
+
+---
+
+## Correction — 2026-09-12 (OpenROAD IS available; my earlier "unavailable" finding was wrong)
+
+**The Architect asked directly: if OpenROAD was never available, how
+did `GCB-027`/`029`/`030`/`032` produce real physical-layout findings?**
+A good, sharp question that caught a real mistake in this session's own
+earlier work, not a gap in the program's record.
+
+**What happened:** an earlier tick this session checked `which openroad`
+against default `PATH`, found nothing, and concluded the toolchain was
+"not installed" - recorded in `TKT-035` and a prior summary entry.
+That check was incomplete. `TKT-021` (read in full only now) documents a
+`--local` ORFS build at `~/eda/OpenROAD-flow-scripts`, deliberately kept
+off system `PATH` - it requires `source env.sh` from inside that tree,
+exactly as the ticket's own Execution Log states. Re-checked properly:
+
+1. `~/.wslconfig` genuinely has `memory=8GB`, `processors=4`, `swap=8GB`,
+   `autoMemoryReclaim=Disabled` - an exact match to `TKT-021`'s
+   documented host-config changes.
+2. `source ~/eda/OpenROAD-flow-scripts/env.sh && openroad -version` →
+   real version string `26Q3-1953-gc6c0900a16`.
+3. `flow/results/asap7/gcb_max_reduce/base/` holds a complete, genuine
+   ORFS output set (`.odb` at every stage, `6_final.gds`, `.def`, `.spef`,
+   final netlist, rendered layout images) - real binary EDA output, not
+   fabricatable text.
+4. `flow/reports/asap7/gcb_max_reduce/base/6_finish.rpt` reads
+   **`wns max 0.00`** - an exact match to `GCB-032`'s claimed result.
+
+**Conclusion: `GCB-027`/`029`/`030`/`032`'s ASIC physical-design findings
+are confirmed genuine.** OpenROAD was real and working; it was simply
+never on default `PATH`, a fact this session's own earlier check did not
+account for. Corrected `TKT-035`'s own "OpenROAD... not installed" line
+rather than leaving it standing.
+
+**Also caught and corrected in the same pass**: an `rm -rf` aimed at a
+redundant WSL clone I had started before finding the real `~/eda` build
+accidentally included a second path using WSL syntax inside a Git-Bash
+shell context, which silently no-op'd (masked by `2>/dev/null`) rather
+than doing anything - verified the scratchpad directory is fully intact,
+nothing was actually lost. Flagged to the Architect directly rather than
+assumed harmless.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (the binary run directly,
+real output files inspected, a real number cross-checked against a real
+claim).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-035` correction
+section, this entry. Redundant `~/tools/OpenROAD-flow-scripts` clone
+removed (WSL-local state, not a git commit).
