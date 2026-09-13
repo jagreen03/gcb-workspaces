@@ -1499,3 +1499,22 @@ quoted numbers).
 corrected (status unchanged, per this epic's own convention).
 
 **Next candidate:** continuing open-ended per the Architect's directive.
+
+---
+
+## Open-ended continuation — 2026-09-12 (consistency sweep: everything touched this session re-verified fresh)
+
+**What was done:** re-ran every real test/build this session has depended
+on, fresh, to confirm nothing was left broken: `gcb-rtl`'s full
+regression (`tb_cs_fifo_path`, `tb_dma_integration`, `tb_ss_calib`
+10000/10000, `tb_ss_tdc` - all PASS); all five `gcb-pic-core` gdsfactory
+scripts (`layout_homodyne.py`, `wdm_combiner_tree.py`, `k16_tile.py`,
+`mmi_power_tree.py`, `qam_reduction_cell.py` - all clean, identical
+output to their last recorded results); `gcb-host`'s
+`test_hf_manifest_gen.py` (13/13 PASS).
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE**, fresh re-run, not
+re-stated from memory.
+
+**No commits** (verification only, nothing changed). Continuing
+open-ended to the next backlog item.
