@@ -165,3 +165,57 @@ closed. No RTL or code changed (this ticket is intake/survey only, per
 its own stated scope) - findings recorded here for whoever picks up
 follow-on work (a real `gcb-host` build system, or correcting the
 README's "FastAPI" description).
+
+---
+## Follow-up (2026-09-12, same day) - directed "build-and-run verification
+pass": re-confirmed this ticket's own closure still holds, then closed
+its one flagged-but-unpursued gap
+
+**The Architect's next-step framing ("open up TKT-032 for its build-and-
+run verification pass") predated this ticket's own closure earlier the
+same session. Re-verified rather than silently re-run**: `src/`/`tests/`
+are still both empty except for what this follow-up itself adds (no
+build system has appeared) - the earlier survey's findings stand.
+
+1. Read `tools/hf_manifest_gen.py` in full (Step 1's own "not read in
+   detail" flag) - a real, substantial (~725-line) HuggingFace config ->
+   GreenCoyote hardware-requirement manifest generator + negotiation
+   engine, not a stub.
+2. **Ran it for real** against two synthetic HF-style configs
+   (`--local`, no network dependency): a 70B-dense-model-shaped config
+   correctly `REJECTED` (needs 384 tiles vs. the 16-tile prototype
+   default); a small dense config correctly `DEGRADED`/accepted-with-
+   warnings.
+3. **Caught and corrected a false lead in my own verification, not in
+   the tool**: checking the exit code via `$?` immediately inside the
+   same `wsl bash -c '...'` invocation that ran the script reported `0`
+   for the `REJECTED` case, which looked like a real bug (the script's
+   own `exit_codes` mapping says `REJECTED -> 1`). Re-checked with a
+   minimal `false; echo $?` control (no Python involved) and reproduced
+   the same wrong `0` - proving this is a WSL-invocation quirk in how
+   `$?` is read *inside* that exact invocation shape, unrelated to
+   `hf_manifest_gen.py`. Re-checked the real exit code from OUTSIDE the
+   `wsl` call instead: genuinely `1` for `REJECTED`, `0` for
+   `DEGRADED`/`ACCEPTED` - the tool's own logic is correct; the earlier
+   reading was a measurement artifact, caught before being reported as a
+   bug.
+4. Added `tests/test_hf_manifest_gen.py` - the first real test in this
+   previously-empty directory: 3 scenarios (large dense -> `REJECTED`,
+   small dense -> `DEGRADED`, a DeepSeek-V3-shaped MoE config -> expert-
+   count/active-expert extraction), 13 self-checking assertions (no
+   pytest dependency, matching `gcb_proxy.py`'s own self-checking
+   convention per this ticket's Step 4 finding), driven by direct import
+   rather than subprocess (sidesteps the exit-code quirk entirely).
+   **All 13 checks pass**, reproduced across two independent runs.
+   Committed `gcb-host@d4be571`, pushed, `HEAD == origin/main` verified.
+
+**Epistemic status: PROVEN — DIGITAL SIMULATION (direct Python
+execution), TESTED CONDITIONS** for the 3 scenarios' negotiation-logic
+outcomes and real exit codes. No claim about the actual FPGA/XRT hardware
+path - `HardwareManifest.from_fpga()` returns a hardcoded prototype
+default here, not a live register read, unchanged and not exercised by
+this pass.
+
+**Final State (unchanged):** `done | blue`. This follow-up adds a real
+test artifact and closes the one flagged gap from the original survey;
+it does not reopen the ticket or change its disposition.

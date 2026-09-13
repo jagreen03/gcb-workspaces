@@ -992,3 +992,81 @@ both completely empty (nothing to build), and Step 3 redirected to
 Execution Log rather than repeating the survey - the one real gap it
 flagged but did not pursue is `tools/hf_manifest_gen.py`, not yet read in
 detail.
+
+---
+
+## Post-loop directed continuation 4 — 2026-09-12 (TKT-032 build-and-run pass, sequenced second target)
+
+**Context:** the Architect's sequencing named TKT-032's "build-and-run
+verification pass" as the second target, after the channel-
+spacing/FDTD-EME phase (previous entry). Checked first, per this
+program's own discipline, rather than assuming the premise: `TKT-032` was
+already closed this same session (`done | blue`, full 5-step survey).
+Re-confirmed the closure still held (src/tests still empty, no build
+system had appeared), then pursued the one real gap that survey itself
+flagged but did not pursue: `tools/hf_manifest_gen.py` had been read, but
+never run.
+
+**What was done:**
+1. Read `hf_manifest_gen.py` in full - a real, substantial (~725-line)
+   HuggingFace config -> GreenCoyote hardware-manifest generator +
+   negotiation engine.
+2. Ran it for real (`--local`, no network dependency) against a
+   synthetic 70B-dense-model config (Llama-3.1-70B-Instruct-shaped) and a
+   small dense config. Large model: correctly `REJECTED` (384 tiles
+   needed vs. the 16-tile prototype default, real warnings about
+   attention/feed-forward tiling and long-context KV cache). Small
+   model: correctly `DEGRADED`/accepted-with-warnings.
+3. **Caught and corrected a false lead in my own verification, not the
+   tool**: reading `$?` immediately inside the same `wsl bash -c '...'`
+   invocation that ran the script showed `0` for the `REJECTED` case -
+   looked like a real bug against the script's own documented
+   `exit_codes` mapping (`REJECTED -> 1`). Ran a minimal control
+   (`false; echo $?`, no Python at all) inside the identical invocation
+   shape and reproduced the same wrong `0` - proving this is a WSL
+   `$?`-inside-invocation quirk, unrelated to `hf_manifest_gen.py`.
+   Re-checked the real exit code from OUTSIDE the `wsl` call: genuinely
+   `1` for `REJECTED`, `0` for `DEGRADED` - correct, as documented. Not
+   reported as a tool bug.
+4. Added `gcb-host/tests/test_hf_manifest_gen.py` - the first real test
+   in that previously-empty directory: 3 scenarios (large dense, small
+   dense, a DeepSeek-V3-shaped MoE config for expert-count/active-expert
+   extraction), 13 self-checking assertions, driven by direct import
+   (sidesteps the exit-code quirk entirely rather than working around
+   it indirectly). All 13 pass, reproduced across two independent runs.
+5. Committed to `gcb-host@d4be571`, pushed, `HEAD == origin/main`
+   verified.
+
+**Test results (actual):**
+```
+test_dense_large_model_rejected:  5/5 PASS (REJECTED, needs 384 tiles)
+test_small_dense_model_degraded:  3/3 PASS (DEGRADED, fits with tiling)
+test_moe_expert_count_detected:   4/4 PASS (256 experts, 8 active, extracted correctly)
+ALL CHECKS PASS
+```
+
+**Epistemic status: PROVEN — DIGITAL SIMULATION (direct Python
+execution), TESTED CONDITIONS** for the 3 scenarios' negotiation-logic
+outcomes and real exit codes, reproduced twice. No claim about the actual
+FPGA/XRT hardware path - `HardwareManifest.from_fpga()` returns a
+hardcoded prototype default, not a live register read, unchanged and not
+exercised here.
+
+**Commits:**
+- `gcb-host@d4be571` - `tests/test_hf_manifest_gen.py` added, pushed,
+  `HEAD == origin/main` verified.
+- `gcb-workspaces` (this commit) - `TKT-032` follow-up Execution Log
+  appended (status unchanged, `done | blue`), `README.md` TKT-032
+  entries updated, this summary entry appended.
+
+**Ticket status changes:** None - `TKT-032` remains `done | blue`; this
+is incremental follow-up closing its own previously-flagged gap, not a
+reopening.
+
+**Next candidate:** per `TKT-033`'s own "Required work," the Architect's
+disposition on which physical subsystem `gcb-pic-core`'s K=16 tile
+represents (Part A) is the highest-leverage next item - it blocks any
+real channel-spacing value from being committed. Absent that, the next
+self-directed candidate would be extending `mode_solve_strip.py`'s FEM
+approach toward the actual MZI-lattice coupler geometry (materially
+bigger work, flagged as deferred in `TKT-033` Part B finding #5).
