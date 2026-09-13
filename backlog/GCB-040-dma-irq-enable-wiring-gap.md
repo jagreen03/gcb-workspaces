@@ -67,19 +67,31 @@ exercises neither `greencoyote_top` nor `greencoyote_pilot_regs`/
 (`1'b1`, ignoring `IRQ_CTRL` entirely). **After this fix, both reset to
 disabled (`0`) and require an explicit `IRQ_CTRL` write (bits 5/6) to
 enable** — matching `registers.yaml`'s own stated `reset: 0` for both
-fields. Any host software that relied on these IRQs firing without first
-writing `IRQ_CTRL` will need to add that write. No such software exists
-in this repository set as far as this session found (`gcb-host`'s own
-driver/simulator were not checked against this specific register write
-this session — flagged, not verified, as a possible follow-up).
+fields.
+
+**Follow-up, same session (2026-09-13):** checked `gcb-host` directly
+against this, as flagged below. `greencoyote_pilot.hpp`'s
+`enable_irq()` convenience helper — the one realistic path software
+would use to set these bits — never included `IRQ_DMA_DONE_EN`/
+`IRQ_DMA_UNDERRUN_EN`, even though the generated `regmap.py` already
+had both field definitions (confirming `regen.py`'s own output was
+current; only the hand-maintained C++ helper lagged). Without this
+follow-up, the RTL fix above would have been correct but practically
+unreachable — no software path existed to ever set bits 5/6. Added two
+new `bool` parameters (`dma_done`, `dma_underrun`), both defaulting to
+`false`, fully backward-compatible. Verified by actually compiling (not
+assumed): a minimal smoke test against the real header, `g++ -std=c++17
+-Wall`, clean, zero warnings — `src/`/`tests/` remain empty (`TKT-032`'s
+own finding, unchanged) so no existing build harness exists to re-run.
+`gcb_proxy.py` (the Python side) has no equivalent convenience wrapper
+at all — confirmed by grep, not assumed — so there was nothing to fix
+there. Committed `gcb-host@171f16e`, pushed, verified.
 
 ## Out of scope
 
 - Auditing every other `IRQ_CTRL`-adjacent or DMA-adjacent register for
   similar hand-RTL-vs-map gaps — this ticket fixes the one instance
   found, not a full audit.
-- `gcb-host`'s driver/simulator: not checked for whether it needs to
-  start writing `IRQ_CTRL[5]`/`[6]` now that they do something.
 
 ---
 ## Telemetry & Evaluation
@@ -97,6 +109,10 @@ in the map for an unknown period with zero RTL backing it, caught by
 reading the RTL's own honest TODO comment rather than trusting that
 "map_version 0.6.0" meant full implementation.
 
-**Final State:** `done | blue`. `gcb-rtl` commit pending (staged
-separately per this program's git discipline); both relevant testbenches
-re-run and passing.
+**Final State:** `done | blue`. The `gcb-host` follow-up above closes
+the one gap the Quality grade's "Not 1.0" noted — left as originally
+recorded rather than re-graded, since this is a same-session addendum,
+not a later re-opening. `gcb-rtl@bc4c4fb` and `gcb-host@171f16e` both
+committed, pushed, verified `HEAD==origin/main`; both relevant gcb-rtl
+testbenches re-run and passing; the gcb-host change verified by a real
+compile, not assumed.
