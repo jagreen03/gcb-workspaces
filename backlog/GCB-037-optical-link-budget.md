@@ -237,3 +237,11 @@ and whose closure depends on KP4 and the doctrine's low-order modulation.
 *(V4 execution for TKT-019 — no PBG vector, no PBG-O disposition; verdict feeds
 the Falsification Test. `GCB-034` stays `open | pending`; V5 outstanding.)*
 **Final State:** `open | pending`
+
+**Update (2026-09-10, later the same evening):** V5 ([[GCB-038]]) ran
+after this ticket and completed the Falsification Test; `GCB-034` was
+then ratified (`done | green`), incorporating this V4 link-budget result
+directly into its Ratified Dual-Regime Contract table. This ticket's own
+`Final State` is left as originally recorded, per standing discipline
+against rewriting locked history — it is a validation record, not the
+decision ticket, and does not self-close.

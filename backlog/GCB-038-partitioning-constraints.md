@@ -180,3 +180,12 @@ force Alternative B.
 the Falsification Test. The Falsification Test is complete; `GCB-034` stays
 `open | pending` pending Architect review to close.)*
 **Final State:** `open | pending`
+
+**Update (2026-09-10, later the same evening):** the Architect review
+this ticket called for happened the same evening — `GCB-034` was
+ratified (`done | green`), incorporating this V5 result (D4 → a
+selectable mode, not a global law; dual-regime PHY confirmed required)
+directly into its Ratified Dual-Regime Contract table. This ticket's own
+`Final State` is left as originally recorded, per standing discipline
+against rewriting locked history — it is a validation record, not the
+decision ticket, and does not self-close.

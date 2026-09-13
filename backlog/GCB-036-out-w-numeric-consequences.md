@@ -247,3 +247,10 @@ Requires a representative activation trace from the target model:
 *(V3 execution for TKT-019 — no PBG vector, no PBG-O disposition; verdict feeds
 the Falsification Test. `GCB-034` stays `open | pending`.)*
 **Final State:** `open | pending`
+
+**Update (2026-09-10, later the same evening):** `GCB-034` was
+subsequently ratified (`done | green`), incorporating this V3 result
+(D2 → INT8, `PER_ROW`, RNE) directly into its Ratified Dual-Regime
+Contract table. This ticket's own `Final State` is left as originally
+recorded, per standing discipline against rewriting locked history — it
+is a validation record, not the decision ticket, and does not self-close.
