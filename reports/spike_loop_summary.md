@@ -3140,3 +3140,105 @@ message alone.
 `registers.yaml`'s own `defects:` tracking, not a backlog ticket.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Direct Architect report, 2026-09-13 - governing photonic-correctness intent, and three isolated problem repos
+
+**What the Architect asked for:** add an intent that the photonic
+design be made correct (not merely specified); turn the existing wiki
+into high-density, AI-consumable context aimed at bringing "Orange
+Team(s)" up to speed on specific blocking questions; and - the core
+proposal - grind on each real sub-problem in its own isolated new
+`gcb-<name>` repo, with both a human and an AI framing, so a focused
+session can get assistance without re-deriving the whole program
+first. Scientific-style short names, GCB-prefixed, well short of the
+longest existing repo name.
+
+**Grounding done before building anything:** "Orange Team" was not a
+concept to invent - it's already real program doctrine
+(`TKT-000-orange-team-epoch-guidance.md`: "Physical Reality First" -
+measure first, deliberately ugly, interpret, only then change the
+architecture), and the dense AI-context pattern already exists too -
+`gcb-spec/ai-agents/` holds three persona prompts (System Architect,
+Analog Evaluator, RTL Verifier), each with a terse "GCB STATE
+COMPRESSION" block and evidence-tagged numbers. Everything built this
+session extends that existing convention rather than inventing a
+parallel one.
+
+**Scope check, not assumed:** asked the Architect directly
+(`AskUserQuestion`) before committing to anything structural - scope
+(photonics-only vs. also edge-AI/datacenter-power/scaling - answered
+photonics-only), process (draft first vs. create repos immediately -
+answered draft first), and naming direction (scientific-term-style,
+gcb-prefixed - confirmed with real candidates). The edge-AI-model-size
+and datacenter-power problems the Architect separately named are real
+and adjacent to this program's mission but have no grounding anywhere
+in `gcb-spec` yet - correctly deferred, not invented on the spot.
+
+**Added first, low-risk:** `gcb-wiki/intent.md` §0, a governing intent
+statement holding the photonic design (`gcb-pic-core` + the laser/
+modulator bank) to the same Orange-Team discipline already applied to
+the digital path, grounded in four real Open items (not invented):
+`DECISION_LEDGER.md`'s `optical.cell.combiner-loss`,
+`optical.cell.fanin`, `readout.comparator.noise.spectre-histogram`, and
+the laser-bank's `CONCEPT ONLY` status in
+`16_hardware_parts_systems_specification.md` Part 9.
+
+**A real finding caught while grounding item 3, same day:** Part 9's
+"the laser bank has zero real spec" is **not accurate as a blanket
+claim** - two real, if modest, Phase-I bench laser designs already
+exist in two different `gcb-spec` files
+(`bench_emulation_parameters.md` §2.1-2.2: 4-8 per-leaf lasers for the
+combiner-tree test bench; `task3_physical_bom.md` §1: a single CW
+laser + VOA for the readout-calibration bench), never reconciled
+against each other or against Part 9's framing. Corrected in
+`intent.md` directly rather than left standing after it had just been
+written minutes earlier in the same session - checked against the real
+files, not repeated from the existing (wrong) characterization.
+
+**Three new private repos created** (`gh repo create`, confirmed
+content landed via the GitHub API, `main` as default branch matching
+every other repo in the program):
+
+- **`gcb-lumen`** — MMI power-summing combiner insertion-loss
+  extraction against the real `gcb-pic-core/mmi_power_tree.py`
+  geometry, then the 4:1-vs-8:1 fan-in decision it blocks. Flags a real
+  toolchain limit in advance: the one existing femwell mode-solve in
+  this program produces a real effective index only, not a loss number
+  - its own code says so.
+- **`gcb-lambda`** — the laser/modulator-bank reconciliation above,
+  stated as this repo's first job, then scoping the real Phase-II gap
+  (`optical_geometry_spec.md`'s locked `N=64`/`L=16` sizing has zero
+  optical-source content).
+- **`gcb-kelvin`** — the analog Rx noise `CONDITIONAL GO → GO` gate:
+  one number, from one commercial tool (Spectre) this program's own
+  toolchain survey already confirmed the open-source stack can't
+  substitute for (ngspice's OSDI `.noise` returns zero on ASAP7; Xyce's
+  no-root Trilinos build is missing required modules). Sharpest-scoped
+  of the three - a clean binary outcome either way.
+
+Each repo: `README.md` (human framing), `intent.md` (scope boundary,
+explicit out-of-scope list, no re-opening already-decided items like
+`TKT-028`'s VOA-over-MZ call), `ai-agents/ORANGE_TEAM.md` (dense
+AI-session context, same format as the existing triad, with its own
+[M]/[D]/[A] number-tagging discipline and an explicit "update this
+file when you're done, don't leave the next session re-deriving
+status" instruction).
+
+`gcb-wiki/intent.md` §0 updated to link all three.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** for everything built
+(real files, real repos, real pushed content, verified via the GitHub
+API after push). The repos' own content is explicitly **not** graded
+PROVEN - each states plainly that its actual measurement/reconciliation
+has not yet been attempted; that's the honest starting state for a
+repo whose entire purpose is to go run it.
+
+**Commits:** `gcb-wiki@f381923` (intent §0), `gcb-wiki@ccfe29c`
+(correction + repo links), `gcb-lumen@`/`gcb-lambda@`/`gcb-kelvin@`
+(each repo's initial commit) - all pushed, verified.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
