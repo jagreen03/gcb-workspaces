@@ -2356,3 +2356,39 @@ misreadings).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (register-map consistency check - clean, no defect found)
+
+**Context:** given how many real staleness bugs this session's grep
+sweeps had already found, ran the same discipline against a different,
+high-leverage claim: `gcb-spec/README.md`/`ai-agents/README.md`'s own
+assertion that `regen.py` is "the only writer of the generated register
+views" in five consumers (`gcb-rtl` SV, `gcb-host` hpp+py, `gcb-dashboard`
+ts, `gcb-wiki` datasheet md) and that hand-editing them is forbidden.
+
+**What was checked:** `map_version` in all five generated files plus
+`registers.yaml` itself (all report **0.6.0**, no drift); register count
+(49, matching the datasheet's own stated figure, grep-counted directly
+against `registers.yaml`); address window (`0x00`-`0xE4`, computed from
+every `offset:` value, not just the two endpoints - matches the
+datasheet's claim exactly). Also reviewed `registers.yaml`'s inline
+`defects:` blocks (per-register RTL-vs-header discrepancies,
+transcription-provenance notes) - these are the spec's own intentional,
+already-complete honesty mechanism, not unresolved gaps needing action.
+
+**Result: no defect found.** Unlike the last several ticks, this is a
+genuine clean verification, not a fix - recorded because the check was
+real and thorough (five independent files cross-checked, not a single
+grep), not because every tick must produce a commit.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (every figure
+computed from the actual files, not read from a summary claim and
+trusted).
+
+**Commits:** none this tick - nothing needed changing.
+
+**Ticket status changes:** none.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
