@@ -2284,3 +2284,42 @@ full-document grep run after the fix, not assumed complete).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (the stale FastAPI claim was also live in gcb-spec - the source of truth itself)
+
+**Context:** having now fixed the "FastAPI MMIO proxy" stale claim
+twice inside `gcb-wiki`, ran a cross-repo `grep -rl "FastAPI"
+--include="*.md"` across every `gcb-*` repo rather than assuming
+`gcb-wiki` was the only place it could have spread.
+
+**What was found:** `gcb-spec` itself - this program's own declared
+"source of truth" - still had it, in two places: `architecture.md`'s
+"Five repositories" table (line 14) and `docs/MAP.md`'s file index
+(line 75). `git log` confirmed both date to 2026-09-07, five days
+before `gcb-host`'s own README correction (`TKT-032`, 2026-09-12
+23:21, `79dbba1`), and neither was ever revisited. This is a more
+significant finding than the `gcb-wiki` instances: `gcb-wiki` is
+explicitly a derived human view (per this session's own standing
+memory), but `gcb-spec` is the repo everything else is told to trust
+*over* `gcb-wiki` when they disagree - and it was the one still wrong.
+
+**What was done:** corrected both lines in `gcb-spec`
+(`architecture.md@064de99`, same commit as `docs/MAP.md`); added a
+closing follow-up note to `TKT-032` itself, since that ticket had
+already recommended this exact README fix and it had in fact been
+done - just never traced forward to see it hadn't fully propagated.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (cross-repo grep,
+not limited to `gcb-wiki`; `git log` timestamps on both `gcb-spec`
+files confirmed they predate the correction and were never touched
+since).
+
+**Commits:** `gcb-spec@064de99` (pushed, verified);
+`gcb-workspaces@c75d5f6` (pushed, verified); this entry.
+
+**Ticket status changes:** none - `TKT-032` stays `done | blue`,
+correctly; this is a propagation fix, not a reopening.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
