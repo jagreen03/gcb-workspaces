@@ -14,10 +14,17 @@ evidence, and flagged where it diverges. The source prompt itself is
 AI-facing ("Gemini + Orange-Team," "may be passed to another LLM") and is
 treated as a task specification, not as evidence.
 
-**Depth note**: deep, re-verified evidence for `gcb-rtl`, `gcb-host`,
+**Depth note (updated same day - all items below now deepened)**: deep,
+re-verified evidence for every repo: `gcb-rtl`, `gcb-host`,
 `gcb-wdm-transceiver`, `gcb-photonic-qam-v2` (RTL level), `gcb-analog-rx`,
-`gcb-pic-core`, `gcb-spec`. Shallow (top-level structure only) for
-`gcb-python-orchestrator`, `gcb-dashboard`, `vortex`'s non-TCU surface.
+`gcb-pic-core`, `gcb-spec`, `gcb-python-orchestrator` (confirmed via
+`packer.py`'s explicit `gcb_dwdm_pkg` bit-convention match), `gcb-dashboard`
+(`make doctor` run for real, passes clean; React dashboard's build gap
+found directly), `vortex` (System Boundary conclusively confirmed via
+`git remote`/`git log`/exhaustive grep, not inferred from file absence).
+See `TKT-035`'s own ticket file for the full deepening narrative and the
+"two named programs" structural correction (supersedes the original
+"Track A/Track B" framing below).
 
 ---
 
@@ -124,7 +131,9 @@ by a real test) / **PHYS-VAL** (physical hardware/measured data) /
 | Track A combiner loss | ~0.1 dB/stage (optimistic) | **ASSUMED** (cited from literature, Smolanski & Malka 2025, not measured in-repo) | `gcb-rtl/sim/mmi_tree_model.py` header |
 | Track B wavelength count | ~60λ | **ASSUMED** (`ESTIMATE/ASSUMPTION`, link-budget derived) | `gcb-wiki/15` — now attributed to `gcb-wdm-transceiver`'s real `N_LAMBDA` parameterization, not `gcb-pic-core` |
 | Track B channel spacing | 50 GHz grid | **ASSUMED**, flagged this session as lacking direct `gcb-spec` corroboration | `gcb-wiki/15`, flagged `gcb-wiki@3f8a319` |
-| `gcb-pic-core` K=16 | (none — revoked) | N/A | `TKT-033`: no `gcb-spec` grounding found |
+| `gcb-pic-core` K=16 | 16 (real, re-grounded - see `TKT-034`) | **ASSUMED/MEASURED** (SNR-budget derived, `intent.md`) | NOT `gcb-spec` - `gcb-photonic-qam-v2/intent.md`'s `K<=16` + `gcb-wdm-transceiver/rtl/gcb_dwdm_pkg.sv`'s `K_MAX=16` ("hard cross-architecture invariant") |
+| React dashboard build | no build/dev script, no `react` dependency declared | **UNKNOWN/MISSING** | `gcb-dashboard/package.json` - checked directly this pass |
+| `gcb-dashboard` render toolchain | fully functional | **TESTED** (`make doctor` run for real, passes clean) | `sv2v v0.0.12`, `Yosys 0.68`, `node v22.22.1`, 17 fresh SVGs |
 | Track A register map version | 0.6.0 | **MEASURED** (byte-exact match, two independent generated files) | `gcb-host/include/generated/greencoyote_regmap.hpp` vs. `gcb-rtl/rtl/generated/greencoyote_regmap_pkg.sv` |
 
 ---

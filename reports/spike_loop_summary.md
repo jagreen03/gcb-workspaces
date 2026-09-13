@@ -1432,3 +1432,46 @@ verified); `gcb-workspaces` (this commit) - `TKT-030` build record,
 **Next candidate (continuing open-ended, per the Architect's own
 directive):** deepen the remaining shallow-pass repos from `TKT-035`
 (`gcb-dashboard`, `vortex`'s non-TCU surface).
+
+---
+
+## Open-ended continuation — 2026-09-12 (deepened gcb-dashboard + vortex, closing TKT-035's last shallow-pass items)
+
+**What was done:**
+1. Read `gcb-dashboard`'s `Makefile` comment directly: it explicitly
+   renders RTL tops from BOTH named programs (`gcb-rtl` + `gcb-photonic-
+   qam-v2`), deliberately excluding `gcb-wdm-transceiver` - confirms
+   this repo is cross-cutting infrastructure, not evidence for either
+   program.
+2. **Ran `make doctor` for real** (not assumed): passes cleanly - full
+   render toolchain genuinely installed and functional (`sv2v v0.0.12`,
+   `Yosys 0.68`, `node v22.22.1`, `yosys2digitaljs`, `elkjs`), `outputs/`
+   holds 17 fresh SVGs.
+3. Checked the React dashboard directly: `GreenCoyoteDashboard.jsx` is
+   real, substantial code (514 lines, genuine hooks + default export),
+   but `package.json` declares no `react`/`react-dom` dependency and no
+   build/dev/start script anywhere - IMPLEMENTED, not buildable as
+   configured. A real, previously-unrecorded gap.
+4. Confirmed `vortex`'s System Boundary conclusively, not by inference:
+   `git remote -v` shows the real upstream origin
+   (`vortexgpgpu/vortex.git`), `git log` shows genuinely unrelated
+   upstream commits, and an exhaustive grep for "greencoyote"/
+   "GreenCoyote"/"ODIN_Bridge" across the entire tree returns zero
+   matches.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (a real command run with
+real output, `git remote`/`git log`/exhaustive grep, direct file reads -
+none of this inferred from naming or absence alone).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-035` deepening
+section, Pass-1 report updated (depth note, inventory table corrections
+including the now-superseded "K=16 revoked" row), `README.md`, this
+entry. No code changes - documentation/verification only.
+
+**Ticket status changes:** none flipped - `TKT-035` stays `open|pending`
+(equipment/DFT deliverable sections remain the one genuinely open item
+from the original 11-section prompt).
+
+**Next candidate:** the equipment/DFT matrices (`TKT-035`'s own last
+open item), or pull the next real priority item from the broader
+backlog per the open-ended directive.

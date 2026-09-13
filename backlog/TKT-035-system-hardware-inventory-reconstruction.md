@@ -230,5 +230,53 @@ multiple other tickets, not an isolated result.
 ticket's central ambiguity) is now resolved with the two-program
 structure, confirmed and simple. This does NOT close the ticket - the
 original Pass-1 deliverable sections not revisited here (equipment/DFT
-matrices, `gcb-dashboard`/`vortex` shallow-pass depth, per the source
-prompt's own 11-section scope) remain genuinely open follow-on work.
+matrices, per the source prompt's own 11-section scope) remain genuinely
+open follow-on work.
+
+---
+## Deepened the two remaining shallow-pass repos (2026-09-12, same day,
+continuing open-ended)
+
+**`gcb-dashboard` - confirmed cross-program, and confirmed genuinely
+functional (not just described).** Its own `Makefile` comment states the
+design explicitly: *"RTL source set for the staleness check: the dirs
+`build_visuals.py` really reads (`gcb-rtl` + `gcb-photonic-qam-v2`)...
+`gcb-wdm-transceiver`/rtl is deliberately NOT in the default set - the
+dashboard never renders those tops."* This repo serves BOTH named
+programs by explicit design, not accident - it is cross-cutting
+infrastructure, not evidence for either program over the other.
+
+**Ran `make doctor` for real** (not assumed): **passes cleanly** - the
+full render toolchain (`sv2v v0.0.12`, `Yosys 0.68`, `node v22.22.1`,
+`yosys2digitaljs`, `elkjs`) is genuinely installed and functional,
+`outputs/` already holds 17 rendered SVGs, fresh (not stale) against
+every RTL source. This is real IMPLEMENTED + TESTED status for Role 2
+(the visualization backend), not merely described.
+
+**Role 1 (the React monitoring dashboard) is a different story, found by
+checking rather than assuming**: `src/GreenCoyoteDashboard.jsx` is real,
+substantial code (514 lines, genuine React hooks + a real default
+export) - but `package.json` declares NO `react`/`react-dom` dependency
+and NO build/dev/start script for it anywhere. **IMPLEMENTED, but this
+repo currently has no way to actually build or run it** - a real,
+previously-unrecorded gap, not a rejection of the component's substance.
+
+**`vortex` - System Boundary question CONCLUSIVELY confirmed, not just
+inferred from file absence.** `git remote -v` shows the real upstream
+origin (`https://github.com/vortexgpgpu/vortex.git`, not a GCB fork);
+`git log` shows genuinely unrelated upstream commits (PR merges, a
+`tinygpu` synthesis config, NaN-boxing test fixes); an exhaustive grep
+for "greencoyote"/"GreenCoyote"/"ODIN_Bridge" across the entire tree
+(`.sv`/`.md`/`.py`) returns **zero matches**. `vortex` is genuinely
+**required external infrastructure**, per the source prompt's own
+System Boundary Check category - not a GCB-authored component, with
+every piece of GCB's own integration work confirmed to live entirely in
+`gcb-rtl/integration/*.sv` and `gcb-spec/vortex_integration_notes.md`,
+never inside the `vortex` tree itself.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** for all of the above
+(a real command run with real output for `make doctor`; `git remote`/
+`git log`/exhaustive grep for `vortex`'s boundary; direct file reads for
+the React gap) - none of this is inferred from naming or absence alone.
+
+This closes both remaining shallow-pass items from the original Pass 1.
