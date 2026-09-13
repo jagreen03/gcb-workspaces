@@ -887,3 +887,108 @@ availability survey (needed before any real insertion-loss/crosstalk
 claim, itself a new intake-style ticket, same shape as `TKT-032`'s own
 intake); or returning to the broader backlog for the next priority item
 if no Architect-directed follow-on is given.
+
+---
+
+## Post-loop directed continuation 3 — 2026-09-12 (channel spacing + FDTD/EME survey, new ticket TKT-033)
+
+**Context:** the Architect named the next priority explicitly — "channel
+spacing and FDTD/EME insertion-loss extraction... bridges the gap between
+structural layout geometry and validated physical simulation data" —
+with a sequenced second target (TKT-032's build-and-run pass) to follow.
+Executed the first target directly.
+
+**Target:** formalize real channel-spacing values for `gcb-pic-core`'s
+K=16 tile and survey/attempt FDTD/EME insertion-loss extraction, per the
+Architect's own framing.
+
+**What was done - Part A (channel spacing):**
+1. Cross-read every existing channel-spacing/wavelength claim across
+   `gcb-wiki` and `gcb-spec` before touching any delta_lengths value.
+2. **Found a real, previously-undetected conflict**: `gcb-wiki/16` Part 9
+   (the "DWDM laser/modulator bank... 8x8 unitary mesh," Phase II)
+   explicitly lists channel spacing as `Missing`, with its own doctrine
+   note against fabricating a figure. But `gcb-wiki/15` (the
+   `gcb_wavelength_router` DWDM digital-transport RTL) DOES already
+   carry an existing `ASSUMPTION` figure: 50 GHz grid, for a 60λ
+   link-budget estimate vs. a 64-lane RTL test ceiling. A THIRD document,
+   `gcb-spec/bench_emulation_parameters.md` (the doc `gcb-wiki/16` itself
+   names as Part 9's nominal parameter owner), describes something
+   structurally different again: a single O-band wavelength combined via
+   a fused-fiber power/intensity coupler tree - not WDM at all. None of
+   the three match `gcb-pic-core`'s own K=16 binary-tree assumption
+   (channel count or combining mechanism), and no document anywhere
+   states which of these `gcb-pic-core`'s tile actually is.
+3. **Did not pick a number.** Per this program's own standing discipline
+   and `TKT-031`'s own precedent (an architecture conflict escalated to
+   the Architect, not resolved by the loop), wrote this up as a new
+   ticket (`TKT-033`) with four named candidate framings for the
+   Architect to choose among, left genuinely open.
+
+**What was done - Part B (FDTD/EME survey):**
+1. Checked what this environment can actually run, per `TKT-030`'s own
+   "not yet confirmed available" flag. `pip index versions meep`
+   resolves and downloads a 4.3 KB wheel - **unzipped it and read its own
+   METADATA rather than trusting the package name**: it is an unrelated
+   CI/CD task runner ("Very light-weight task runner... triggered by VCS
+   hooks"), NOT the MIT FDTD simulator (which is conda-forge-only, not on
+   PyPI, under this name). Caught exactly like the AWG's own "builds
+   without raising an exception" trap - reading actual content, not
+   absence of an error.
+2. `tidy3d` is real cloud-hosted FDTD but needs an external account/API
+   key - flagged, NOT created, pending Architect authorization (an
+   external-service signup is outward-facing and hard to reverse).
+3. `femwell` (pure-Python FEM mode solver/EME, open-source, no license)
+   installed cleanly into its own dedicated venv (`~/.venvs/femwell`,
+   kept separate from `~/.venvs/gdsfactory` - heavier, partially
+   overlapping dependency tree: VTK, `cadquery-ocp`, `gmsh`,
+   `scikit-fem`), ~90s, zero native build failures.
+4. Built and ran a real FEM mode-solve for a 500x220nm silicon strip
+   waveguide cross-section at 1.31 um (O-band, the one concrete
+   wavelength this program's docs commit to anywhere). First attempt hit
+   a real, ordinary API error (`mesh_from_OrderedDict` returns a
+   `meshio.Mesh`, not an skfem-native mesh - needed
+   `skfem.io.meshio.from_meshio()` conversion), fixed and re-run.
+5. Reproduced the result byte-identically across two independent fresh
+   process invocations before committing.
+
+**Test results (actual):**
+```
+n_eff (real): 2.684623
+n_eff (imag): ~1e-16 (numerical noise, not a loss measurement - no Im(n) input)
+```
+Textbook-consistent for these dimensions/wavelength.
+
+**Epistemic status: PROVEN — DIGITAL FEM SIMULATION, TESTED CONDITIONS**
+for `n_eff`'s real part at the stated geometry/wavelength/index
+assumptions (reproduced twice independently). **UNPROVEN/escalated**:
+which physical subsystem `gcb-pic-core`'s K=16 tile represents (Part A,
+held for Architect disposition); any real channel spacing, insertion
+loss, or crosstalk figure for the actual MZI-lattice combiner (out of
+scope this session - materially bigger 3D/coupled-mode work, same
+caution `TKT-030` used before attempting the full K=16 layout).
+
+**Commits:**
+- `gcb-pic-core@23ec5dd` - `mode_solve_strip.py` +
+  `requirements-femwell.txt` added, pushed, `HEAD == origin/main`
+  verified.
+- `gcb-workspaces` (this commit) - new ticket
+  `TKT-033-channel-spacing-conflict-and-fdtd-eme-survey.md` (`open |
+  pending`, no PBG grade per architecture-conflict-ticket doctrine),
+  `README.md` filetree + status table entries added, this summary entry
+  appended.
+
+**Ticket status changes:** New ticket `TKT-033` created, `open |
+pending`. Does not close `TKT-030` (already `done | blue`) or any other
+existing ticket.
+
+**Next candidate (per the Architect's own stated sequencing):** `TKT-032`
+(gcb-host) build-and-run verification pass - **note for whoever picks
+this up**: `TKT-032` was already closed this same session
+(`done | blue`) with a full 5-step survey; Step 2 found `src/`/`tests/`
+both completely empty (nothing to build), and Step 3 redirected to
+`gcb-rtl`'s own regression, which passed clean. Re-opening it for a
+"build-and-run pass" should start by reading `TKT-032`'s existing
+Execution Log rather than repeating the survey - the one real gap it
+flagged but did not pursue is `tools/hf_manifest_gen.py`, not yet read in
+detail.
