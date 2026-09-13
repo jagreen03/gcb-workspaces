@@ -2252,3 +2252,35 @@ commit cross-checked against `gcb-wiki/16`'s creation time).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (Part 13 cross-referenced Part 12's now-closed gap)
+
+**Context:** having just fixed Part 12's stale "file does not exist"
+claim, checked whether any other `gcb-wiki/16` entry pointed at the same
+gap. Part 13 (Bench DAC stimulus interface) explicitly said "a pinned
+physical DAC part (**same class of gap as Part 12**)" - a direct
+cross-reference to the exact claim just fixed, so checked it rather than
+assuming it was unaffected.
+
+**What was found:** it was equally stale. `task3_physical_bom.md` §1
+names a real `[CANDIDATE]` DAC: Analog Devices AD9767 (`TKT-028`'s
+resolution, elevating the RTL header's own illustrative timing-analogy
+reference to an actual candidate) plus an AD8605-class driver op-amp.
+
+**What was done:** corrected Part 13 to reflect the real candidate,
+keeping the honest `[CANDIDATE]`-not-purchased tier intact. Grepped the
+whole document afterward for every remaining `task3_physical_bom`
+mention (4 total) to confirm none were left stale - all four now
+accurate.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (BOM file content
+re-checked against this specific claim before writing the correction;
+full-document grep run after the fix, not assumed complete).
+
+**Commits:** `gcb-wiki@41e8fb7` (pushed, verified); this entry.
+
+**Ticket status changes:** none - documentation accuracy only.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
