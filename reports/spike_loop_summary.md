@@ -3523,3 +3523,73 @@ by any of this process work.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Open-ended loop tick, 2026-09-13 - gcb-lambda's own reconciliation hypothesis was wrong; the real finding is a ticket
+
+**Pulled by actually executing `gcb-lambda`'s own stated Deliverable 1**
+(reconcile `gcb-wiki/16` Part 9's laser-bank "zero spec" blanket
+claim), rather than surveying the core backlog again — the core
+backlog had already been swept clean multiple times this session
+(deliberately-left-open validation records, correctly-deferred
+Architect decisions, toolchain-blocked items). The new Research
+Operations framework's own problem repos are real, open
+architecture-reconciliation work the standing loop can pull from too.
+
+**What happened:** `gcb-lambda`'s own first-draft hypothesis — that
+`bench_emulation_parameters.md`'s N-laser design and
+`task3_physical_bom.md`'s single-laser design were two different,
+compatible sub-experiments — was re-checked against the real source
+files per the repo's own `ai-agents/ORANGE_TEAM.md` hard rule ("read
+directly, in full, before accepting or correcting this repo's own
+working hypothesis"). **The hypothesis was wrong.** Both documents
+label themselves "Task 3," and `gcb-wiki/02_receiver_architecture.md`'s
+"Phase I — Guaranteed Bench" section states one combined purpose for
+them (summation *and* ratiometric-cancellation together) — this is
+**one bench**, and the two documents simply disagree on laser
+**count**: 4–8 independent per-leaf diodes vs. one diode split via a
+1×8 PM splitter. A further check confirmed `task3_physical_bom.md`'s
+"8×8 unitary-mesh bench coupling emulation" language is a passive,
+single-wavelength proxy, not a real WDM claim — `TKT-033`'s core
+no-WDM finding stands unaffected; this is narrowly a laser-count
+question.
+
+**Corrected, not just discovered:** `gcb-wiki/16_hardware_parts_systems_specification.md`
+Part 9's blanket "no repository contains a model... none of this is
+recorded anywhere" claim — checked and false — fixed in all three
+places it appeared (detailed entry, summary table, "Known
+documentation gaps" item 2), separating what's real (Phase I, partial,
+one open conflict) from what's genuinely still CONCEPT ONLY (Phase II,
+confirmed by a direct zero-match grep of `optical_geometry_spec.md`).
+`silicon-and-package-detail.md` and `intent.md` §0 corrected to match.
+`gcb-lambda`'s own `README.md`/`EXTERNAL_AI_BRIEFING.md`/
+`ai-agents/ORANGE_TEAM.md` all corrected to drop the superseded "two
+compatible experiments" framing and state the real finding.
+
+**The laser-count conflict itself is not resolved — filed as
+`GCB-043`** for Architect disposition, same category as `TKT-031`'s
+TIA-vs-switched-charge-integrator conflict. Both of `README.md`'s
+running ticket indexes updated.
+
+**Logged as Research Triage Pass 2** — the first time the new
+harvest/triage workflow has been used to *execute* a Research
+Scientist task directly, and a real demonstration that the External
+Reviewer role matters against one's own prior conclusion, not only a
+different AI's output: this session's own earlier hypothesis was the
+thing that turned out to need correcting.
+
+**Verified via:** the link-audit script (125 links, all resolving),
+`npm run build`, redeployed via `Deploy-CoyoteWiki.ps1`, re-verified
+over real HTTP that the corrected Part 9 content is actually live.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** for the documentation
+corrections (every changed claim traces to a real file, re-read this
+session, not from memory). The laser-count conflict itself remains
+explicitly **UNPROVEN/UNRESOLVED** — that's `GCB-043`'s whole point,
+not something this tick settles.
+
+**Commits:** `gcb-wiki@f5be0b2`, `gcb-workspaces@ecfe1da`,
+`gcb-lambda@cd6f035` — all pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** `GCB-043` filed, `open | pending`.
+
+**Next candidate:** continuing the open-ended loop.
