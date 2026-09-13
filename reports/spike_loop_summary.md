@@ -2214,3 +2214,41 @@ timeline; the BOM file's own content read in full before describing it).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (gcb-wiki/16's Part 14 carried the same stale FastAPI claim twice)
+
+**Context:** continuing the pass through `gcb-wiki/16`'s own "Known
+documentation gaps" list - gap #3 flagged Part 14 (`gcb-host`) as a
+shallower, README-only pass worth a dedicated follow-up. Did that
+follow-up: read `include/greencoyote_pilot.hpp` (795-line C++ driver),
+`proxy/gcb_proxy.py` (313-line Python side), and
+`tools/hf_manifest_gen.py` (725-line, previously undistinguished from
+the MMIO stack) directly.
+
+**What was found:** Part 14's entry still called the Python side a
+"FastAPI MMIO proxy" - the exact stale claim already fixed once in
+`gcb-host`'s own README by `TKT-032` (2026-09-12 23:21, `79dbba1`),
+~13 hours after `gcb-wiki/16`'s own 10:32 creation first recorded the
+then-accurate description. Same bug pattern as the `task3_physical_bom.md`
+finding two ticks ago, different document, same root cause: a
+correction landed in the source-of-truth repo and never propagated to
+`gcb-wiki`'s derived survey.
+
+**What was done:** rewrote Part 14 with the real, direct-read detail
+(three distinct pieces: C++ driver targeting Alveo U55C via XRT with a
+`/dev/mem` fallback, Python register simulator against the generated
+`v0.6.0` regmap, and the separate HF-manifest tool); confirmed zero
+FastAPI code by direct read, not by trusting the already-corrected
+README a second time; marked gap #3 resolved.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (three source files
+read directly; `git log` timestamp on `gcb-host`'s own correction
+commit cross-checked against `gcb-wiki/16`'s creation time).
+
+**Commits:** `gcb-wiki@346f011` (pushed, verified); this entry.
+
+**Ticket status changes:** none - documentation accuracy only.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
