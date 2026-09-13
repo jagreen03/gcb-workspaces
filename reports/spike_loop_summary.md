@@ -1594,3 +1594,54 @@ end-to-end in a way that leaves evidence (the React dashboard build gap,
 
 **Commits:** `gcb-workspaces` (this commit) - `TKT-035` section, this
 entry. No code changes.
+
+---
+
+## Open-ended continuation — 2026-09-12 (toolchain availability checks, README fix, doctrine-consistency confirmed clean)
+
+**What was done:**
+1. Checked OpenROAD/ORFS availability (relevant to `TKT-020`'s still-
+   open "heavier OpenROAD place-and-route question"): not installed in
+   this environment (only `yosys` found) - meaning `GCB-027/029/030/032`'s
+   physical-synthesis findings (dated two days before this session,
+   same session ID) ran in a different environment than this one. Noted,
+   not forced - did not attempt to install OpenROAD.
+2. Fixed a real, simple, previously-flagged-but-never-corrected
+   documentation defect: `gcb-host/README.md` still said "FastAPI MMIO
+   proxy" - `TKT-032` found and flagged this exact inaccuracy earlier
+   this same session, but the README line itself was never actually
+   updated. Corrected now (`gcb-host@79dbba1`, pushed, verified).
+3. Read `gcb-spec/ai-agents/` (the "paved road" persona-prompt triad,
+   referenced by `gcb-spec`'s own README as required reading, never
+   actually inspected until now). Found a minor, cosmetic discrepancy
+   (architecture.md says "Five repositories," this doc says "six" -
+   adds `gcb-wiki`) - not contradictory, not urgent. Checked the
+   maintenance-mandated "GCB STATE COMPRESSION" block consistency
+   across all three agent files for real drift: **clean** - every key
+   number checked (53 µV comparator noise, 56 dB SNDR, 0.55 fJ/MAC)
+   matches exactly across all three, confirming this program's own
+   doctrine-sync discipline is genuinely being followed, not just
+   described.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** throughout (toolchain
+checks run for real, README read and fixed directly, doctrine files
+cross-checked by grep across all three, not sampled).
+
+**Commits:** `gcb-host@79dbba1` (pushed, verified). No `gcb-workspaces`
+commit needed for items 1/3 (no ticket claims were found stale enough
+to require correction beyond what's recorded here).
+
+**Assessment at this point in the open-ended run:** this tick's sweep
+(toolchain availability, README audit, doctrine consistency) found one
+real fix and two clean confirmations, in contrast to earlier ticks'
+denser finding rate. The readily-accessible, safely-actionable surface
+of this workspace has now been swept broadly: architecture reconciliation
+(Track A/B, `TKT-033`/`034`/`035`, the `gcb-papers` capstone), multiple
+ticket corrections, several new verified `gcb-pic-core` components, a
+regression re-run confirming `TKT-019.8`'s stale text, toolchain
+availability checks (Docker and OpenROAD both found unavailable here),
+and now a documentation/doctrine-consistency audit. Continuing
+open-ended per the Architect's own standing instruction not to stop on
+my own judgment - the next tick will look for newly-available signal
+(a fresh backlog scan, or anything the Architect adds) rather than
+re-sweeping ground already covered.
