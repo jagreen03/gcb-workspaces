@@ -2835,3 +2835,53 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - a real bug my own verification missed, found by an actual browser
+
+**Self-critical record, stated plainly.** The Architect loaded the
+deployed viewer in a real browser and hit: "Error: marked.js was not
+found on window." This is precisely the gap this session's own
+records had flagged as unverified ("no browser extension was
+available... still worth doing once deployed") - and the gap turned
+out to be real, not hypothetical.
+
+**Root cause:** `index.html` referenced
+`.../marked/12.0.2/marked.umd.min.js` - a URL that does not exist on
+`cdnjs.cloudflare.com`. Confirmed by direct `curl` (404) and the cdnjs
+API. I had verified `marked.parse()` works via an `npm install`ed copy
+of the library (a real check, genuinely run) - but never once
+`curl`-checked the actual CDN delivery URL hardcoded into `index.html`
+before shipping it. KaTeX's and mermaid's URLs happened to be correct;
+marked's wasn't, and nothing in my own build/HTTP-asset checks could
+have caught it, because those checks only covered files `build.mjs`
+deploys, never the three external CDN URLs the page also depends on.
+
+**Fixed and verified far more rigorously than the first pass:**
+corrected to `marked.min.js` (confirmed via the cdnjs API + direct
+`curl` against both viable candidates, checked which one sets
+`window.marked` via its UMD tail before picking). Then, rather than
+repeat the same class of mistake, **simulated the actual browser load
+end to end**: downloaded the real CDN-delivered file, executed it in a
+Node `vm` with `window`/`self`/`globalThis` aliased to the sandbox
+(matching a `<script>` tag's real global-object semantics), and
+confirmed `window.marked.parse()` produces the exact HTML structure
+(`<pre><code class="language-mermaid">` included) the rest of the
+render chain depends on. Also re-verified, by direct `curl` and
+content inspection this time, every other CDN URL in `index.html`
+(KaTeX CSS/JS/auto-render, mermaid) and the actual global names each
+one exposes (`renderMathInElement`, `window.mermaid`) - none of that
+had actually been checked before either, it had just happened to be
+right.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION**, now including the one
+class of check (external CDN delivery, simulated real browser
+load) that was missing from every prior verification pass on this
+viewer.
+
+**Commits:** `gcb-wiki@74fd1b7` (pushed, verified); this entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
