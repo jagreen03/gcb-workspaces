@@ -1552,3 +1552,21 @@ silicon - these are draft arXiv papers).
 
 **Ticket status changes:** none - `TKT-035` remains `open|pending`
 (equipment/DFT matrices still the one stated remaining item).
+
+---
+
+## Open-ended continuation — 2026-09-12 (resolved gcb-wiki's own flagged UNVERIFIED provenance item)
+
+**What was done:** `gcb-wiki/15`'s own §1/§11 had already, correctly,
+flagged the `gcb_bitplane_tx_mapper.sv` fork-provenance claim as
+`UNVERIFIED` in an earlier session - this session's own direct evidence
+(the `gcb-wdm-transceiver` README's explicit fork statement + the
+`gcb_wavelength_router.sv` diff, both already gathered for `TKT-035`)
+resolves it. Updated both locations in doc 15 to CONFIRMED.
+
+**Commits:** `gcb-wiki@ded1367` (pushed, verified).
+
+**Next candidate:** checking whether the Cyclopter/pgvector deployment
+(`gcb-python-orchestrator/deploy/cyclopter/`) - referenced repeatedly
+this session as "real" infrastructure - is actually running, not just
+described.
