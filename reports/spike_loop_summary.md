@@ -2134,3 +2134,44 @@ correctly; only its own internal bookkeeping was corrected.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (systematic frontmatter-vs-README cross-check; TKT-019.11-.16 had no README row at all)
+
+**Context:** given how many real frontmatter-vs-content staleness bugs
+this session had already found one at a time (the GCB-034 family, the
+sibling-repo table), ran a systematic check instead of another manual
+spot-check: scripted a cross-reference of every backlog ticket's own
+`status`/`telemetry_color` frontmatter against its row in `README.md`'s
+per-ticket tables (72 tickets, excluding `*-FINDINGS.md` companion
+files). Two script bugs produced false positives along the way (wrong
+table-column offsets) - caught and fixed before drawing any conclusion,
+not reported as findings.
+
+**What was found, once the script was correct:** every ticket's
+frontmatter matches its README row exactly - no actual status/color
+drift anywhere. But the check also surfaced rows with no README entry
+at all, and one cluster was real: `TKT-019.11` through `.16` (six real,
+substantial 200-800-line architecture/falsification tickets, all with
+their own `Final State` sections) have zero representation in the main
+per-ticket index - the EPIC `TKT-019` table stops cold at `TKT-019.10`.
+(`TKT-000` and `TKT-019.17`-`.21` also have no row - the former is a
+doctrine/meta ticket outside the table's own scope, the latter is the
+reset-aliasing cluster left untouched per standing instruction, neither
+investigated further.)
+
+**What was done:** added one README row per ticket (`.11`-`.16`),
+summarized from each ticket's own text only - nothing invented, same
+density/style as the surrounding rows.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (scripted check,
+verified correct before trusting its output; each new row traced to
+the ticket's own Final State/Telemetry text).
+
+**Commits:** `gcb-workspaces@0d1bc1c` (pushed, verified); this entry.
+
+**Ticket status changes:** none - this is README-index completeness,
+not a ticket-level change; all six stay `open | pending`, correctly.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
