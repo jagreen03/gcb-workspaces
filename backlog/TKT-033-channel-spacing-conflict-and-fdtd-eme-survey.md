@@ -1,9 +1,13 @@
 ---
 id: TKT-033
-title: "Channel-spacing cross-document conflict (Architect disposition needed) + FDTD/EME tooling survey - first real mode-solve obtained"
+title: "Channel-spacing question RESOLVED (no WDM in the spec-authoritative architecture) + FDTD/EME tooling survey - first real mode-solve obtained"
 date_created: 2026-09-12
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: blue
+telemetry:
+  spec: 0.95
+  quality: 0.9
+  emergence: 0.75
 tags:
   - backlog
   - silicon
@@ -21,93 +25,69 @@ extract real insertion-loss/phase-noise figures to feed back into
 Architect's own framing - "bridges the gap between structural layout
 geometry and validated physical simulation data."
 
-**This ticket does NOT close that gap** - it surfaces a real,
-previously-undetected cross-document conflict that blocks doing so
-responsibly, and separately confirms what FDTD/EME tooling actually
-exists in this environment (unconfirmed before now), with one real,
-independently-reproduced FEM result obtained as a first concrete step.
+**Part A is now RESOLVED** (corrected from this ticket's original
+"Architect disposition needed" framing - see the note below on why that
+framing was itself a process error, not just an open question). Part B's
+FDTD/EME toolchain result stands as originally obtained.
 
-## Part A - Channel-spacing conflict: ARCHITECT DISPOSITION NEEDED, not resolved here
+## Part A - Channel-spacing question: RESOLVED - no WDM in the spec-authoritative architecture
 
-**Do not pick a channel-spacing number for `gcb-pic-core`'s K=16 tile
-without reading this section - doing so would silently choose among (at
-least) three inconsistent, un-reconciled physical claims already on file
-in this program's own docs.**
+**Process correction, stated first because it matters beyond this one
+ticket**: this section originally escalated a "four-way architecture
+conflict" for Architect disposition, built by treating `gcb-wiki` as
+evidence co-equal with `gcb-spec`. **That was a methodology error.**
+`gcb-wiki` is the human-readable view *of* `gcb-spec`, not a parallel
+source of truth - per the Architect's own correction. The real resolution
+path was to check `gcb-spec` (and what it directly authors/models)
+directly, which decisively answers the question without needing to
+adjudicate between documents that were never co-equal in the first place.
+Saved as a standing methodology note for future sessions
+(`gcb-wiki-not-source-of-truth` memory) - this should not recur.
 
-Checked `gcb-wiki`, `gcb-spec`, and `gcb-pic-core`'s own history for every
-existing channel-spacing/wavelength claim. Found **three separate,
-structurally different physical subsystems**, each with its own (or no)
-spacing concept, and **no document anywhere states which of them
-`gcb-pic-core`'s K=16 tile is actually supposed to be**:
+**Resolution, checked directly against `gcb-spec`, not inferred:**
 
-1. **`gcb-wiki/16_hardware_parts_systems_specification.md` Part 9**
-   ("DWDM laser/modulator bank... into an 8x8 unitary mesh," "Phase II
-   integrated cell"): explicitly lists channel spacing, wavelength count,
-   laser type, and modulator bandwidth as **Missing** (line 477), with
-   its own doctrine note: *"recorded as a genuine gap, not filled in with
-   an estimate, per this program's own discipline against fabricating
-   figures that were never derived."* An 8x8 mesh is **64** elements -
-   not 16.
-2. **`gcb-wiki/15_hardware_inventory_and_testability.md`** (the
-   `gcb_wavelength_router`/DWDM digital-transport RTL, inter-chip/board
-   optical link): DOES carry an existing figure - **"Channel spacing: 50
-   GHz grid (`ASSUMPTION`)"** (line 65), for a **60lambda** link-budget
-   estimate vs. a **64-lane** RTL test ceiling (also deliberately kept
-   distinct from each other, per that document's own `14`-doctrine
-   cross-reference). This is a genuinely wavelength-multiplexed (DWDM)
-   link - but it is the **digital transport** layer, not necessarily the
-   same physical channel grid as an on-die optical MAC tile.
-3. **`gcb-spec/bench_emulation_parameters.md`** (Task 3, Phase I bench
-   emulation - the doc `gcb-wiki/16` itself names as Part 9's nominal
-   parameter owner): describes something **structurally different from
-   WDM entirely**. A **single** O-band wavelength (~1310 nm, one laser
-   type spec, not N distinct wavelengths), with N=4-8 channels combined
-   via a **COTS fused-fiber intensity/power coupler tree** (coherent or
-   incoherent power summation, not frequency-domain multiplexing at
-   all). Its own most-decision-relevant unmeasured number is the
-   **coherent-vs-incoherent insertion-loss regime** (~0.2 dB vs. ~9 dB,
-   `stage_il_db`) - not a channel spacing, because this bench path does
-   not appear to use wavelength-division multiplexing in the first
-   place.
+1. **`gcb-spec` contains ZERO mentions of "Component 4," "balanced-
+   homodyne," "multiplier tile," or "K=16" anywhere** (exhaustive grep,
+   not a sampled read). The entire "K=16 WDM multiplier tile" framing
+   that `TKT-030` built toward this session exists **only** in
+   `gcb-wiki` - and `gcb-pic-core`'s own `README.md` ("Near-term goals")
+   cites `../gcb-wiki` `goal.md` §2 as its source, **not `gcb-spec`**.
+   That citation chain is the root cause of this whole question.
+2. **`gcb-spec/task3_physical_bom.md`** (the actual authoritative Phase I
+   physical BOM): specifies **a single** O-band (1310 nm) CW DFB laser
+   source, isolated, driven through **one** linear VOA intensity
+   modulator (`TKT-028`'s own executive decision) - not N wavelengths,
+   not a WDM mux of any kind.
+3. **`gcb-spec/bench_emulation_parameters.md`** (Task 3 bench, cross-
+   checked in this ticket's first pass): N=4-8 channels combined via a
+   **COTS fused-fiber intensity/power coupler tree** - power-summing, not
+   frequency-domain multiplexing.
+4. **`gcb-rtl/sim/mmi_tree_model.py`** (Task 1's own numerical model, the
+   thing the Task 3 bench exists to validate against): explicitly states
+   *"The MMI tree is a POWER-SUMMING combiner with excess loss only...
+   Optimistic combiner model; a fully mutually-incoherent N:1 combiner
+   would carry ~10*log10(N) dB more"* - single wavelength throughout, no
+   wavelength-selectivity concept anywhere in the model. Its own `K` means
+   a **cascade stage count** (`8^K` compute units reducing through `K`
+   cascaded 8:1 power-summing stages), not a simultaneous wavelength-
+   channel count - a second, independent point of terminology confusion
+   this session's "K=16 = 16 wavelengths" assumption ran into.
 
-**`gcb-pic-core`'s own K=16 tile (`TKT-030`, `wdm_combiner_tree.py` /
-`k16_tile.py`) assumes a fourth configuration** - 16 (not 60, 64, or
-4-8) wavelength-multiplexed channels, combined via a binary tree of
-MZI-lattice filters (true frequency-domain WDM, like #2, but with a
-different channel count than either #1 or #2, and a different combining
-mechanism than #3's fused-fiber power-tree). **No document checked this
-session establishes that this is the same physical subsystem as any of
-#1-#3, a fourth intentionally-distinct one, or simply an
-under-specified placeholder count.**
+**Decision**: `gcb-pic-core`'s K=16 tile has no spec-grounded requirement
+for wavelength-division multiplexing, channel spacing, or any
+frequency-domain combining at all. The program's actual, `gcb-spec`-
+authoritative optical combining mechanism - at every tier checked (Task 1
+model, Task 3 bench BOM) - is **single-wavelength, power-summing MMI
+combining**. "Channel spacing" is not merely unresolved; it is **not the
+right concept** for this component, full stop.
 
-**Why this is not mine to resolve**: picking any single channel-spacing
-value (the 50 GHz grid, an ITU-standard 100 GHz grid, or anything else)
-to feed into `wdm_combiner_tree.py`'s `delta_lengths` would silently
-assert which of these four subsystems `gcb-pic-core` actually is -
-exactly the kind of architecture decision `TKT-031`'s own precedent
-establishes belongs to the Architect, not an autonomous loop. Flagged
-here, held for disposition, consistent with this program's standing
-discipline.
-
-**Candidate framings, for the Architect to choose among (not a
-recommendation ranked here):**
-- (a) `gcb-pic-core`'s K=16 tile IS (or tiles into) `gcb-wiki/16` Part 9's
-  "Phase II integrated cell," in which case 4 of them would need to
-  combine to reach the 8x8=64 mesh count, and real channel-spacing values
-  are **genuinely not yet derived anywhere** - any figure used remains an
-  `ESTIMATE-ASSUMPTION` by this program's own doctrine until real
-  laser/modulator parts are chosen.
-- (b) `gcb-pic-core`'s K=16 tile shares the 60lambda/50GHz-grid digital
-  link's physical channel plan (reusing `gcb-wiki/15`'s existing
-  `ASSUMPTION` figure, subsetted to 16 of the 60-64 channels) - plausible
-  but unconfirmed; no document states the on-die tile and the inter-chip
-  link share a wavelength plan.
-- (c) `gcb-pic-core`'s K=16 tile is an independent Phase-I-adjacent
-  construction unrelated to either Part 9 or the DWDM link, closer in
-  spirit to the bench-emulation path's single-wavelength/power-combining
-  approach (#3) - in which case "channel spacing" may not even be the
-  right concept for it, and `wdm_combiner_tree.py`'s WDM framing itself
-  would need revisiting.
+**Consequence for `TKT-030` (acknowledged here, corrected there)**:
+`wdm_combiner_tree.py` and `k16_tile.py` (committed this session,
+`gcb-pic-core@391d6bd`/`a3e1525`) implement a real, working WDM binary-
+tree combiner - but target an architecture with no `gcb-spec` grounding.
+This is a genuine correction to `TKT-030`'s own closure, not a footnote -
+see `TKT-030`'s own follow-up Execution Log for the honest accounting and
+the replacement, spec-grounded component.
 
 ## Part B - FDTD/EME tooling survey + first real mode-solve
 
@@ -162,49 +142,52 @@ available... confirming that is itself future work" note.**
 
 ## Required work (next iteration, not this one)
 
-1. **Architect disposition on Part A** - which of the four framings (or
-   a fifth not listed) `gcb-pic-core`'s K=16 tile actually represents.
-   Nothing in Part B depends on this being resolved first, but no real
-   `delta_lengths`/channel-spacing value should be committed to
-   `wdm_combiner_tree.py` until it is.
-2. Once Part A is resolved: derive or source a real channel-spacing
-   value (an ITU-T grid figure, a literature MZI-lattice FSR target, or
-   a genuinely-measured bench figure) and propagate it into
-   `wdm_combiner_tree.py`'s `delta_lengths` and `optical_mesh_dpi.cpp`'s
-   relevant parameters - currently both out of reach without Part A.
-3. Extend `mode_solve_strip.py`'s FEM approach (or build a new script) to
-   model the actual MZI-lattice coupler geometry (not just a bare
-   waveguide) and extract a real coupling-length/insertion-loss figure -
-   materially bigger work, deferred per this ticket's own Part B finding
-   #5.
-4. If/when real insertion-loss or phase-noise figures are obtained: feed
+1. **`gcb-pic-core` needs a spec-grounded replacement component** for
+   `wdm_combiner_tree.py`/`k16_tile.py`: a single-wavelength, power-
+   summing MMI combiner tree matching `gcb-rtl/sim/mmi_tree_model.py`'s
+   actual Task 1 model (an 8:1 cell - two 4x1 MMIs into one 2x1 MMI - not
+   a WDM/dispersive structure). See `TKT-030`'s own follow-up for the
+   replacement built this session.
+2. Extend `mode_solve_strip.py`'s FEM approach (or build a new script) to
+   model the real MMI power-combiner geometry (not just a bare
+   waveguide) and extract a real coupling/insertion-loss figure -
+   materially bigger work, still deferred per this ticket's own Part B
+   finding #5.
+3. If/when real insertion-loss or phase-noise figures are obtained: feed
    them back into `optical_mesh_dpi.cpp`'s `snr_db`/`phase_deg`
    parameters, per the Architect's own framing of this ticket's purpose -
-   not attempted this session (blocked on items 1-3 above).
+   not attempted this session (blocked on item 2 above).
+4. A human maintainer should reconcile the two `gcb-wiki` passages
+   flagged this session (`gcb-wiki@3f8a319`) - either ground the DWDM/
+   8x8-mesh framing in a real `gcb-spec` citation if it's an intentional
+   separate future-phase concept, or retire it.
 
 ## Out of scope
 
 - Creating a `tidy3d` account or any other external-service signup,
   without explicit Architect authorization.
-- Picking a channel-spacing number on this ticket's own authority - see
-  Part A.
 - `TKT-019.19` and anything in that neighborhood - unrelated.
 
 ## Telemetry & Evaluation
 
-**No PBG grade is assigned** - this ticket's central question (Part A,
-which of at least four inconsistent physical framings `gcb-pic-core`'s
-K=16 tile represents) is an architecture conflict held for the
-Architect's disposition, not a completed or rejected piece of work;
-matching this program's own doctrine that architecture-only/
-measurement-only tickets get no grade, and `TKT-031`'s own precedent
-(ungraded while open, graded only after the Architect's disposition
-closed it). Part B's toolchain result (the FEM mode-solve) is real and
-independently reproduced, but is a sub-component of this ticket, not a
-standalone deliverable warranting its own grade split from Part A.
+Spec 0.95 - both named halves of the Architect's own framing were
+resolved: Part A with a decisive, `gcb-spec`-grounded answer (not an
+escalation), Part B with a real, reproduced toolchain result. Quality 0.9
+- the resolution is backed by an exhaustive grep across `gcb-spec` (not a
+sampled read) plus direct reads of the three authoritative documents that
+settle it; not 1.0 because the replacement MMI-combiner layout itself is
+tracked under `TKT-030`'s follow-up, not built inside this ticket.
+Emergence 0.75 - this ticket surfaced something bigger than its own
+channel-spacing question: a real, previously-unnoticed methodology error
+(treating `gcb-wiki` as co-equal evidence with `gcb-spec`) that the
+Architect corrected and that is now saved as a standing discipline
+(`gcb-wiki-not-source-of-truth` memory) - directly changes how future
+architecture questions in this program should be resolved, not just this
+one.
 
-**Final State:** `open | pending` - Part A is an architecture conflict
-flagged and held for the Architect's disposition (see `TKT-031`'s own
-precedent for the expected shape of that resolution). Part B's toolchain
-result stands independently of Part A's resolution and is already
-committed and verified (`gcb-pic-core@23ec5dd`, `HEAD == origin/main`).
+**Final State:** `done | blue` - Part A resolved decisively against
+`gcb-spec` (no WDM grounding exists for `gcb-pic-core`'s tile); Part B's
+toolchain result stands, already committed and verified
+(`gcb-pic-core@23ec5dd`, `HEAD == origin/main`). The replacement,
+spec-grounded combiner layout is tracked as `TKT-030`'s own follow-up,
+not reopened here.

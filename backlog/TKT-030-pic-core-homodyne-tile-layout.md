@@ -1,13 +1,13 @@
 ---
 id: TKT-030
-title: "gcb-pic-core Component 4: verify + extend the balanced-homodyne layout toward a real K=16 tile - layout-feasibility goal (#1) RESOLVED"
+title: "gcb-pic-core Component 4: K=16 WDM framing CORRECTED to gcb-spec's actual 8-input power-summing combiner (see TKT-033)"
 date_created: 2026-09-12
 status: done
 telemetry_color: blue
 telemetry:
-  spec: 0.95
+  spec: 0.7
   quality: 0.9
-  emergence: 0.45
+  emergence: 0.7
 tags:
   - backlog
   - silicon
@@ -478,15 +478,108 @@ opened, not a surprising new direction; the main transferable lesson
 (place sub-assemblies by their own measured size rather than guessed
 gaps, to guarantee non-overlap by construction) is real but incremental.
 
-**Final State:** `done | blue` - a complete, assembled K=16 tile now
-exists and is verified-clean by both checks (`gcb-pic-core/k16_tile.py`,
-`a3e1525`). This closes the ticket's own named objective: near-term
-goal #1 ("a gdsfactory script that generates the physical layout for a
-single K=16 balanced-homodyne multiplier tile") is achieved and verified.
-**Explicitly NOT closed by this ticket, per its own "Out of scope" and
-"Required work" item 3, both stated at creation**: real channel-spacing/
-`delta_lengths` values (still listed Missing in `gcb-wiki`), any
-insertion-loss/crosstalk measurement (needs FDTD/EME tooling not yet
-confirmed available in this environment), and foundry-specific DRC - all
-genuinely separate, dependent follow-on work, not silently folded into
-this closure.
+**Final State (superseded by the correction below):** `done | blue` - a
+complete, assembled K=16 tile now exists and is verified-clean by both
+checks (`gcb-pic-core/k16_tile.py`, `a3e1525`). This closes the ticket's
+own named objective: near-term goal #1 ("a gdsfactory script that
+generates the physical layout for a single K=16 balanced-homodyne
+multiplier tile") is achieved and verified. **Explicitly NOT closed by
+this ticket, per its own "Out of scope" and "Required work" item 3, both
+stated at creation**: real channel-spacing/`delta_lengths` values (still
+listed Missing in `gcb-wiki`), any insertion-loss/crosstalk measurement
+(needs FDTD/EME tooling not yet confirmed available in this environment),
+and foundry-specific DRC - all genuinely separate, dependent follow-on
+work, not silently folded into this closure.
+
+---
+## Correction (2026-09-12, same day) - the K=16 WDM framing has no
+`gcb-spec` grounding; replaced with the real, spec-authoritative component
+
+**Found while resolving `TKT-033` (channel spacing for this exact tile):
+the entire "K=16 balanced-homodyne multiplier tile" objective above
+traces to `gcb-wiki` alone, not `gcb-spec`.** This repo's own
+`README.md` ("Near-term goals") cited `../gcb-wiki` `goal.md` §2 as its
+source - not `gcb-spec`. An exhaustive grep of `gcb-spec`'s actual
+working tree for "Component 4," "balanced-homodyne," "multiplier tile,"
+or "K=16" returns **zero matches**. `gcb-spec` (and what it directly
+authors/models - `gcb-rtl/sim/mmi_tree_model.py`'s Task 1 model,
+`gcb-spec/task3_physical_bom.md`'s Phase I BOM) describes a materially
+different, simpler mechanism instead: a **single** O-band (1310 nm)
+wavelength, a **power-summing** MMI combiner, `n_inputs=8` by default -
+never wavelength-division multiplexing at any channel count.
+
+**Process correction, stated plainly**: my own earlier investigation
+(this ticket's first two continuations) treated `gcb-wiki`'s documents as
+evidence co-equal with `gcb-spec` when a conflict surfaced, escalating a
+"four-way architecture conflict" instead of checking `gcb-spec` directly
+first. The Architect corrected this: `gcb-wiki` is the human-readable
+view *of* `gcb-spec`, not a parallel source of truth. Saved as a standing
+methodology note (`gcb-wiki-not-source-of-truth` memory) so this does not
+recur in future sessions on this program.
+
+**What this does NOT mean**: `wdm_combiner_tree.py` and `k16_tile.py`
+(`391d6bd`, `a3e1525`) are not deleted and their own verification stands
+- they are real, working, independently-reproduced WDM binary-tree
+combiner layouts. They simply do not target a `gcb-spec`-grounded
+requirement, and should not be presented as closing this repo's actual
+near-term goal.
+
+**What was done instead**: built `mmi_power_tree.py` - a single-
+wavelength, power-summing binary tree of plain `gf.components.mmi1x2()`
+combiners (no `delta_lengths`, no wavelength-dependent parameter at all -
+this device is not a grating), `n_inputs=8` matching
+`mmi_tree_model.py`'s own default. Reused `wdm_combiner_tree.py`'s own
+balanced-tree Y-placement fix (each stage's unit at the average Y of its
+two feeding ports) but had to re-sweep the spacing constants empirically
+- the smaller `mmi1x2` footprint (25.5x2.5 um vs. `mzi_lattice_mmi`'s much
+larger one) reproduced the exact same class of `get_netlist()` port-
+overlap defect at the original spacing, caught before trusting a clean
+"0 routing failures" result again. Verified for N in {2, 4, 8, 16} (8 is
+the spec-grounded default) - zero `route_single` warnings AND a clean
+`get_netlist()`, reproduced byte-identically across two independent
+fresh processes. Caught and fixed a real latent bug in the `route()`
+helper's own dead fallback branch (an undefined name, carried over from
+copying a differently-named parameter) before running it. Committed
+`gcb-pic-core@5063bb2`, pushed, `HEAD == origin/main` verified. Corrected
+`gcb-pic-core/README.md`'s "Near-term goals" to cite the real component
+and flag the `gcb-wiki` citation as the root cause (`e08defd`).
+
+**Separately flagged, NOT investigated this session** (a materially
+bigger question, left for a follow-on ticket): the same grep pattern
+applied to this repo's own "Role" description (`README.md`) - the A+B/
+A-B balanced-homodyne multiply concept itself, "Invariant #6" - also
+finds no readable match in `gcb-spec`'s working tree. Whether the
+*multiply* operation this repo's `balanced_homodyne_cell()` implements is
+itself `gcb-spec`-grounded, or whether it too traces to `gcb-wiki` alone,
+is genuinely unresolved and deserves its own investigation before being
+taken as settled.
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** for `mmi_power_tree(8)`'s `route_single`/`get_netlist()`
+results, reproduced twice. **UNPROVEN/OPEN**: whether `balanced_homodyne_cell()`'s
+own core multiply operation is itself `gcb-spec`-grounded (flagged, not
+resolved); real insertion loss/crosstalk for the power-combining tree
+(toolchain confirmed via `mode_solve_strip.py`, the MMI-specific
+extraction itself not yet attempted).
+
+## Telemetry & Evaluation (correction)
+
+Spec 0.7 - the replacement component is real, verified, and closes the
+actual `gcb-spec`-grounded requirement; not higher because the original
+K=16 WDM deliverable this ticket spent most of its effort on turned out
+to target the wrong requirement, a real cost even though the new work
+recovers it. Quality 0.9 - the correction is backed by an exhaustive grep
+of `gcb-spec`'s actual working tree (not a sampled read) and the
+replacement component passed the same two independent checks this
+program now requires, reproduced twice; the latent `route()` bug was
+caught before running, not after. Emergence 0.7 - this correction
+surfaced something bigger than this one ticket: a standing methodology
+error (treating a derived wiki as co-equal evidence with its own source
+spec) that is now corrected program-wide, not just for this component -
+a materially higher-value outcome than the layout work alone.
+
+**Final State:** `done | blue` - the tile's real, `gcb-spec`-grounded
+combining component (`mmi_power_tree.py`) is built and verified.
+`wdm_combiner_tree.py`/`k16_tile.py` remain in the repo as real but
+not-currently-targeted WDM code. The "Role"/Invariant-6 grounding
+question is flagged as a new, separate open item, not resolved here.

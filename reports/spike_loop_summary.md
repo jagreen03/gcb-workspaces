@@ -1070,3 +1070,108 @@ real channel-spacing value from being committed. Absent that, the next
 self-directed candidate would be extending `mode_solve_strip.py`'s FEM
 approach toward the actual MZI-lattice coupler geometry (materially
 bigger work, flagged as deferred in `TKT-033` Part B finding #5).
+
+---
+
+## Architect correction — 2026-09-12 (gcb-wiki is not source of truth; TKT-033 resolved decisively; TKT-030 corrected)
+
+**Context:** after reporting TKT-033 as a "four-way architecture conflict
+held for Architect disposition," the Architect corrected the underlying
+methodology: `gcb-wiki` is the human-readable view OF `gcb-spec`, not a
+parallel source of truth. Escalating a wiki-vs-spec divergence as an
+unresolved conflict between co-equal sources was itself the error - the
+real resolution path was to check `gcb-spec` directly. Instructed to
+apply this and make the TKT-033 decision directly, and to retain the
+correction for future sessions.
+
+**What was done:**
+1. Saved a standing methodology memory (`gcb-wiki-not-source-of-truth`)
+   capturing the correction for future application on this program (and
+   generalized: any project with a derived human wiki alongside an
+   authoritative spec/model directory should default to the spec as
+   ground truth).
+2. Checked `gcb-spec` directly, exhaustively (grep across its full
+   working tree, not a sampled read): "Component 4," "balanced-homodyne,"
+   "multiplier tile," "K=16" appear **nowhere** in it. The entire K=16
+   WDM framing `TKT-030` spent most of this session building toward
+   traces to `gcb-wiki` alone - and `gcb-pic-core`'s own `README.md`
+   cites `../gcb-wiki` `goal.md`, not `gcb-spec`, as its source - the
+   root cause.
+3. Found what `gcb-spec` actually says instead: `gcb-spec/task3_physical_bom.md`
+   (Phase I BOM) specifies a single O-band 1310nm CW laser with one
+   linear VOA modulator; `gcb-rtl/sim/mmi_tree_model.py` (Task 1's own
+   numerical model) explicitly describes "a SINGLE 8-input cell... The
+   MMI tree is a POWER-SUMMING combiner" - single wavelength, no
+   WDM/dispersive element anywhere, `n_inputs=8` by default. That
+   model's own `K` means a cascade-stage count (`8^K` units through `K`
+   stages), a second, independent terminology collision with this
+   session's "K=16 = 16 simultaneous wavelengths" assumption.
+4. **Resolved `TKT-033` Part A decisively**: channel spacing is not
+   merely unresolved for `gcb-pic-core`'s tile - it is not the right
+   concept, because the tile's WDM premise itself has no `gcb-spec`
+   grounding. Flipped `TKT-033` from `open|pending` to `done|blue`.
+5. Flagged both divergent `gcb-wiki` passages (doc 15's 50GHz-grid
+   `ASSUMPTION`, doc 16 Part 9's DWDM-mesh framing) for human maintainer
+   review - not corrected unilaterally, since either could be a genuine,
+   separate future-phase concept missing its `gcb-spec` citation, or
+   stale text (`gcb-wiki@3f8a319`, pushed).
+6. Built the real, spec-grounded replacement: `mmi_power_tree.py` in
+   `gcb-pic-core` - a binary tree of plain, non-dispersive `mmi1x2()`
+   power combiners (no wavelength-dependent parameter at all), `n=8`
+   matching `mmi_tree_model.py`'s default. Reused `wdm_combiner_tree.py`'s
+   own balanced-tree Y-placement fix, but had to re-sweep spacing
+   constants empirically - the smaller `mmi1x2` footprint reproduced the
+   exact same class of `get_netlist()` port-overlap defect at the
+   original spacing. Verified for N in {2,4,8,16}, zero `route_single`
+   warnings AND clean `get_netlist()`, reproduced byte-identically across
+   two independent fresh processes. Caught and fixed a real latent bug in
+   the `route()` helper's dead fallback branch (undefined name) before
+   running it. Committed `gcb-pic-core@5063bb2`, pushed,
+   `HEAD == origin/main` verified.
+7. Corrected `gcb-pic-core/README.md`'s "Near-term goals" to cite the
+   real component and flag the `gcb-wiki` citation as root cause
+   (`e08defd`). Did NOT delete `wdm_combiner_tree.py`/`k16_tile.py` - kept
+   as real, working WDM-combiner code, explicitly flagged as not
+   currently targeted.
+8. **Found, flagged, did NOT fix** (explicit scope boundary, not an
+   oversight): the same grep check applied to `gcb-pic-core`'s own core
+   "Role" description (the A+B/A-B homodyne multiply, "Invariant #6")
+   also finds zero readable matches in `gcb-spec`'s working tree - a
+   materially bigger question than K=16 alone (the original multiply
+   operation, not new-this-session work). Opened `TKT-034` as an intake
+   placeholder, matching `TKT-032`'s own original precedent for a bounded
+   first pass - not investigated further this session.
+9. Corrected `TKT-030`'s own record honestly: appended a full correction
+   section rather than silently editing its prior claims, updated its
+   telemetry (spec 0.95->0.7, emergence 0.45->0.7 - the methodology
+   finding is worth more than the layout work it corrects).
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** for `mmi_power_tree(8)`'s two-check validation, reproduced
+twice. **RESOLVED BY DIRECT SPEC CHECK** (not an estimate or a disposition
+held open) for TKT-033's channel-spacing question. **OPEN, FLAGGED, NOT
+INVESTIGATED**: whether `balanced_homodyne_cell()`'s own multiply
+operation is `gcb-spec`-grounded (`TKT-034`).
+
+**Commits:**
+- `gcb-pic-core@5063bb2` - `mmi_power_tree.py` added, pushed.
+- `gcb-pic-core@e08defd` - `README.md` near-term goals corrected, pushed.
+- `gcb-wiki@3f8a319` - two divergent passages flagged for human review, pushed.
+- `gcb-workspaces` (this commit) - `TKT-030` correction appended,
+  `TKT-033` resolved (`open|pending` -> `done|blue`), new `TKT-034`
+  intake ticket, `README.md` entries updated, this summary entry
+  appended.
+- Local memory: `gcb-wiki-not-source-of-truth.md` + `MEMORY.md` index
+  created (not a repo commit - session-persistent memory for future
+  sessions on this program).
+
+**Ticket status changes:** `TKT-033`: `open|pending` -> `done|blue`.
+`TKT-030`: remains `done|blue`, corrected in place (telemetry updated).
+New `TKT-034`: `open|pending`.
+
+**Next candidate:** `TKT-034`'s own investigation (whether the core
+multiply operation is spec-grounded) is the natural next step, same
+family as this correction. Absent that, extending `mode_solve_strip.py`'s
+FEM approach toward the real MMI power-combiner geometry (not just a bare
+waveguide) to get a genuine insertion-loss figure for `mmi_power_tree.py`
+remains the other open thread from `TKT-033` Part B.
