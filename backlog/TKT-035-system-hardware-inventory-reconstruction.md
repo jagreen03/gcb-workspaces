@@ -130,12 +130,17 @@ refinement note.
   which is exactly Track A's real data path - Vortex TCU feeding an
   optical cascade). Likely just an uncited repo, not a separate track -
   not yet confirmed by reading its internals in depth.
-- `gcb-analog-rx` - Track A's real, already-synthesized Rx
-  (`greencoyote_ss_tdc.sv`, single-slope readout) was chosen by ADR-005
-  over a retired alternative ("the Charge-Balancing Delta-Sigma branch is
-  retired," `gcb-spec/architecture.md`). Whether `gcb-analog-rx`'s
-  switched-charge integrator is that retired branch, an unrelated Phase-
-  II candidate, or something else - not checked this pass.
+- `gcb-analog-rx` - **CHECKED against `ADR-005` directly.** NOT the
+  retired ΔΣ branch (no feedback-nulling loop, no decimated bitstream -
+  clearly different). NOT the winning Single-Slope CIS either, exactly:
+  shares the same passive-integration-onto-`C_int` front end, but uses a
+  flash/comparator-bank ADC back-end instead of Single-Slope's ramp +
+  shared Gray-counter TDC, and its modeled window (200 ps) doesn't match
+  `ADR-005`'s locked window (256 ns) by over 1000x - built independently
+  of `ADR-005`'s real numbers. A genuinely **third** Rx variant for the
+  same role, not yet reconciled with the already-locked decision -
+  flagged on `TKT-031` (the ticket that made the original Phase-I
+  disposition without checking `ADR-005`), not silently resolved.
 - `gcb-wdm-transceiver` - real, substantial, regression-tested DWDM
   RTL, but Track A is explicitly single-wavelength ("no channel mux").
   Most likely a genuinely separate subsystem (inter-chip/board optical
@@ -147,13 +152,15 @@ refinement note.
   status as `gcb-wdm-transceiver`.
 
 **Net result**: of five "Track B" repos, one (`gcb-pic-core`) is now
-confirmed to be Track A's own Phase II; one more (`gcb-python-
-orchestrator`) is a plausible match pending a deeper read; two
-(`gcb-wdm-transceiver`, `gcb-photonic-qam-v2`) are most likely genuinely
-separate, real subsystems (transport/longer-horizon vision, not
-discarded); one (`gcb-analog-rx`) needs a direct check against ADR-005.
-This is real progress on Contradiction Register entry #1, not a full
-close - the remaining three checks are `TKT-035`'s own next iteration.
+confirmed to be Track A's own Phase II; one (`gcb-analog-rx`) is
+confirmed to be a genuinely separate, third Rx variant, not reconciled
+with `ADR-005`'s already-locked decision (flagged on `TKT-031`); one
+more (`gcb-python-orchestrator`) is a plausible Track-A match pending a
+deeper read; two (`gcb-wdm-transceiver`, `gcb-photonic-qam-v2`) are most
+likely genuinely separate, real subsystems (transport/longer-horizon
+vision, not discarded). This is real progress on Contradiction Register
+entry #1, not a full close - `gcb-python-orchestrator` is the one
+remaining unchecked item.
 
 ## Telemetry & Evaluation
 

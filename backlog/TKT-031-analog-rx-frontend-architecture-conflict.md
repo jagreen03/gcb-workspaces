@@ -211,3 +211,43 @@ source document specified in advance.
 
 **Final State:** `done | blue` - Architect disposition implemented and
 verified; `gcb-analog-rx@5290e72`, this commit.
+
+---
+## Flag (2026-09-12, same day, `TKT-035`): this disposition was made
+without checking `gcb-spec/docs/adr/ADR-005-Single-Slope-Readout.md`,
+which already LOCKED a different, already-synthesized Rx for the same
+role
+
+**Checked directly, not assumed**: `ADR-005` (Accepted, 2026-09-07 -
+BEFORE this ticket's own disposition) picked **Single-Slope CIS**
+(discharge-mode integration onto `C_int`, then ONE comparison against a
+shared ramp, time-stamped by a shared 6 GHz Gray counter) over a
+**Charge-Balancing ΔΣ** branch, now retired. This is Track A's real,
+already-synthesized receiver (`greencoyote_ss_tdc.sv`/`_calib.sv`, real
+Vivado evidence per `TKT-035`).
+
+**`gcb-analog-rx`'s switched-charge integrator is neither of ADR-005's
+two candidates**:
+- NOT the retired ΔΣ - no feedback-nulling loop, no 1-bit quantizer, no
+  decimated bitstream (`switched_charge_model.py`'s own docstring:
+  "a switched-capacitor integrator followed by an ADC comparator bank" -
+  structurally different).
+- NOT an implementation of the winning Single-Slope CIS either - it
+  shares the same front-end physics (passive integration onto `C_int`,
+  discharge-mode), but its back-end is a **flash/comparator-bank ADC**
+  (voltage-domain, multi-bit in one step), not Single-Slope's **ramp +
+  shared Gray-counter TDC** (time-domain). The modeled integration
+  window (`T_int` = 200 ps, `F_CLK` = 5 GHz) also does not match
+  `ADR-005`'s own locked window (`T_obs` = 256 ns) - over 1000x
+  different, indicating this model was built independently of `ADR-005`'s
+  real numbers, not calibrated against them.
+
+**This ticket's own "Phase I BASELINE for the multi-channel receive
+path" disposition is therefore real and verified on its own terms (the
+dynamic-range math checks out), but describes a THIRD, separate Rx
+circuit from the one `ADR-005` already locked and synthesized for the
+same role** - not confirmed as complementary, a superseded earlier
+exploration, or a genuine architecture conflict with `ADR-005` itself.
+Flagged for the Architect, not resolved here - this ticket's own prior
+disposition is not silently overridden, per this program's standing
+discipline against unilaterally re-deciding an Architect call.

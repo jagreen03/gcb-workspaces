@@ -1305,3 +1305,42 @@ reconciled, four with a stated best guess, not yet confirmed).
 
 **Next candidate:** confirm `gcb-python-orchestrator` and `gcb-analog-rx`
 against Track A directly (both plausible, neither confirmed).
+
+---
+
+## Directed continuation — 2026-09-12 (confirm gcb-analog-rx against ADR-005)
+
+**Directed task:** check `gcb-analog-rx`'s switched-charge integrator
+against `gcb-spec/docs/adr/ADR-005-Single-Slope-Readout.md` directly -
+the one remaining concrete check flagged in the prior entry.
+
+**Answer: neither ADR-005 candidate - a genuinely separate, third Rx
+variant, not reconciled.**
+- NOT the retired ΔΣ branch: no feedback-nulling loop, no 1-bit
+  quantizer, no decimated bitstream.
+- NOT the winning Single-Slope CIS either: shares the same passive-
+  integration-onto-`C_int` front end, but uses a flash/comparator-bank
+  ADC back-end instead of Single-Slope's ramp + shared 6GHz Gray-counter
+  TDC; modeled window (`T_int`=200ps, `F_CLK`=5GHz) doesn't match
+  ADR-005's own LOCKED window (`T_obs`=256ns) by over 1000x - built
+  independently of ADR-005's real numbers, not calibrated against them.
+
+**Consequence**: `TKT-031`'s own "Phase I BASELINE" disposition was made
+without checking that `ADR-005` (Accepted 2026-09-07, before `TKT-031`'s
+disposition) already locked a different, already-synthesized circuit
+for the same role. `TKT-031`'s own dynamic-range verification stands on
+its own terms - not overridden - but the ticket now carries a flag for
+the Architect, not a silent reconciliation.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** (both documents read in
+full, mechanisms compared point by point: front-end physics, back-end
+quantizer type, window timing).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-031` flag appended,
+`TKT-035` resolution section updated (4 of 5 "Track B" repos now
+checked), `README.md` updated, this entry appended. No code changes this
+turn - this was a documentation/spec cross-check only.
+
+**Ticket status changes:** none flipped - `TKT-031` stays `done|blue`
+(flagged in place), `TKT-035` stays `open|pending` (`gcb-python-
+orchestrator` is now the one remaining unchecked item).
