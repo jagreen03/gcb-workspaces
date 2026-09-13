@@ -1911,3 +1911,38 @@ the one stated open item there).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (two repos' READMEs were entirely uncommitted, now fixed)
+
+**Context:** continuing the same safe, no-EDA-risk sweep that found the
+`gcb-dashboard` README gap above - a plain `git status --short` across
+all `gcb-*` repos (zero memory/compute risk, appropriate right after the
+B-operand OOM event).
+
+**What was found:** distinct from `gcb-dashboard`'s case (an older
+version *was* already committed, just stale), `gcb-photonic-qam-v2/README.md`
+and `gcb-python-orchestrator/README.md` were both showing `??` -
+completely untracked, never `git add`ed in either repo's history at all
+(`git log --all -- README.md` returned nothing in both). Read both files
+in full before touching git: both matched content already relied on
+earlier this session (the QAM-Accelerator fork-provenance description;
+the compiler/scheduler + Cyclopter-telemetry two-role description) - no
+surprises, no rewrite needed.
+
+**What was done:** `git add README.md` (only that file, in each repo)
+and committed as-is, one commit per repo, each pushed and verified
+`HEAD == origin/main`.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (`git log` confirmed
+no prior history; file contents read and checked against
+previously-verified material before committing).
+
+**Commits:** `gcb-photonic-qam-v2@8168b50` (pushed, verified);
+`gcb-python-orchestrator@d7d2975` (pushed, verified); this entry.
+
+**Ticket status changes:** none - this is routine repo hygiene, not
+tied to a specific open ticket.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
