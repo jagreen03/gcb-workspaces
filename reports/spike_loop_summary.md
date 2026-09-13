@@ -2624,3 +2624,71 @@ corrected, disposition unchanged.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Direct Architect request, 2026-09-13 - a stakeholder narrative portal (gcb-wiki/sagas/ + viewer/) and versioned image prompts
+
+**Not a loop tick - a direct, explicit request**, interrupting the
+open-ended sweep: build an 8-persona narrative portal explaining the
+whole program, a browser-hostable TypeScript viewer for it (SOLID
+design, GitHub Pages-deployable), and a versioned image-prompt folder
+for future concept renders.
+
+**What was built, all committed and pushed, verified `HEAD==origin/main`
+throughout:**
+- `gcb-wiki/sagas/` - 8 persona documents (neighbor, math/photonics
+  professors, electrical/mechanical engineers, investor, corporate
+  contacts, students), every technical claim re-verified against real
+  files/tool output before being written (not transcribed from the
+  Architect's own draft and trusted) - `gcb-wiki@c58240d`.
+- `gcb-wiki/viewer/` - a static TS/HTML app, one class per interface
+  in `src/types.ts` (Dependency Inversion), `marked`+`mermaid`+`KaTeX`
+  via CDN, no bundler, `build.mjs` assembling a self-contained `dist/`.
+  **Verified by actually building it**, not assumed: `npm run build`
+  caught and fixed one real `noUncheckedIndexedAccess` compile error;
+  every asset + all 8 sagas confirmed reachable over HTTP from a real
+  local server afterward - `gcb-wiki@e033b60`.
+- `.github/workflows/deploy-pages.yml` - builds+deploys on push (one
+  manual step remains: enabling Pages -> Actions in GitHub's own repo
+  settings, documented, not something a commit can do).
+- `gcb-spec/concepts/images/` versioned: existing 7 renders moved to
+  `v1_legacy/` (`git mv`, history preserved), new `v2_personas/` with
+  a `manifest.json` + one `prompt.txt` per persona, grounded in the
+  same re-verified facts - `gcb-spec@e4fd170`.
+
+**Two real things caught before they became real problems:**
+1. The Architect's own draft asserted "Apache 2.0 open-source foundry"
+   licensing. Checked directly - the only `LICENSE` file anywhere in
+   the program (`gcb-grants/LICENSE.md`) says "All rights reserved";
+   no core repo has a license file at all. Not carried into
+   `saga-06-investor.md` as fact - stated as an open, undetermined
+   question instead, flagged explicitly so it's never repeated to an
+   investor as if settled.
+2. Every saga used relative links across repo boundaries
+   (`../../gcb-spec/...`) - works in this local multi-repo checkout,
+   **breaks on GitHub and in the deployed viewer** (separate repos).
+   Caught by checking `gcb-wiki`'s own existing convention (plain
+   backticks, no cross-repo links) before shipping more of the same
+   mistake - converted every one to a real `https://github.com/...`
+   URL instead, fixed in `gcb-wiki@2288750`.
+
+Also caught mid-verification: a local test server left running after
+an unsuccessful `pkill` attempt (it returned HTTP 200 when it should
+have been dead) - found via a real `curl`, not assumed stopped, and
+properly killed by PID via `netstat`/`taskkill`.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** for every technical
+claim in every saga (re-checked against real files this session, not
+copied from the request); **PROVEN — DIRECT EXECUTION** for the viewer
+(real `npm run build`, real HTTP fetch checks). No browser extension
+was available in this environment for a live visual render check -
+flagged to the Architect as still worth doing once deployed.
+
+**Commits:** `gcb-spec@e4fd170`, `gcb-wiki@c58240d`, `@e033b60`,
+`@2288750` (all pushed, verified); this entry.
+
+**Ticket status changes:** none - this work is not tracked against a
+`GCB-###`/`TKT-###` ticket; it's a direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
