@@ -3310,3 +3310,67 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - Orange-Team Collaborator page added to the wiki navigator
+
+**What the Architect asked for:** add a new page reachable from the
+wiki's existing "I am..." persona dropdown, named for someone who
+wants to see the new prompts and human framing of the 3 new problem
+repos (`gcb-lumen`/`gcb-lambda`/`gcb-kelvin`); on selecting it, show
+summaries of the 3 problems with a dropdown per problem holding a
+ready-to-send AI prompt, plus a note on saving AI progress. Explicit
+design constraint stated by the Architect: the wiki should stay mostly
+static and durable ("good once good for a long time"), not sprinkle
+live links across many pages that would need constant upkeep as these
+problems get solved and change.
+
+**Design choice, following that constraint directly:** one new
+appendix page (`appendices/orange-team-collaborator.md`), registered
+under the *existing* `"appendix"` tier - zero viewer TypeScript
+changes, same Open/Closed pattern as every prior lens/saga/appendix
+addition this session (add the `.md` file + one manifest entry). The
+3 per-problem sections use plain `<details class="depth-collapsible">`
+- reusing `PortalDepthFilter`'s existing explicit-tag CSS/behavior
+verbatim, no new interactive code written. Each dropdown holds a
+condensed, self-contained "starter" prompt (not the full
+`EXTERNAL_AI_BRIEFING.md`), with an explicit link to the fuller
+canonical version in each repo for deep work - a deliberate choice to
+avoid duplicating ~150 lines of code/evidence three times inside a
+page meant to stay static, which would itself become the kind of
+staleness risk the Architect was trying to avoid.
+
+**Two things caught before shipping, both by verification, not
+assumed clean:**
+1. The page's own first draft linked `../intent.md` as an in-portal
+   relative link - would have 404'd in the deployed SPA exactly like
+   the two link bugs fixed earlier this session (`intent.md` isn't a
+   manifest document, so the link router correctly leaves it
+   un-intercepted). Caught by extending the link-audit script to also
+   check appendices' outbound links, fixed to an absolute GitHub URL.
+2. A raw `<=` inside one of the three `<pre>` prompt blocks (nested in
+   raw HTML `<details>`, not markdown-processed) - fixed to `&lt;=`.
+   Caught by a real render of the file through the actual pinned
+   marked.js CDN build (fetched fresh for the check, not assumed from
+   memory), confirming exactly 3 `<details>` blocks, exactly 3
+   matching closers, the escape landed correctly, and no accidental
+   4th `<details>` was created by the stray bracket.
+
+**Verified via:** `npm run build` (clean); the link-audit script (now
+124 links across the whole portal, all resolving); a real marked.js
+render check (8/8 assertions passing); redeployed via
+`Deploy-CoyoteWiki.ps1`; re-verified over real HTTP that the new page
+and manifest entry are live. (A separate HTTP check of the private
+`gcb-lumen` repo's own briefing link correctly 404'd for an
+unauthenticated request - expected GitHub behavior for a private repo,
+not a real broken link; already confirmed to exist via the
+authenticated `gh api` when the repo was created.)
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.**
+
+**Commits:** `gcb-wiki@e61aa43` (pushed, verified `HEAD == origin/main`).
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
