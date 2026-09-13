@@ -538,3 +538,106 @@ is a plausible next lever but requires either dedicated photonics-
 layout-domain attention or continued careful iteration - this loop has
 now hit a genuine domain-expertise boundary on its one remaining
 substantial open target. Honest stopping point.
+
+---
+
+## Iteration 8 — 2026-09-12 (restructured /loop: planning-first, prolonged
+iterations)
+
+**Structural change, requested directly**: prior iterations stopped too
+readily after one blocked attempt. This run (and forward) builds an
+explicit, ordered roadmap per ticket BEFORE executing, and treats a
+blocked roadmap STEP as a logged finding that advances to the next step
+or the next ticket - not a reason to end the loop.
+
+**`TKT-030` roadmap worked (steps 1-2), a clean, precise, unresolved
+result:** Step 1 (widen `free_propagation_region_output_function`'s
+`width1`/`width2`/`length`) had **zero effect** - re-run and compared
+byte-for-byte against the un-widened baseline, not assumed fixed. Step 2
+(sweep `outputs` in {4,8,12,16}) found **identical 19 failures at every
+value** - the original "16-channel density" hypothesis this step was
+designed to test was wrong, found by running it. Followed the lead:
+swept `arms` instead, found **`routing_failures = arms-1` exactly**,
+independent of `outputs`/FPR-geometry/`length_increment`. **Caught and
+rejected a false positive along the way**: a same-process sweep briefly
+showed one value as "fixed," contradicted by a prior result at
+textually-identical parameters - re-ran in a fresh, isolated process and
+confirmed the "fix" was `gdsfactory`'s own component-caching returning a
+stale object, not a real result. Points to a version-specific
+`gdsfactory 9.50.0` `awg()` limitation, not a tunable parameter. Step 3
+(manual waveguide construction or a ring/MZI alternative) explicitly
+deferred as categorically bigger work - logged, not rushed, and not a
+reason to stop the loop.
+
+**`TKT-032` roadmap added**, ready for execution next.
+
+**Commit:** `gcb-workspaces@35510e7`.
+
+---
+
+## Iteration 9 — 2026-09-12
+
+**Target:** `TKT-032`'s 5-step roadmap, worked in full.
+
+**Step 1 (read source):** `include/greencoyote_pilot.hpp` is a real,
+substantial (~800-line) header-only C++ driver - not a stub - targeting
+an Alveo U55C FPGA via XRT, opening an IP literally named
+`"greencoyote_top"`. Full register surface read: `PRECISION_MODE`,
+`GLOBAL_CAL`, `CH_GAIN_TRIM`, `REDUCTION_CTRL`, `IRQ_CTRL`, an 8-port
+crossbar (tensor/pipeline/MoE routing), training/LoRA/gradient-reduce
+registers, task scheduling, and `SS_TDC_CTRL`/`SS_CAL_*` (matching
+`gcb-rtl`'s single-slope TDC readout by name - the first clue to Step 5).
+
+**Step 2 (C++ build):** `src/` and `tests/` are BOTH completely empty -
+no build system exists anywhere in this repo. Reported as a real finding
+(nothing to build), not a blocked attempt.
+
+**Step 3 (tests), redirected to the real surface:** `gcb-host/tests/` is
+empty, but Step 5 confirmed the real counterpart lives in `gcb-rtl` -
+ran its existing Icarus regression fresh: `tb_cs_fifo_path` (the pilot
+testbench) **ALL CHECKS PASS**, `tb_dma_integration` **ALL CHECKS PASS**
+(`fire_seen=1018 errors=0`), `tb_ss_calib` **10000/10000 PASS**,
+`tb_ss_tdc` **ALL CHECKS PASS**. The RTL side is genuinely healthy; the
+gap is entirely host-side.
+
+**Step 4 (proxy smoke test) - a real documentation inaccuracy found:**
+`gcb_proxy.py` contains **zero** FastAPI code anywhere (confirmed by
+direct grep) - it is a self-contained, self-checking pure-Python MMIO
+register simulator, not an HTTP proxy. Ran it directly: exercises a DMA
+descriptor push + doorbell + arm + reduction trigger, asserts w1p strobes
+self-clear correctly - **exit 0, passed**. `gcb-host`'s own README
+("FastAPI MMIO proxy") is stale/inaccurate for what this file actually
+is - flagged, not silently corrected.
+
+**Step 5 (relate to RTL) - this ticket's own starting hypothesis was
+WRONG, found by checking:** the roadmap guessed `gcb_dwdm_ctrl_axi.sv`
+(`gcb-wdm-transceiver`). Refuted. The real connection is
+`gcb-rtl/rtl/greencoyote_top.sv` + `greencoyote_pilot_regs.sv` -
+confirmed two ways: the C++ driver's own XRT IP name, and a genuinely
+synchronized register map (`map_version: 0.6.0` matches exactly, every
+checked offset matches exactly on both sides). A real, previously-
+undocumented cross-repo link, found only by actually reading both sides.
+
+**Work done:** `backlog/TKT-032-...md` - full Execution Log for all 5
+steps; moved to `done | blue`. `README.md` updated. No RTL/code changed
+in `gcb-host` or `gcb-rtl` - this was a survey, per its own scope.
+
+**Test results (actual):** `gcb-rtl`: `tb_cs_fifo_path`,
+`tb_dma_integration`, `tb_ss_calib` (10000/10000), `tb_ss_tdc` - all
+re-run fresh, all pass. `gcb-host/proxy/gcb_proxy.py` - run fresh, exit 0.
+
+**Epistemic status: PROVEN — DIGITAL SIMULATION, TESTED CONDITIONS** for
+every pass/fail result reported (all re-run this session, not read from
+a prior log). The cross-repo register-map match is a direct, verified
+textual/numeric comparison, not an inference from naming alone.
+
+**Commits:**
+- `gcb-workspaces`: PENDING (to be filled before push)
+- `gcb-rtl`, `gcb-host`: none (survey only, no code changed)
+
+**Ticket status changes:** `TKT-032` — `open | pending` → **`done | blue`**.
+
+**Next candidate:** `TKT-030` Step 3 (manual AWG waveguide construction,
+or research a ring/MZI alternative) remains the one deferred item across
+both active roadmaps - continuing the loop into it, or a fresh backlog
+scan, per the restructured "keep going" discipline.
