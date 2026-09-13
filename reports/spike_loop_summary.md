@@ -2983,3 +2983,102 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - a per-chip silicon/package detail view, and a student tooling-install reference
+
+**What the Architect asked for:** "I really do not see the detail view
+of the silicon and this is the most challenging part. Because silicon
+can be electronics and can be photonics I do not know what is up" - a
+per-chip-package specification disclosing what's intended, partially
+made, and its process, distinguishing electronic from photonic;
+"ideas we discussed of smaller chips to be part of tool to include in
+RTL and other building libraries"; and a separate students-facing
+install reference page, since "installing all the tools would be
+complex."
+
+**A genuine ambiguity, checked with the Architect rather than
+guessed:** the "smaller chips... RTL and other building libraries"
+idea could not be found recorded anywhere in `gcb-spec` or `gcb-rtl`
+(exhaustive grep, no matches for chiplet/tiny-tapeout/shuttle/MPW/
+library-macro framing). Rather than write "an idea we discussed" into
+the wiki from a guess, asked via `AskUserQuestion` - confirmed: small
+per-block test chips (ADC/homodyne-cell/TDC-class blocks), taped out
+individually and cheaply via MPW/shuttle runs, verified in silicon,
+then folded into a reusable macro library for both this program's own
+SoC and other RTL projects.
+
+**A discovery that reframed the whole task:** while grounding the
+"detail view," found `gcb-wiki/16_hardware_parts_systems_specification.md`
+already exists - a 944-line, 17-part, per-component engineering
+inventory (part numbers, interfaces, dependencies, standalone
+testability) - checked directly, every claim in it traces to a real
+file. **It was never linked from the portal-manifest.json, the
+lenses, or any appendix** - the same class of gap as the missing
+manufacturing appendix earlier this session, just far larger. This is
+almost certainly the literal reason the Architect couldn't find "the
+detail view": it already existed, just invisibly.
+
+**Response, not a duplicate of that file:**
+`appendices/silicon-and-package-detail.md` organizes its 17 parts by
+the actual question a reader has - electronic-digital /
+electronic-analog / photonic / software, one line of real status
+each, linking out to the full inventory for depth rather than
+re-typing it - plus a domain-colored mermaid diagram, and a table
+making an easy-to-miss point explicit: digital-die packaging
+(wire-bond/flip-chip) and photonic packaging (fiber/grating-coupler
+alignment) are different disciplines, not variants of one job -
+directly relevant to a mechanical engineer scoping enclosures. The
+confirmed small-test-chip idea got its own section, explicitly labeled
+"PROPOSED IDEA - NOT STARTED, NOT COMMITTED" (a new tag, deliberately
+distinct from this program's existing "CONCEPT ONLY" vocabulary, so it
+reads as a suggestion, not committed scope).
+
+`appendices/student-tooling-installation.md` maps the program's five
+real, mostly-independent toolchains (digital RTL sim, synthesis/
+physical design, photonics layout/mode-solve, analog SPICE, FPGA/
+Vivado) with real version floors, real install commands, and real
+gotchas already hit this program's own sessions - not generic EDA
+install advice: the `meep` PyPI package is a name collision with an
+unrelated CI/CD tool (confirmed by unzipping its wheel, per
+`gcb-pic-core/mode_solve_strip.py`'s own comment), no packaged
+`ngspice` ships BSIM-CMG/OSDI so the analog SPICE stack requires the
+from-source build `gcb-spec/scripts/setup_spice_env.sh` already exists
+for, and Vivado is flagged as the one non-open-source, licensed tool
+in the entire stack.
+
+**Self-caught before shipping:** the new appendix's own first draft
+repeated the exact double-hyphen fragment-slug mistake fixed earlier
+this session (`#part-2--what-is-not...` instead of the real single-
+hyphen `SlugHeadingAnchorer` output) - caught by an exhaustive
+link-audit script re-run against the whole portal (not just the new
+page), same technique built for that earlier fix, extended and
+re-verified rather than trusted from memory. A second script then
+confirmed every `#fragment` link on the portal matches an actual
+heading in its target document, not just a plausible-looking string.
+
+Both new appendices wired into the existing SSOT structure: registered
+in `portal-manifest.json`, cross-linked from `lenses/01-silicon-
+architect.md`, `02-systems-board.md`, `03-software-integrator.md`,
+`lenses/README.md`'s index, `sagas/saga-08-student.md`, and
+bidirectionally from `manufacturing-pdk.md`.
+
+**Verified via:** `npm run build` (clean); the link-audit + fragment-
+check scripts described above (both deleted before commit, not part
+of the shipped product); redeployed to the live IIS site via
+`Deploy-CoyoteWiki.ps1`; re-verified over real HTTP that both new
+appendices, the extended manifest, the fixed slug, and every new
+cross-link are actually live at `http://localhost/Coyote/` - not just
+the local build.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION**, with one explicit
+exception recorded in the page itself: the small-test-chip section is
+a **PROPOSED IDEA**, not a status claim, and is labeled as such.
+
+**Commits:** `gcb-wiki@c060fb9` (pushed, verified `HEAD == origin/main`
+locally); this entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
