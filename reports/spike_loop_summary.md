@@ -3374,3 +3374,79 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - an external AI's plan for gcb-lumen, checked and partly executed
+
+**What happened:** the Architect pasted `gcb-lumen/EXTERNAL_AI_BRIEFING.md`'s
+prompt into an external AI chat and brought the response back -
+exactly the workflow the Orange-Team Collaborator wiki page was built
+for earlier today. The response recommended SAX (a circuit-level
+photonic S-parameter simulator) plus an assumed per-junction excess
+loss, cascaded across the combiner tree, as the practical open-source
+path to a system-level insertion-loss number.
+
+**Evaluated claim by claim against the real repo, not accepted
+wholesale:**
+- SAX being real, open-source, and workable here: **confirmed by
+  actually installing it and building a working model** - `pip
+  install sax` succeeded cleanly (`sax-0.18.2`, pulls in `jax`/
+  `jaxlib`, no native build, no license).
+- The specific "0.15-0.3 dB per junction, standard PDK data" figure:
+  **no citation given anywhere in the response** - flagged as an
+  assumed guess, not treated as sourced fact, per this program's own
+  [M]/[D]/[A] tagging discipline.
+- Two file names the response referenced as already-known
+  (`k16_tile.py`, `mmi_power_tree.py`): both real, checked directly -
+  but **neither appears anywhere in the prompt actually sent**, and
+  `gcb-lumen`'s own source repo (`gcb-pic-core`) is private. Filed as
+  an open, unresolved provenance question for the Architect - two
+  honest possibilities (more context was given than shown, or
+  coincidental pattern-matching) - not resolved unilaterally, not
+  swept under the rug either.
+- The 4:1-vs-8:1 loss-bound math (0.1 dB/stage optimistic;
+  `10*log10(N)` pessimistic): confirmed correct arithmetic.
+
+**Built and ran the part that checked out, rather than just discussing
+it:** `sax_combiner_model.py`, a real SAX circuit model of the exact
+`mmi_power_tree.py` binary-tree topology at N=8 and N=16. **Found and
+fixed a real bug in the first version while building it**: compared
+the tree's actual output against an incorrectly-derived "ideal"
+reference (N, treating amplitudes as additive) instead of the
+physically correct `sqrt(N)` (energy conservation for N coherent
+unit-amplitude inputs combining losslessly into one output port) -
+caught by hand-deriving the 3-stage N=8 cascade algebraically before
+trusting the script's number, not by inspection alone. Post-fix, the
+model exactly reproduces the existing literature-cited 0.1 dB/stage
+estimate (0.30 dB for N=8, 0.40 dB for N=16) - an independent
+confirmation via real running code of a number this repo's own
+`EXTERNAL_AI_BRIEFING.md` had only hand-derived earlier today.
+
+**What this does and does not close, stated explicitly:** does NOT
+close the real blocking question - the per-junction loss number fed
+into the model is still an assumed placeholder, not measured or
+extracted. Does close a smaller, real question: the SAX-based rollup
+framework is now genuinely working infrastructure, ready to take a
+real number (from a `femwell` extraction, a cited literature value, or
+a bench measurement - none yet attempted) with zero further modeling
+work the moment one exists.
+
+Full evaluation in `gcb-lumen/FINDINGS-2026-09-13.md`;
+`ai-agents/ORANGE_TEAM.md`'s `MEASUREMENT STATE` updated to V2 per its
+own standing instruction not to leave the next session re-deriving
+current status; `README.md` updated with a pointer to both.
+
+**Epistemic status: PROVEN — DIGITAL CIRCUIT-MODEL SIMULATION, TESTED
+CONDITIONS** for the SAX model's correctness (verified by matching an
+independently-derived number). **UNPROVEN**, explicitly and
+unchanged: the real per-junction insertion loss for the actual
+fabricated geometry - the file-name provenance question is also left
+open, not resolved.
+
+**Commits:** `gcb-lumen@c04eb48` (pushed, verified via `gh api`); this
+entry.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
