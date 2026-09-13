@@ -161,3 +161,50 @@ toolchain checks directly) and Triage Coordinator (this entry). A
 reminder folded into the repo's own hard rules: "no access to tool X"
 should be checked directly each time a new session picks up a repo,
 not carried forward as an assumption from the repo's own prior text.
+
+---
+
+## Pass 4 — 2026-09-13 — `gcb-lumen` (second pass, same day)
+
+**Harvested:** a real new toolchain capability found by this session
+while continuing to work the repo directly — checking whether real
+FDTD access existed on this host (via `micromamba`/conda-forge, the
+same mechanism already confirmed useful for `gcb-kelvin`'s WSL
+toolchain finding earlier this session) rather than carrying forward
+this repo's own prior "FDTD is effectively unavailable" framing.
+
+**What happened:** real `pymeep` (1.34.0, the genuine conda-forge FDTD
+package, not the PyPI name-collision impostor) installed and ran
+cleanly. A real 2D effective-index-method FDTD model of the exact
+`mmi1x2()` combiner geometry was built and run at three resolutions as
+a basic convergence check. The 50:50 split ratio converged cleanly;
+**the insertion-loss number did not** (4.36 → 9.06 → 2.86 dB across
+resolutions 20/30/40 — non-monotonic, a real simulation bug, most
+likely the flux-normalization reference, not yet fixed).
+
+**Classification:**
+
+1. **Real FDTD access** — **resolved** (as a toolchain-availability
+   question). `EXTERNAL_AI_BRIEFING.md`'s prior framing corrected.
+2. **The actual combiner insertion-loss number** — **still needs more
+   research**, unchanged in substance but now much better-scoped: a
+   real simulation exists with one specific, named, suspected bug
+   (missing normalization reference run), rather than "no tool path
+   known." **Priority: P1 unchanged** — still blocks
+   `optical.cell.fanin`, nothing currently demanding it today.
+
+Not ticket-worthy — a debugging task for the next Research Scientist
+pass (human or AI), not an Architect decision.
+
+**Drafted:** `gcb-lumen/FINDINGS-2026-09-13-fdtd.md`; `fdtd/mmi_fdtd.py`
+(the real, reusable simulation script); `ai-agents/ORANGE_TEAM.md`
+(V3) and `EXTERNAL_AI_BRIEFING.md` updated so the next session fixes
+the known bug instead of re-deriving tool availability or re-running
+an un-normalized first pass.
+
+**Discipline note:** all three resolution results were reported, not
+the most favorable one. A genuinely non-monotonic convergence sweep is
+itself a real, useful Orange-Team result (a bad/unstable number is a
+successful measurement of "this pipeline isn't trustworthy yet," not
+a failure to hide) — the same principle this program already applies
+to "deliberately ugly first passes" elsewhere.
