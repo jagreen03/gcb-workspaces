@@ -1,9 +1,13 @@
 ---
 id: TKT-030
-title: "gcb-pic-core Component 4: verify + extend the balanced-homodyne layout toward a real K=16 tile"
+title: "gcb-pic-core Component 4: verify + extend the balanced-homodyne layout toward a real K=16 tile - layout-feasibility goal (#1) RESOLVED"
 date_created: 2026-09-12
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: blue
+telemetry:
+  spec: 0.95
+  quality: 0.9
+  emergence: 0.45
 tags:
   - backlog
   - silicon
@@ -378,9 +382,111 @@ prior AWG finding in this ticket relied on) is demonstrably insufficient;
 `get_netlist()` should be run alongside it on any future layout claim in
 this codebase, not just this one.
 
-**Final State:** `open | pending` - the binary-tree WDM combiner
-architecture is now verified-clean (both checks) for N in {2, 4, 8, 16}
-and committed to `gcb-pic-core`. `TKT-030`'s overall objective (a real,
-integrated K=16 tile combining this combiner with
-`balanced_homodyne_cell()`) remains open - this continuation closes the
-combiner-architecture sub-problem, not the ticket itself.
+**Final State (superseded by the continuation below):** `open | pending` -
+the binary-tree WDM combiner architecture is now verified-clean (both
+checks) for N in {2, 4, 8, 16} and committed to `gcb-pic-core`.
+`TKT-030`'s overall objective (a real, integrated K=16 tile combining
+this combiner with `balanced_homodyne_cell()`) remains open - this
+continuation closes the combiner-architecture sub-problem, not the
+ticket itself.
+
+---
+## Execution Log - continuation 2 (2026-09-12): the two combiner trees
+wired into `balanced_homodyne_cell()` - a real, assembled K=16 tile
+
+**Directed task ("continue /loop on wiring the tree into
+balanced_homodyne_cell"): close the integration gap this ticket's own
+"What this is NOT yet" section named from the start - a true K=16 tile
+needs 16 wavelength-multiplexed channels PER OPERAND (A, B) landing on
+ONE MMI/photodiode pair, which means TWO combiner trees, not one.**
+
+1. Built `k16_tile(n)`: two `wdm_combiner_tree(n)` instances (one per
+   operand colour) routed into `balanced_homodyne_cell()`'s existing `A`
+   and `B` input ports via `route_single`.
+2. **Real layout problem, solved empirically, not assumed away**: the
+   cell's `A`/`B` ports are only `2*FANOUT_Y` (~12 um) apart, but each
+   N=16 tree's own bounding box is ~701x1100 um - naively aligning both
+   trees' `OUT` ports directly to `A`'s/`B`'s Y would collide the two
+   trees' bounding boxes almost entirely (each tree's box would span
+   roughly the same ~1100 um Y range, centered only 12 um apart). Fixed
+   by placing `tree_b`'s ENTIRE bounding box fully west of `tree_a`'s -
+   disjoint X ranges by construction (computed from the tree's own
+   `xsize`, not a hand-tuned guess) - so the two trees cannot overlap
+   regardless of how close their Y targets are; `route_single` then
+   bridges the resulting small Y offset with an S-bend, the same
+   mechanism already proven inside each tree's own internal stage-to-
+   stage routing.
+3. Ran BOTH validity checks this ticket has now learned it needs
+   (`route_single` warnings AND `get_netlist()`) together, for N=16:
+   **0 warnings, `get_netlist()` raises no exception** (5 top-level
+   netlist instances: `cell` + `tree_a` + `tree_b` + the 2 new routes -
+   consistent with `get_netlist()`'s hierarchical, non-flattened
+   behavior at this assembly level, vs. the 71 instances it reported when
+   called on a single tree directly in the prior continuation).
+4. **Reproduced byte-identically across two fully independent, separate
+   process invocations** before committing - same discipline applied to
+   every surprising-or-clean result in this investigation, including this
+   one, even though nothing here actually triggered `gdsfactory`'s own
+   component-cache false-positive pattern (both calls to
+   `wdm_combiner_tree(n)` inside `k16_tile()` are the SAME cached
+   component placed as two separate references, which is the intended,
+   correct use of that cache - not the trap).
+5. Committed as `k16_tile.py` in `gcb-pic-core` (commit `a3e1525`, pushed,
+   `HEAD == origin/main` confirmed), matching `layout_homodyne.py`'s and
+   `wdm_combiner_tree.py`'s existing style/docstring conventions, running
+   both checks together in its own `__main__` for the same reason as
+   before. Ran the committed file itself fresh and confirmed identical
+   output to the scratchpad prototype (`3018.50 x 1114.00 um`, 32 ports,
+   0 warnings, `get_netlist_ok=True`).
+
+**Test results (actual):**
+```
+N=16  size=3018.50x1114.00  ports=32  route_single_warnings=0  get_netlist_ok=True
+```
+32 exposed ports: `A_IN0`..`A_IN15` (16 A-colour wavelength-channel
+inputs) and `B_IN0`..`B_IN15` (16 B-colour wavelength-channel inputs) -
+the tile's full external optical interface.
+
+**What this does NOT establish**: real channel spacing, insertion loss,
+crosstalk, or any other optical-physics property - `delta_lengths`
+throughout remain `ESTIMATE-ASSUMPTION` placeholders, same status as
+every prior piece of this investigation. It also does not certify that
+`get_netlist()` is itself an exhaustive validity check (a third, deeper
+check is not ruled out - reported as the best verification performed,
+not an absolute guarantee), and no DRC (design-rule check) has been run
+against any specific foundry PDK (this uses the generic PDK throughout).
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** that `k16_tile(16)` produces a `gdsfactory` `Component` with
+zero `route_single` warnings AND a valid (`get_netlist()`-clean) layout,
+reproduced byte-identically across two independent processes. **UNPROVEN**:
+real optical feasibility of any kind; foundry-specific DRC cleanliness.
+
+## Telemetry & Evaluation (continuation 2)
+
+Spec 1.0 - executed exactly the directed task (wire the tree into the
+cell), closing the specific integration gap this ticket's own "What this
+is NOT yet" section identified at creation. Quality 0.9 - the real
+layout-collision problem (two large trees, two closely-spaced target
+ports) was identified and solved by construction (computed disjoint X
+ranges from the tree's own measured size) rather than a hand-tuned
+magic-number gap, and the result was independently reproduced twice
+before being committed; not 1.0 because only two of gdsfactory's validity
+checks were run and no foundry DRC was attempted. Emergence 0.3 - this is
+the direct, expected completion of the path the prior two continuations
+opened, not a surprising new direction; the main transferable lesson
+(place sub-assemblies by their own measured size rather than guessed
+gaps, to guarantee non-overlap by construction) is real but incremental.
+
+**Final State:** `done | blue` - a complete, assembled K=16 tile now
+exists and is verified-clean by both checks (`gcb-pic-core/k16_tile.py`,
+`a3e1525`). This closes the ticket's own named objective: near-term
+goal #1 ("a gdsfactory script that generates the physical layout for a
+single K=16 balanced-homodyne multiplier tile") is achieved and verified.
+**Explicitly NOT closed by this ticket, per its own "Out of scope" and
+"Required work" item 3, both stated at creation**: real channel-spacing/
+`delta_lengths` values (still listed Missing in `gcb-wiki`), any
+insertion-loss/crosstalk measurement (needs FDTD/EME tooling not yet
+confirmed available in this environment), and foundry-specific DRC - all
+genuinely separate, dependent follow-on work, not silently folded into
+this closure.

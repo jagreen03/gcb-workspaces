@@ -805,3 +805,85 @@ one per operand colour - to form the actual K=16 tile per the original
 scope-gap note), and/or pursue real channel-spacing/`delta_lengths`
 values against `gcb-wiki`'s Invariant #6 once that data exists (still
 listed Missing as of this entry).
+
+---
+
+## Post-loop directed continuation 2 — 2026-09-12 (TKT-030, Architect-directed: "wiring the tree into balanced_homodyne_cell")
+
+**Context:** continuing directly from the previous entry's binary-tree
+combiner work. The Architect directed the next concrete step: wire that
+verified combiner into the existing `balanced_homodyne_cell()`, closing
+the integration gap this ticket named at creation (a true K=16 tile
+needs 16 wavelength-multiplexed channels PER OPERAND, A and B, landing on
+ONE MMI/photodiode pair - meaning two trees, not one).
+
+**Target:** `TKT-030` - assemble `k16_tile(n)`: two `wdm_combiner_tree(n)`
+instances, one per operand colour, routed into `balanced_homodyne_cell()`'s
+existing `A`/`B` inputs.
+
+**What was done:**
+1. Prototyped in the scratchpad first (same workflow as the combiner
+   tree itself), then wrote the final version as `k16_tile.py` in
+   `gcb-pic-core`, matching `layout_homodyne.py`/`wdm_combiner_tree.py`'s
+   existing style.
+2. **Real layout problem solved by construction, not a tuned guess**:
+   the cell's `A`/`B` ports are only ~12 um apart, but each N=16 tree's
+   own bounding box is ~701x1100 um - naively aligning both trees' `OUT`
+   ports to `A`'s/`B`'s Y would collide the two trees almost entirely.
+   Solved by computing `tree_b`'s placement so its ENTIRE bounding box
+   sits fully west of `tree_a`'s (disjoint X ranges, derived from the
+   tree's own measured `xsize`), guaranteeing no overlap regardless of
+   how close the two target Y values are; `route_single` then bridges
+   the resulting small Y offset with an S-bend.
+3. Ran BOTH validity checks this ticket's prior continuation established
+   as necessary (`route_single` warnings AND `get_netlist()`) for N=16:
+   0 warnings, `get_netlist()` exception-free (5 top-level netlist
+   instances: cell + tree_a + tree_b + 2 routes).
+4. **Reproduced byte-identically across two fully independent process
+   invocations** before committing - same discipline applied throughout
+   this investigation, even though nothing here actually triggered the
+   component-cache false-positive pattern (the two `wdm_combiner_tree(n)`
+   calls inside `k16_tile()` are intentionally the same cached component
+   placed as two separate references - the correct, intended use of that
+   cache, not the trap caught earlier in this ticket).
+5. Committed `k16_tile.py` to `gcb-pic-core` (`a3e1525`, pushed,
+   `HEAD == origin/main` verified). Ran the committed file itself fresh
+   and confirmed identical output to the scratchpad prototype.
+
+**Test results (actual):**
+```
+N=16  size=3018.50x1114.00  ports=32  route_single_warnings=0  get_netlist_ok=True
+```
+32 exposed ports: `A_IN0..A_IN15` (16 A-colour channel inputs),
+`B_IN0..B_IN15` (16 B-colour channel inputs).
+
+**Epistemic status: PROVEN — DIGITAL LAYOUT SIMULATION, TESTED
+CONDITIONS** that `k16_tile(16)` produces a `gdsfactory` `Component` with
+zero `route_single` warnings AND a valid `get_netlist()`, reproduced
+byte-identically across two independent processes. **UNPROVEN**: real
+channel spacing, insertion loss, crosstalk, or any other optical-physics
+property (`delta_lengths` remain `ESTIMATE-ASSUMPTION` placeholders
+throughout); foundry-specific DRC (generic PDK only, no DRC deck run).
+
+**Commits:**
+- `gcb-pic-core@a3e1525` - `k16_tile.py` added, pushed,
+  `HEAD == origin/main` verified.
+- `gcb-workspaces` (this commit) - `TKT-030` continuation-2 Execution Log
+  + telemetry, frontmatter status flipped `open|pending` → `done|blue`
+  (near-term goal #1 - the tile's own named objective - is now achieved
+  and verified; goals #2/#3 and DRC remain explicitly out of scope per
+  the ticket's own original text), `README.md` TKT-030 entries updated,
+  this summary entry appended.
+
+**Ticket status changes:** `TKT-030`: `open | pending` → `done | blue`.
+Closing note, not a silent upgrade: this closes the *layout-feasibility*
+objective only - real optical design (channel spacing, insertion loss,
+crosstalk, foundry DRC) remains genuinely open future work, named as
+such in the ticket's own "Out of scope" section since its creation.
+
+**Next candidate:** real channel-spacing/`delta_lengths` design values
+(blocked on the still-Missing spec in `gcb-wiki`); FDTD/EME tooling
+availability survey (needed before any real insertion-loss/crosstalk
+claim, itself a new intake-style ticket, same shape as `TKT-032`'s own
+intake); or returning to the broader backlog for the next priority item
+if no Architect-directed follow-on is given.
