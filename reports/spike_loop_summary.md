@@ -2587,3 +2587,40 @@ correctly left open, not forced to a resolution it doesn't belong to.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (exhaustive register check: GCB-041 was an underestimate by 2 registers)
+
+**Context:** the user asked to continue iterating; ran the exhaustive
+register-vs-RTL check `GCB-041`'s own text had only informally gestured
+at - all 49 non-stub `registers.yaml` registers (the 8 `THERMAL_*`
+registers marked `implemented: false` in the spec itself excluded as a
+correct, deliberate negative control, not a gap) cross-checked against
+every `ADDR_*` reference in `gcb-rtl/rtl/*.sv`.
+
+**What was found:** `SS_TDC_CTRL` (0xB0) and `SS_TDC_STATUS` (0xC0) are
+equally unimplemented, alongside the three already named
+(`SS_CAL_IDX`/`SS_CAL_DATA`/`SS_RAMP_TIMING`) - the full `SS_READOUT`
+block, 5 registers not 3. `SS_TDC_STATUS` didn't surface in the original
+`signal:`-field grep because it's read-only (`source:` fields, not
+`signal:`) - a blind spot in the narrower check, caught by switching to
+address-based verification instead. Also confirmed, exhaustively: this
+is the *only* gap of its kind anywhere in the register map - real,
+useful confidence that `GCB-041`'s finding is complete, not an
+underestimate in the other direction either.
+
+**What was done:** updated `GCB-041`, and its README row, to the full,
+now-exhaustively-confirmed 5-register scope. No RTL or architectural
+decision touched - same disposition as before, just accurately scoped.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (every one of the 49
+registers checked against real RTL files, not sampled).
+
+**Commits:** `gcb-workspaces@c1891db`, `@4374ff2` (both pushed,
+verified); this entry.
+
+**Ticket status changes:** `GCB-041` stays `open | pending` - scope
+corrected, disposition unchanged.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
