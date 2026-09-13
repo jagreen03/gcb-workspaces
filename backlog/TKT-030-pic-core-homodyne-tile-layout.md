@@ -215,40 +215,62 @@ next step, not a reason to stop
   `free_propagation_region` auto-routing for ANY nonzero `length_increment`
   grating, or a geometry assumption baked into the recipe that none of its
   own exposed knobs actually control. Proceeding to Step 3.
-- [ ] **Step 3 - fallback construction or alternative architecture.
-  DEFERRED, not attempted this iteration (logged, not a stop).** Steps
-  1-2 exhausted every exposed `awg()` constructor-level parameter
-  (confirmed by direct, repeated, fresh-process testing, not assumption) -
-  neither resolved it. Both remaining options are categorically bigger
-  than a parameter sweep: (a) hand-authoring waveguide geometry bypassing
-  `route_single` entirely is real photonic-layout implementation work,
-  not a quick script edit; (b) evaluating a cascaded ring/MZI filter bank
-  is an architecture-comparison research task, not an afternoon's
-  parameter tuning either. Explicitly deferred rather than rushed - this
-  is the point this ticket's own "Required work" section anticipated
-  ("do not attempt... without real photonics-layout domain grounding").
-  Moved attention to `TKT-032` (gcb-host) this iteration instead, per
-  this loop's own "advance, don't stop" discipline - a blocked roadmap
-  step on one ticket routes to the NEXT active ticket's roadmap, not to
-  ending the loop. If steps 1-2 don't resolve it: either (a) construct
-  the FPR-to-arm
-  waveguides manually (bypassing `gdsfactory`'s `route_single` entirely -
-  straight + bend primitives placed by hand), or (b) research (not
-  commit to) whether a cascaded wavelength-selective filter bank (ring
-  resonators or cascaded asymmetric MZIs - NOT the power-splitting MMI
-  tree already ruled out) is a viable alternative to a monolithic 16-arm
-  AWG for this specific channel count. Report findings; do not silently
-  adopt (b) without flagging it as an architecture change from the
-  AWG-based approach this ticket started with.
+- [x] **Step 3(a) - hand-authored waveguide construction. DEFERRED, not
+  attempted.** Real photonic-layout implementation work (placing straight/
+  bend primitives by hand, bypassing `route_single` entirely), not a
+  quick script edit - left for dedicated follow-up, consistent with this
+  ticket's own original caution against rushing this without real
+  domain grounding.
+- [x] **Step 3(b) - research a cascaded ring/MZI filter-bank alternative.
+  ATTEMPTED, a genuinely encouraging (not conclusive) result.** Checked
+  `gf.components.mzi_lattice_mmi()` - a real, standard integrated-
+  photonics Mach-Zehnder LATTICE filter, the building block for a
+  **binary-tree** WDM combiner (16 channels -> 15 individual 2-port
+  filters arranged 8+4+2+1, each stage only ever combining TWO channels
+  into one - structurally sidestepping the AWG's whole 16-way single-
+  device fan-out problem by construction, not by tuning). The basic
+  single-stage building block (`delta_lengths=(10.0,)`, a placeholder
+  value - no real channel-spacing spec exists here either, same
+  `ESTIMATE-ASSUMPTION` caveat as the AWG's `length_increment`) **builds
+  perfectly cleanly: 0 routing failures, a real 4-port component,
+  verified by direct run, not assumed.** This is categorically different
+  from the AWG's persistent internal bug. Attempted a 2-stage cascade
+  next (`delta_lengths=(10.0, 15.0)`) and hit a real, ORDINARY parameter-
+  validation error ("All MMI-related argument lists must be the same
+  length") - several per-stage tuples (`coupler_widths`,
+  `coupler_lengths_mmis`, `coupler_widths_mmis`, `coupler_gaps_mmis`,
+  `taper_functions_mmis`, `straight_functions_mmis`,
+  `cross_sections_mmis`) must all be extended to `len(delta_lengths)+1`
+  entries together - a clear, actionable API-usage requirement, NOT a
+  silent/opaque geometry failure like the AWG's. Did not complete the
+  full 2-stage (or 4-stage, for the real 16-channel tree) build this
+  iteration - that is real further work, not a five-minute fix, and
+  building the full tree is its own task, not committed to here per this
+  step's own "research, don't commit" instruction.
+  **Conclusion: a cascaded MZI-lattice binary tree is a credible,
+  evidence-backed alternative architecture to a monolithic AWG for this
+  tile, worth a dedicated follow-up attempt** - its basic unit builds
+  clean where the AWG's never did, and its remaining work is ordinary
+  parameter-matching, not an unresolved internal router limitation. This
+  is a finding to report, not an architecture decision made on the
+  ticket's behalf - flagged explicitly as a DIFFERENT approach from the
+  AWG this ticket started with, for the Architect or next engineer to
+  weigh.
 
 ## Telemetry & Evaluation
 
-No PBG grade - this ticket documents a verified current state, a real
-diagnostic attempt at the K=16 extension that found and honestly
-reported a concrete routing-feasibility failure (not a success), and a
-specific next lever to try. It does not itself deliver a working K=16
-layout.
+No PBG grade - this ticket's own roadmap is now fully worked (all steps
+attempted or deliberately deferred with reasons), but it does not itself
+deliver a working K=16 layout, which is what a grade would need to
+certify. Real value delivered: the AWG path is now conclusively
+characterized (a version-specific internal limitation, not a tunable
+parameter, confirmed across 6+ independent, verified parameter sweeps
+including one caught-and-rejected false positive), and a credible
+alternative (cascaded MZI-lattice binary tree) is identified with a real,
+clean-building basic unit - a materially better-informed starting point
+for whoever continues this than existed before this session.
 
-**Final State:** `open | pending` - genuine diagnostic progress recorded;
-the K=16 layout itself remains unresolved. Roadmap above tracks the next
-attempts.
+**Final State:** `open | pending` - roadmap fully worked; the K=16 layout
+itself remains unresolved, now with two characterized paths (AWG:
+dead-ended at a library limitation; MZI-lattice tree: promising, unit
+verified, full tree not yet attempted) instead of one dead end.
