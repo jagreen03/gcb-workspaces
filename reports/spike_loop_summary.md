@@ -3082,3 +3082,61 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Open-ended loop tick, 2026-09-13 - DEFECT-002/004 were fixed weeks ago, registers.yaml never caught up
+
+**Pulled by checking actual code against the spec's own tracked state,
+not frontmatter status alone**, per the loop's standing instruction.
+Surveyed open backlog items first (GCB-041 and TKT-035 are real but
+explicitly await Architect disposition, not unilaterally actionable;
+TKT-020's remaining open items are either blocked on RTL that doesn't
+exist yet or gated by the host memory ceiling this session is
+explicitly told to respect) before settling on `gcb-spec/registers.yaml`'s
+own `defects:` block as the next checkable thing.
+
+**Finding:** DEFECT-001 carries `status: resolved` + `fixed_in:`;
+DEFECT-002 (illegal `output reg` + continuous `assign`) and DEFECT-004
+(read-decode concat width bugs on TASK_ALLOC_CTRL/TILE_ALLOC_MAP) did
+not, reading as still-live. `git log -S` on the exact fixed text in
+`gcb-rtl` found one real commit, `652e21e` (2026-09-02, three weeks
+before this session's own work started), whose own message says
+"resolve DEFECT-002 ... DEFECT-004 ..." - confirmed substantively, not
+just by commit message: every RTL output is `output wire` except the
+one legitimate `output reg` exactly as the defect's own summary
+described as correct, and both register's read-decode concatenations
+total 32 bits today, landing fields exactly where `registers.yaml`'s
+own `fields:` table already says.
+
+**Verified before committing:** re-ran `python regen.py --all` into a
+scratch `--out-root` (not the real output paths) and diffed all 4
+generated consumers (SV package, C++ header, Python regmap, TypeScript)
+against what's already committed - byte-identical, confirming this is
+pure defect-tracking metadata never read by codegen, not a functional
+spec change.
+
+**One real, separate gap deliberately NOT folded into "already
+fixed":** TASK_ALLOC_CTRL's `SHUTDOWN_ACK` bit is still genuinely
+undecoded on the write side, and has no `signal:`/`output:` defined in
+the spec at all - there's no named downstream signal for RTL to drive
+yet, so this needs a spec decision before it's an RTL task. Its
+defect-list bullet is updated to say this clearly, kept open, not
+silently dropped alongside the two real closures.
+
+**DEFECT-003** (thermal block) checked too: already accurately
+self-documented (`implemented: false` on all eight registers, header
+comment already says "NOT IMPLEMENTED") - not a live mismatch. Left
+as-is with a note explaining why, since whether to ever implement the
+thermal domain is a real open decision, not a doc-accuracy fix like
+the other two.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.** A pure documentation-
+accuracy fix: zero RTL changed, zero generated code changed, confirmed
+by actual `regen.py` re-run and diff, not assumed from the commit
+message alone.
+
+**Commits:** `gcb-spec@319f709` (pushed, verified `HEAD == origin/main`).
+
+**Ticket status changes:** none new filed - this closes a gap in
+`registers.yaml`'s own `defects:` tracking, not a backlog ticket.
+
+**Next candidate:** continuing the open-ended loop.
