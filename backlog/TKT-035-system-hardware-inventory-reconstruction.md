@@ -92,10 +92,11 @@ register, system boundary, functional-completeness gaps, dependency map).
    (Required Equipment Matrix, full DFT/test-structure matrix) - Pass 1
    covers these at the depth `gcb-wiki/15` already established, re-
    verified rather than redone from scratch line-by-line.
-3. Confirm the Finding #3 hypothesis above (`gcb-wiki/15`'s 60lambda
+3. ~~Confirm the Finding #3 hypothesis above (`gcb-wiki/15`'s 60lambda
    figures describing `gcb-wdm-transceiver`, not `gcb-pic-core`) directly
    with the Architect or by re-reading `gcb-wiki/15`'s own citations in
-   full.
+   full.~~ **Done, see "Required work item 3, resolved" below** — confirmed
+   with a precision correction (two different sources, not one).
 
 ## Out of scope
 
@@ -436,3 +437,41 @@ real output files inspected, a real reported number cross-checked
 against a real claim). The earlier "unavailable" claim in this same
 report is the thing that was wrong, corrected here rather than left
 standing.
+
+---
+## Required work item 3, resolved — with a precision correction (2026-09-13, continuing open-ended)
+
+This report's own "Required work" §3 asked to confirm Finding #3's
+hypothesis "by re-reading `gcb-wiki/15`'s own citations in full." Done.
+**The 64-lane half is confirmed; the 60λ half needs a correction:**
+`gcb-wiki/15` line 64 — present since its *original* 2026-09-11 draft,
+predating this report's Finding #3 entirely — already sources the
+figures precisely: **60λ is `ESTIMATE/ASSUMPTION`, cited to the
+`GCB-034`/`GCB-037` link-budget work** (the Mode B transport-layer PHY
+provisioning estimate, ≈ 60λ at the P = 4 accumulator), **not** to
+`gcb-wdm-transceiver`'s RTL at all. **64 lanes is `PROVEN — DIGITAL
+SIMULATION, TESTED CONDITIONS`, cited to `TKT-019.1`'s own router test
+ceiling** — this one genuinely is `gcb-wdm-transceiver`'s own
+`gcb_wavelength_router.sv` (`N_LAMBDA=64`). `gcb-wiki/15` states
+explicitly that these two are **kept deliberately distinct, per
+`gcb-wiki/14`'s own doctrine**, and does not merge them.
+
+So Finding #3's core conclusion stands (neither figure is
+`gcb-pic-core`'s; the fork-divergent `gcb_wavelength_router.sv` really
+is `gcb-wdm-transceiver`'s) — but its phrasing, "`gcb-wiki/15`'s
+~60lambda/50GHz-grid DWDM figures most plausibly describe
+`gcb-wdm-transceiver`'s own real... wavelength router," **conflated two
+different sources under one description**: the 60λ figure is a
+higher-level link-budget *estimate* (`GCB-034`/`GCB-037`), and the
+64-lane figure is the RTL's own *tested* ceiling. Both real, both
+relevant to `gcb-wdm-transceiver`, but not the same artifact — the
+exact distinction `gcb-wiki/15` had already drawn and this report had
+not yet noticed when it wrote Finding #3.
+
+The 50 GHz channel-spacing half of the original puzzle remains
+unresolved, per `gcb-wiki/15`'s own already-standing maintainer flag
+(2026-09-12, `TKT-033`/`.035`) — no new claim made on it here.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (`git log -L` on the
+specific line confirmed it predates this report's own hypothesis; read
+`gcb-wiki/15`'s full citation context before writing this correction).
