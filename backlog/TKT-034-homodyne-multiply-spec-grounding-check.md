@@ -1,9 +1,13 @@
 ---
 id: TKT-034
-title: "Check whether gcb-pic-core's core multiply operation (A+B/A-B homodyne, Invariant #6) is gcb-spec-grounded, or gcb-wiki-only like TKT-033's K=16 framing was"
+title: "RESOLVED: gcb-pic-core's multiply operation is real and grounded - in gcb-photonic-qam-v2/intent.md + gcb-wdm-transceiver RTL, not gcb-spec, not gcb-wiki-only"
 date_created: 2026-09-12
-status: open
-telemetry_color: pending
+status: done
+telemetry_color: blue
+telemetry:
+  spec: 0.9
+  quality: 0.85
+  emergence: 0.8
 tags:
   - backlog
   - silicon
@@ -68,9 +72,59 @@ before concluding anything.
   only, matching `TKT-032`'s own precedent for a bounded first pass.
 - `TKT-019.19` and anything in that neighborhood - unrelated.
 
+---
+## Resolution (2026-09-12, same day, continuing the directed open-ended
+backlog work)
+
+**Answer: (b), refined - `gcb-pic-core`'s A+B/A-B multiply is real and
+grounded, but in a different real program than `gcb-spec`, not in
+`gcb-wiki` alone.**
+
+`gcb-photonic-qam-v2/intent.md` (Required-work item 1's own "read the
+actual documents" instruction, followed through) states, almost
+verbatim: *"square-law photodiodes extract the cross-term
+|A+B|^2-|A-B|^2 = 4Re(AB*). This is the physical basis of the MAC."* -
+the same physics as `gcb-pic-core`'s own `balanced_homodyne_cell()`,
+word for word. Its own "Software Tiling Constraint" section derives
+`K <= 16` for this exact mechanism from a balanced-homodyne SNR/phase-
+noise budget (DPI-C co-simulation, `model/RESULTS.md`). Separately,
+`gcb-wdm-transceiver/rtl/gcb_dwdm_pkg.sv` has `K_MAX = 16`, real
+synthesizable RTL, commented *"a HARD cross-architecture invariant."*
+Both `gcb-pic-core` and `gcb-analog-rx` self-describe, in their own
+README headers, as part of **"the GCB Photonic QAM Accelerator"** - a
+real, named second program.
+
+**This is NOT the same finding as (c)** - the multiply operation is not
+ungrounded. It is grounded in this second program's own real design
+documents and RTL (`gcb-photonic-qam-v2/intent.md`, `gcb-wdm-
+transceiver`'s RTL), which `gcb-pic-core`'s README should have cited
+directly instead of routing through `gcb-wiki`. `gcb-spec`'s own
+`mmi_tree_model.py` (option (a)/(b) in the original framing) is
+confirmed NOT this mechanism - plain power-summing, no differential
+detection anywhere in its derivation, belonging to a different,
+separate program ("GCB/ODIN_Bridge," the Vortex-TCU-fed FPGA pilot).
+
+**Consequence, recorded on `TKT-030`, not here**: this corrects an
+intervening claim from earlier the same day (that `gcb-pic-core`'s
+K=16 mapped to `gcb-spec`'s `L_CONTRACT=16`) - that was a hastier,
+less-specific match made before this ticket's own investigation ran.
+The real topology `gcb-pic-core` needs, per this grounding: 16 separate
+multiply cells feeding two power-summing trees feeding one shared
+photodetector pair - not yet built, tracked on `TKT-030`.
+
 ## Telemetry & Evaluation
 
-No PBG grade - this is an intake placeholder, not a completed survey
-(matching `TKT-032`'s own original shape before its survey was done).
+Spec 0.9 - answered the exact question this ticket posed (is the
+multiply operation `gcb-spec`-grounded, or `gcb-wiki`-only), with a
+real third answer neither original option anticipated cleanly. Quality
+0.85 - backed by a direct, word-for-word mechanism match and a real RTL
+constant, not inference from naming alone; not 1.0 because the
+corrected topology itself is not yet built. Emergence 0.8 - this
+surfaced a materially important correction to the SAME DAY's own prior
+work (the `L_CONTRACT=16` claim), caught and fixed within the same
+session rather than left standing - a genuinely higher-value outcome
+than the original narrow question.
 
-**Final State:** `open | pending` - flagged, not investigated.
+**Final State:** `done | blue` - the grounding question is answered;
+the resulting corrected-topology build is tracked as follow-on work on
+`TKT-030`, not reopened here.

@@ -251,3 +251,23 @@ exploration, or a genuine architecture conflict with `ADR-005` itself.
 Flagged for the Architect, not resolved here - this ticket's own prior
 disposition is not silently overridden, per this program's standing
 discipline against unilaterally re-deciding an Architect call.
+
+---
+## Simplification (2026-09-12, same day, `TKT-035`): the flag above was
+real but overstated - there is no reconciliation needed
+
+**`gcb-analog-rx` self-describes, in its own README header, as part of
+"the GCB Photonic QAM Accelerator"** - a real, separate, named second
+program from "GCB/ODIN_Bridge" (`ADR-005`'s own program, `gcb-spec`'s
+5-repo list). `ADR-005` never had jurisdiction over `gcb-analog-rx`'s
+design question in the first place - it was deciding the Rx for a
+DIFFERENT program's receiver role, not this one's. The two "candidates"
+never competed; they are each the Rx question for a different,
+separately-evidenced accelerator.
+
+**This does not retract the flag's own factual content** (the mechanism
+comparison, the 1000x timing mismatch, all still accurate and worth
+keeping on file) - it retracts the implication that anything needs
+reconciling. No Architect decision is actually pending here;
+`gcb-analog-rx`'s own `TKT-031` disposition stands on its own terms, for
+its own program, same as before this flag was raised.

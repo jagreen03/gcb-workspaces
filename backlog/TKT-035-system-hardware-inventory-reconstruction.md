@@ -151,26 +151,84 @@ refinement note.
   counterpart found. Most likely a separate, longer-horizon vision, same
   status as `gcb-wdm-transceiver`.
 
-**Net result**: of five "Track B" repos, one (`gcb-pic-core`) is now
-confirmed to be Track A's own Phase II; one (`gcb-analog-rx`) is
-confirmed to be a genuinely separate, third Rx variant, not reconciled
-with `ADR-005`'s already-locked decision (flagged on `TKT-031`); one
-more (`gcb-python-orchestrator`) is a plausible Track-A match pending a
-deeper read; two (`gcb-wdm-transceiver`, `gcb-photonic-qam-v2`) are most
-likely genuinely separate, real subsystems (transport/longer-horizon
-vision, not discarded). This is real progress on Contradiction Register
-entry #1, not a full close - `gcb-python-orchestrator` is the one
-remaining unchecked item.
+**Net result (SUPERSEDED below - this paragraph's `gcb-pic-core`
+conclusion was a hasty overreach, corrected the same day, see
+`TKT-030`'s own correction-of-correction and `TKT-034`'s resolution).**
+
+---
+## Correction: "Track A/Track B" was itself too vague - there are TWO
+NAMED, coherent programs, not one canonical track plus a scatter of
+loose repos
+
+**Continuing the directed open-ended work (confirm `gcb-python-
+orchestrator`, then deepen) surfaced the real, simple structure.** Both
+`gcb-pic-core` and `gcb-analog-rx` self-describe, in their own README
+headers, as **"the GCB Photonic QAM Accelerator"** - a real, named
+second program, not an amorphous "Track B." Its components, now
+confirmed by direct, specific evidence (not naming/guesswork):
+
+- `gcb-wdm-transceiver` - the V1.0 DWDM transport + reduction RTL.
+  `rtl/gcb_dwdm_pkg.sv`'s own comment: `K_MAX = 16` is *"a HARD
+  cross-architecture invariant."*
+- `gcb-photonic-qam-v2` - the V2.0 complex-QAM extension (its own
+  README's own file-fork admission explains the `gcb_wavelength_router.sv`
+  divergence found earlier - normal version drift within ONE lineage,
+  not two separate forks). `intent.md`'s "Software Tiling Constraint"
+  derives the SAME `K <= 16` from a balanced-homodyne SNR budget, for the
+  SAME A+B/A-B multiply mechanism `gcb-pic-core` implements - confirmed
+  word-for-word, not by coincidence of a shared digit.
+- `gcb-pic-core` - the PIC layout for that same multiply cell.
+- `gcb-analog-rx` - a candidate Rx front-end **for this program**, not a
+  rival implementation of `gcb-spec`'s `ADR-005` decision (which belongs
+  to the OTHER program, "GCB/ODIN_Bridge"). **This simplifies the
+  `TKT-031` flag below**: there was never a reconciliation needed - each
+  named program has always had its own separate Rx question, the earlier
+  flag just hadn't identified that `gcb-analog-rx` belongs to the QAM
+  Accelerator program specifically.
+- `gcb-python-orchestrator` - **CONFIRMED this pass** (the one item left
+  open): `compiler/packer.py`'s own comment copies its bit convention
+  from `gcb_dwdm_pkg::pack_int4` "not reinvented" - the SAME RTL package
+  as `gcb-wdm-transceiver`, K_MAX=16 included. This is the QAM
+  Accelerator's own compiler, not "GCB/ODIN_Bridge"'s (my own earlier
+  guess, based only on the word "Photonic" in its README, was wrong -
+  corrected here rather than left standing).
+
+**The two real, named programs, simplified:**
+
+| | GCB/ODIN_Bridge | GCB Photonic QAM Accelerator |
+|---|---|---|
+| Repos | `gcb-spec`, `gcb-rtl`, `gcb-host`, `gcb-dashboard`, `gcb-papers` | `gcb-wdm-transceiver`, `gcb-photonic-qam-v2`, `gcb-pic-core`, `gcb-analog-rx`, `gcb-python-orchestrator` |
+| Optical mechanism | Single wavelength, power-summing (plain addition) | 2 colors/operand (QPSK I/Q), balanced-homodyne multiply (A+B/A-B) |
+| Spec authority | `gcb-spec` (direct, explicit) | `gcb-photonic-qam-v2/intent.md` + shared RTL (`gcb_dwdm_pkg.sv`) - real, just no single unified repo like `gcb-spec` |
+| Physical evidence | Real Vivado P&R (`greencoyote_top`, Alveo U55C) | Real cocotb/Icarus RTL regression (`gcb-wdm-transceiver`), real DPI-C co-simulation (`model/RESULTS.md`), `gdsfactory` layout feasibility (`gcb-pic-core`) - no FPGA/ASIC evidence |
+
+**All five "Track B" repos are now accounted for** - none discarded, all
+real, all belonging together as one coherent second program. This closes
+Contradiction Register entry #1 (the original TKT-035 report) to the
+extent evidence allows: the two "tracks" are not competing visions of
+the same thing, they are two separate, real, differently-evidenced
+programs sharing an umbrella name.
 
 ## Telemetry & Evaluation
 
-No PBG grade - this is a large, explicitly-scoped-as-Pass-1 reconstruction
-task, not a completed, gradable deliverable; matching this program's own
-doctrine that a partial/in-progress survey gets no grade until its own
-scope is actually finished.
+Spec 0.9 - resolved the original ambiguity with a simple, two-program
+structure, backed by each repo's own self-description and matching
+RTL/doc evidence, not guesswork; not 1.0 because the physical-maturity
+gap between the two programs (one has real FPGA evidence, the other
+doesn't) remains a real, unaddressed fact, and the equipment/DFT
+deliverable sections from the original prompt are still deferred.
+Quality 0.9 - every claim in the corrected table is backed by a direct
+read (README self-descriptions, RTL comments, intent.md text), including
+catching and correcting this same ticket's own earlier overreach rather
+than leaving it standing. Emergence 0.85 - the "two named programs"
+framing is simpler and more actionable than the original "Track A/
+Track B" ambiguity, and directly enabled `TKT-034`'s resolution and
+`TKT-030`'s correction - a structural finding with real leverage on
+multiple other tickets, not an isolated result.
 
-**Final State:** `open | pending` - Pass 1 delivered (see the report);
-one of five Track-B repos (`gcb-pic-core`) now confirmed reconciled into
-Track A, implemented and verified; the other four have a stated best
-guess each, not yet confirmed. Required Work items above left for
-continuation.
+**Final State:** `open | pending` - Contradiction Register entry #1 (the
+ticket's central ambiguity) is now resolved with the two-program
+structure, confirmed and simple. This does NOT close the ticket - the
+original Pass-1 deliverable sections not revisited here (equipment/DFT
+matrices, `gcb-dashboard`/`vortex` shallow-pass depth, per the source
+prompt's own 11-section scope) remain genuinely open follow-on work.

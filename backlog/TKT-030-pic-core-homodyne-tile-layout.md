@@ -604,3 +604,56 @@ one behind "K=16"), both clean by both checks, reproduced twice
 repo** (per `TKT-035`'s framing) - it looks like `gcb-spec`'s own
 Phase-II integrated-array work, just never cited from it. See `TKT-035`
 for the fuller reconciliation across all five "Track B" repos.
+
+---
+## Correction of the above (2026-09-12, same day): the `L_CONTRACT=16`
+match was a hasty overreach - a closer, better-evidenced match exists,
+and it is NOT `gcb-spec`
+
+**Stated plainly: the refinement directly above jumped to a conclusion
+on numeric coincidence (16 = 16) without checking the more specific
+source.** Continuing the same investigation into `gcb-python-
+orchestrator` (per the Architect's own next-step direction) surfaced a
+much tighter match:
+
+- `gcb-photonic-qam-v2/intent.md`'s own "Software Tiling Constraint"
+  derives `K <= 16` from a **balanced-homodyne SNR/phase-noise budget**
+  (+3 dB per doubling of `K`, `~30 dB` integrated-MZI budget) for **the
+  exact same multiply mechanism this repo's own "Role" describes** -
+  its own text: *"square-law photodiodes extract the cross-term
+  |A+B|^2-|A-B|^2 = 4Re(AB*). This is the physical basis of the MAC."*
+  Word-for-word the same physics as `gcb-pic-core`'s own `balanced_homodyne_cell()`.
+- `gcb-wdm-transceiver/rtl/gcb_dwdm_pkg.sv` has `K_MAX = 16`, its own
+  comment: *"a HARD cross-architecture invariant... reduction depth
+  (fixed at 16)."* Real, synthesizable RTL, not a narrative claim.
+- Both `gcb-pic-core` and `gcb-analog-rx` (a different repo, same
+  program) literally self-describe as **"the GCB Photonic QAM
+  Accelerator"** in their own README headers - a real, named second
+  program, not an amorphous "Track B."
+
+`gcb-spec`'s `L_CONTRACT=16` (Phase-II integrated array) is a REAL
+number for a REAL, different mechanism (plain power-summing, no A+B/A-B
+differential detection anywhere in its derivation) belonging to a
+DIFFERENT program ("GCB/ODIN_Bridge," the Vortex-TCU-fed FPGA pilot).
+Both `16`s are real; they are not the same constraint, and `gcb-pic-core`
+belongs with the second one, evidenced far more precisely (identical
+multiply mechanism, not just a matching digit).
+
+**Practical consequence for `mmi_power_tree.py`**: the component itself
+(a single-wavelength power-summing binary tree) remains real, correct,
+verified work - and is structurally still the right combining primitive.
+What was wrong was the CLAIM that building it closes `gcb-pic-core`'s own
+near-term goal. The real topology this repo's own architecture needs,
+per this corrected grounding: **16 separate `balanced_homodyne_cell()`
+multiply units** (each its own small A_j/B_j pair), then **TWO**
+`mmi_power_tree(16)`-style power-summing trees (one summing all 16 "+"
+outputs, one summing all 16 "-" outputs) feeding a **final shared**
+photodetector pair - not 16 raw channels feeding one multiply cell
+directly, which is what `k16_tile.py` built. Not yet built - tracked as
+new follow-on work in this ticket's continuation.
+
+**Epistemic status**: this correction itself is **PROVEN - DIRECT
+EVIDENCE** (both source documents read in full, the matching mechanism
+confirmed word-for-word, the RTL constant read directly). The topology
+hypothesis above is **UNPROVEN** - a strong, specific, evidence-backed
+lead, not yet built or verified.

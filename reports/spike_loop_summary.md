@@ -1344,3 +1344,63 @@ turn - this was a documentation/spec cross-check only.
 **Ticket status changes:** none flipped - `TKT-031` stays `done|blue`
 (flagged in place), `TKT-035` stays `open|pending` (`gcb-python-
 orchestrator` is now the one remaining unchecked item).
+
+---
+
+## Open-ended continuation — 2026-09-12 (confirm gcb-python-orchestrator; TKT-034 resolved; self-correction of same-day overreach)
+
+**Context:** directed to continue open-ended, not stopping on my own
+judgment. Started with the one remaining TKT-035 item
+(`gcb-python-orchestrator` vs. Track A), then followed the evidence
+where it actually led - including back into my own immediately-prior
+conclusion.
+
+**What was done:**
+1. Read `gcb-python-orchestrator/scheduler.py`'s own comment: it tiles
+   contractions at `K <= 16`, citing `gcb-photonic-qam-v2/intent.md`'s
+   "Software Tiling Constraint" - NOT `gcb-spec`.
+2. Read that constraint directly: derived from a balanced-homodyne
+   SNR/phase-noise budget, for the SAME A+B/A-B multiply mechanism
+   `gcb-pic-core`'s own `balanced_homodyne_cell()` implements -
+   `intent.md`'s own words: "square-law photodiodes extract... 4Re(AB*),
+   the physical basis of the MAC." Word-for-word match, not a guess.
+3. Read `gcb-wdm-transceiver/rtl/gcb_dwdm_pkg.sv`: `K_MAX = 16`, real
+   synthesizable RTL, commented "a HARD cross-architecture invariant."
+4. Confirmed `packer.py` (the compiler's INT4 byte-packer) explicitly
+   copies `gcb_dwdm_pkg::pack_int4`'s bit convention "not reinvented" -
+   `gcb-python-orchestrator` is this program's own compiler.
+5. Noticed both `gcb-pic-core` and `gcb-analog-rx` self-describe, in
+   their own README headers, as **"the GCB Photonic QAM Accelerator"** -
+   a real, named second program I had not registered on an earlier pass.
+6. **Caught and corrected my own immediately-prior conclusion**: the
+   previous turn matched `gcb-pic-core`'s K=16 to `gcb-spec`'s
+   `L_CONTRACT=16` (Track A) on numeric coincidence, without checking
+   this far more specific, mechanism-matching source. Corrected on
+   `TKT-030` (a new "Correction of the above" section, not a silent
+   edit), resolved `TKT-034` with the real answer, and rewrote `TKT-035`
+   around a simpler, final "two named programs" structure. Simplified
+   the `TKT-031`/`ADR-005` flag from the prior entry: it was never a
+   real conflict needing reconciliation - `gcb-analog-rx` belongs to the
+   QAM Accelerator program, `ADR-005` to the other one; they were never
+   competing.
+
+**Epistemic status: PROVEN — DIRECT EVIDENCE** for every claim (RTL
+comments, `intent.md` text, README self-descriptions, all read directly,
+word-for-word mechanism matches confirmed, not inferred). The new
+topology hypothesis (16 multiply cells + 2 summing trees + 1 shared PD
+pair) remains **UNPROVEN** - a strong, specific, evidence-backed lead,
+not yet built.
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-030` correction-of-
+correction, `TKT-034` resolved (`open|pending` -> `done|blue`), `TKT-035`
+rewritten around the two-program structure, `TKT-031` simplified,
+`README.md` updated throughout, this entry appended. No code changes
+this turn - continuing into the real topology build next.
+
+**Ticket status changes:** `TKT-034`: `open|pending` -> `done|blue`.
+`TKT-030`, `TKT-031`, `TKT-035`: status unchanged, content corrected.
+
+**Next candidate:** build the real topology (16 `balanced_homodyne_cell()`
+multiply units -> two `mmi_power_tree`-style summing trees -> one shared
+PD pair) in `gcb-pic-core`, verified the same way as every other layout
+this session - continuing now, per the open-ended directive.
