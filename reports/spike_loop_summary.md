@@ -3450,3 +3450,76 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - Research Operations: roles, triage, and the first real ticket it produced
+
+**What the Architect asked for:** a research-scientist-organization
+approach to the isolated problem repos (`gcb-lumen`/`gcb-lambda`/
+`gcb-kelvin`) - named roles so the work can be spread across more than
+one AI or person, in more than one location, with different
+objectives; an easy way for AI to "harvest" finished research and
+decide whether it needs more research or a new ticket, with each
+prioritized; and a standing process for adding more prompts to the
+wiki as new blockers surface.
+
+**Built on what already exists, not invented from scratch**: the role
+table format is borrowed directly from `gcb-spec/ai-agents/README.md`'s
+existing triad ("owns / must not touch"); the discipline underneath it
+is the same Orange-Team "Physical Reality First" doctrine (`TKT-000`)
+already governing the three problem repos.
+
+**`gcb-wiki/appendices/research-operations.md` (new)**: four roles -
+**Principal Investigator** (the Architect; the only one who ratifies
+or closes anything), **Research Scientist** (any AI or person, one
+problem repo each), **External Reviewer** (checks a Research
+Scientist's claims against the real repo before they're trusted - the
+role this session already played informally when checking the
+external AI's SAX suggestion), **Triage Coordinator** (harvests
+findings, classifies them, assigns priority). A P0-P3 priority scale
+for open questions, deliberately kept separate from `PBG` telemetry
+(which grades completed work's quality, not open questions' urgency).
+A concrete harvest -> triage -> promotion workflow, and the standing
+process for adding a new problem's section to
+`orange-team-collaborator.md` as new blockers surface.
+
+**Then the workflow was actually run, not just written down** - the
+session's own now-established "prove it, don't just describe it"
+pattern:
+
+- `gcb-workspaces/reports/research_triage_log.md` (new, append-only):
+  Pass 1 harvests `gcb-lumen`'s 2026-09-13 SAX finding and splits it
+  into three separately-classified threads - the real loss number
+  (needs more research, P1), the SAX-framework question (resolved),
+  and the unexplained file-name reference (ticket-worthy, P2).
+- `gcb-workspaces/backlog/GCB-042` (new): the ticket that pass drafted
+  - the external AI's unexplained reference to two real, private-repo
+  file names, recorded as a process/trust observation with both honest
+  explanations stated and neither resolved (no PBG grade, filed for
+  disposition, same category as `GCB-041`). Both of `README.md`'s
+  running ticket indexes updated to match.
+- `gcb-lumen/EXTERNAL_AI_BRIEFING.md` and `ai-agents/ORANGE_TEAM.md`:
+  the "needs more research" thread's concrete output - a refined next
+  prompt that states the SAX rollup as already-solved (so a future
+  consultation doesn't waste effort re-deriving it) and narrows the
+  ask to the one real remaining gap, with an explicit instruction not
+  to repeat the prior round's unsourced-number mistake.
+
+**Verified via:** the link-audit script (125 links, all resolving),
+`npm run build`, redeployed via `Deploy-CoyoteWiki.ps1`, re-verified
+over real HTTP that the new page and its role table/priority scale are
+live.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** for everything built
+and the triage pass's own real outputs (a real log entry, a real
+ticket, a real updated prompt). The underlying research question
+`GCB-042` and the triage pass both trace back to - `gcb-lumen`'s real
+per-junction loss number - remains explicitly **UNPROVEN**, unchanged
+by any of this process work.
+
+**Commits:** `gcb-wiki@5c1e9b5`, `gcb-workspaces@702481b`,
+`gcb-lumen@267afeb` - all pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** `GCB-042` filed, `open | pending`.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
