@@ -2536,3 +2536,54 @@ its own flagged follow-up within the same tick it was raised.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (GCB-041: a bigger finding from the same cross-check, correctly NOT implemented)
+
+**Context:** extended `GCB-040`'s spec-signal-vs-RTL cross-check
+systematically - every `signal:`-named field in `registers.yaml`
+checked against the whole `gcb-rtl/rtl/*.sv` tree, not just the two
+`IRQ_CTRL` bits already fixed. 25 signals came back "missing" on the
+first pass.
+
+**Investigated carefully before concluding anything, given the stakes.**
+Most of those 25 (`r_dma_*`) turned out to be a false alarm: checked
+`greencoyote_streaming_dma.sv` directly and found it implements its own
+local register decoder under shorter local names (`r_en`, `r_ring_src`,
+etc.) - a naming-convention difference, not a gap, confirmed by reading
+the real write-decode block before concluding. The remaining cluster
+(`r_ss_*`, `SS_CAL_IDX`/`SS_CAL_DATA`/`SS_RAMP_TIMING`) was real:
+confirmed present in both `registers.yaml` and the generated package,
+confirmed absent from `greencoyote_pilot_regs.sv` entirely, and -
+deeper still - confirmed `greencoyote_ss_tdc.sv`/`greencoyote_ss_calib.sv`
+are never instantiated anywhere in `gcb-rtl` at all, `top` included.
+
+**Correctly stopped short of implementing anything.** Unlike `GCB-040`
+(two bits, zero new clock domains, safe to wire and verify in one
+pass), this touches the single-slope readout - the subsystem
+`gcb-spec/ai-agents/README.md` itself names as the most rigorously
+gated, `ADR-005 CONDITIONAL GO` part of the entire program. Checked
+whether it's even a real defect first: `greencoyote_adc_if`/
+`greencoyote_dac_if` (the currently-active Phase I bench path) genuinely
+ARE integrated, while `ss_tdc`/`ss_calib` are documented (pre-existing
+text) as the future "Phase II (silicon-target)" backend - not
+necessarily an oversight. The one unambiguous error found -
+`gcb-wiki/16` asserting as present fact that a coefficient BRAM exists
+in `greencoyote_pilot_regs.sv` that does not exist anywhere - was
+corrected directly. The substantive question (when/whether to integrate
+a new clock domain into the gated subsystem) was filed as `GCB-041` for
+the Architect, not decided or implemented.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** for every factual
+claim (grep-confirmed absence across the whole RTL tree, not one file);
+**explicitly no claim and no action** on the integration-timing
+question itself.
+
+**Commits:** `gcb-wiki@7555a92` (pushed, verified);
+`gcb-workspaces@67a3c92` (pushed, verified); this entry.
+
+**Ticket status changes:** `GCB-041` created, `open | pending` -
+correctly left open, not forced to a resolution it doesn't belong to.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
