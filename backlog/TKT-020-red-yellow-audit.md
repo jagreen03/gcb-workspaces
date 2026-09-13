@@ -471,6 +471,52 @@ Epic demo is scheduled.
    real physical power figure (the reported 87.45 W is a FakeRAM
    placeholder artifact, not a silicon or foundry-macro claim).
 
+   **B-operand scale-up attempted same day - a real, concrete negative
+   result, reported honestly, not a mechanism failure.** Built the
+   analogous design (`gcb_tensor_b_operand_pd`) for the much larger B
+   operand (`SUBTILES=64` instead of 1, overridden via
+   `VERILOG_TOP_PARAMS` on the same staged RTL - `MACRO_DEPTH=16384` per
+   lane, the full array's larger half). First found and fixed a real
+   issue before attempting P&R at all: the naive FakeRAM macro generation
+   (no column-mux) produced a pathological `8.36 x 5308.8` um macro
+   (~635:1 aspect ratio, wildly outside the macro placer's own `-min_ar
+   0.33` bound) - regenerated with `column_mux_factor=16` (the real,
+   standard technique for exactly this) to get a sane `132.81 x 331.8` um
+   shape before proceeding.
+
+   **Synthesis and floorplan (including real 32-macro placement + PDN)
+   both succeeded** - design area 1,410,327-1,418,185 um^2 (confirmed
+   directly, not estimated: ~62x the A-operand's, matching the expected
+   64x `SUBTILES` scale-up closely), floorplan peak memory only 1.79 GB.
+   **Placement then exceeded this host's resource ceiling**: the
+   timing/routability-driven global placement pass (required before CTS)
+   grew memory enough that **the session's own harness killed the
+   process to protect the host** - not a hang, not a silent failure;
+   memory returned to baseline (602 MB) immediately after, confirming a
+   real spike, not a stuck process. No further attempt was made this
+   pass - forcing a retry with even tighter settings without a clear
+   resource-budget increase would be hammering against a now-measured
+   real constraint, not informative engineering.
+
+   **What this proves**: the A-operand slice is genuinely tractable on
+   this host (already demonstrated, end to end); the B-operand slice
+   (and by extension the full 4 MiB array) is **not**, on this host, at
+   these settings, right now - a real, informative scale boundary, not
+   a defect in the approach. Candidate follow-ons for whoever picks this
+   up next (not attempted, not recommended over each other): a lower
+   `CORE_UTILIZATION`/larger die to ease placement congestion; disabling
+   `-routability_driven`/`-timing_driven` for a purely structural first
+   pass; splitting the 64 `SUBTILES` across multiple smaller macro
+   instances instead of one `16384`-deep macro; or simply a host with
+   more RAM.
+
+   **Epistemic status: FAILED - RESOURCE CEILING, TESTED CONDITIONS**
+   (a measured, real limit on this specific host, not an untested
+   unknown) for the B-operand slice's placement stage. **PROVEN** for its
+   synthesis and floorplan stages specifically (both completed, real
+   numbers obtained). Does not change the A-operand result above in any
+   way.
+
 ---
 ## Execution Log
 

@@ -1817,3 +1817,52 @@ half remains genuinely open).
 **Next candidate:** continuing open-ended per the Architect's own
 directive - the full B-operand OpenROAD array, or the next fresh
 backlog item.
+
+---
+
+## Open-ended continuation — 2026-09-13 (B-operand scale-up: a real, informative negative result)
+
+**What was done:** followed up the A-operand OpenROAD milestone with a
+scale-up attempt at the much larger B operand (`SUBTILES=64` vs 1,
+`MACRO_DEPTH=16384` per lane - the full 4 MiB array's larger half),
+given the real resource risk (the A-operand run already peaked near
+this host's documented ceiling).
+
+1. Generated the B-operand FakeRAM macro naively first - found a real,
+   reportable issue before attempting P&R on it: `8.36 x 5308.8` um,
+   a ~635:1 aspect ratio, wildly outside the macro placer's own `-min_ar
+   0.33` bound. Regenerated with `column_mux_factor=16` (the standard
+   real technique for a deep/narrow memory) - `132.81 x 331.8` um, sane.
+2. Staged the design (reusing the same real `gcb_tensor_operand_sram.v`,
+   `SUBTILES` overridden via `VERILOG_TOP_PARAMS`, matching the precedent
+   `gcb_max_reduce`'s own config already set).
+3. Ran synthesis alone first (quick, low-risk): succeeded, area
+   1,410,327 um^2 - confirmed directly, matching the expected ~62x
+   scale-up from the A-operand's 22,675 um^2.
+4. Ran floorplan alone next (including real 32-macro placement + PDN):
+   succeeded, peak memory only 1.79 GB - better than feared.
+5. Ran placement/CTS: **killed by the session's own harness** partway
+   through the timing/routability-driven global placement pass, to
+   protect the host from running out of memory. Checked immediately
+   after: memory back to baseline (602 MB), no zombie processes - a
+   real spike that the harness correctly caught, not a hang or silent
+   failure.
+
+**Epistemic status: FAILED — RESOURCE CEILING, TESTED CONDITIONS** (a
+measured, real limit on this specific host, not an untested unknown) for
+placement. **PROVEN** for synthesis and floorplan specifically (both
+completed, real numbers obtained).
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-020` B-operand
+disposition appended (alongside the A-operand success, not replacing
+it), `README.md`, this entry. No WSL/ORFS-side commit needed (design
+files live in the same WSL-local location as the A-operand design, per
+that same established precedent).
+
+**Ticket status changes:** none flipped - `TKT-020` remains `open|pending`.
+
+**Next candidate:** the candidate follow-ons noted in `TKT-020` itself
+(lower utilization, disable routability-driven placement, split into
+smaller macros, or a host with more RAM) if the B-operand scale is
+pursued further; otherwise continuing the broader open-ended backlog
+sweep per the Architect's own directive.
