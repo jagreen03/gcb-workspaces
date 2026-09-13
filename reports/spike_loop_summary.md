@@ -3242,3 +3242,71 @@ item.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+## Direct Architect report, 2026-09-13 - self-contained AI briefings for the three new repos
+
+**What the Architect asked for:** "get this up to speed so that I can
+run to other AI chats and explore the issues blocking GCB" - a way to
+copy-paste each of `gcb-lumen`/`gcb-lambda`/`gcb-kelvin`'s problem into
+a completely separate AI chat session (ChatGPT, Gemini, a plain web
+chat) that has **no filesystem or repo access at all**.
+
+**Why `ai-agents/ORANGE_TEAM.md` alone wasn't enough for this:** that
+file (added earlier this session) assumes the session reading it can
+fetch real files by path - `gcb-pic-core/mmi_power_tree.py`,
+`gcb-spec/bench_emulation_parameters.md §2.1-2.2`, etc. A fresh
+ChatGPT/Gemini tab has no way to do that; pasting the prompt alone
+would leave it reasoning about file paths it can't open.
+
+**Added `EXTERNAL_AI_BRIEFING.md` to each of the three repos** - fully
+self-contained, every fact/number/code excerpt inlined directly rather
+than referenced:
+
+- **`gcb-lumen`**: the complete real `mmi_power_tree.py` and
+  `mode_solve_strip.py` source (not excerpts - the full files, the
+  `route()` helper included so the code is actually complete), the
+  real `n_eff = 2.684623` result, the `~0.1 dB/stage` literature
+  estimate already baked into the existing model, the FDTD/EME
+  toolchain survey findings (the `meep` PyPI name collision, `tidy3d`'s
+  cloud-account requirement), and the real 4:1-vs-8:1 decision
+  language waiting on this number.
+- **`gcb-lambda`**: both real Phase-I bench laser designs quoted in
+  full (the N=4-8-laser combiner-tree bench vs. the single-laser+VOA
+  readout bench, including `TKT-028`'s locked VOA-over-MZ rationale),
+  the working two-apparatus hypothesis, and the confirmed-empty
+  `optical_geometry_spec.md` wavelength/laser search.
+- **`gcb-kelvin`**: the full analog operating point, the 53 µV number
+  and its ±16% band, and every toolchain-limit finding already on file
+  (ngspice OSDI `.noise` returning zero on ASAP7, the ~50x `trnoise`
+  reproducibility spread, the no-root Xyce/Trilinos build failure) -
+  so an external session doesn't waste effort re-suggesting something
+  this program already tried and ruled out.
+
+Each briefing ends with the actual open question stated plainly, and
+the house "measure first, tag every number" discipline restated in
+one line so an external AI session without this program's full context
+still gets the right framing.
+
+Each repo's `README.md` updated with a one-line pointer to the new
+file at the very top, so it's the first thing visible on the repo's
+GitHub page.
+
+**Verified via the GitHub API after each push** that the files
+actually landed (not just that `git push` reported success) - same
+discipline as every other deployment-verification step this session.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.** Every fact inlined
+into the three briefings was copied verbatim or near-verbatim from the
+same real files already cited in each repo's own `ai-agents/ORANGE_TEAM.md`
+- no new claims introduced, only re-packaged for a context-less
+audience.
+
+**Commits:** `gcb-lumen@1e56b4c`/`@2a76cd5`,
+`gcb-lambda@0865a45`/`@93e3e12`, `gcb-kelvin@c7c4759`/`@f09b37a` - all
+pushed, verified via API.
+
+**Ticket status changes:** none - direct deliverable, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
