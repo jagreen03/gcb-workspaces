@@ -2392,3 +2392,47 @@ trusted).
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (extending the A-operand reconciliation to B-operand - also clean)
+
+**Context:** directly following up on the A-operand area/cell-count
+reconciliation requested by the Architect this tick - applied the same
+rigor to `TKT-020`'s B-operand negative-result figures ("design area
+1,410,327-1,418,185 um^2... ~62x the A-operand's... floorplan peak
+memory 1.79 GB"), rather than assuming the A-operand reconciliation
+meant the whole ticket was trustworthy.
+
+**What was checked:** `flow/logs/asap7/gcb_tensor_b_operand_pd/base/`
+holds real per-stage metrics JSON (`1_synth.json`,
+`2_1_floorplan.json`, etc.) - confirmed B-operand's synthesis-stage
+`instance__area` = **1,410,330 um^2**, floorplan-stage = 1,410,420
+um^2, and a third, independent Yosys-native figure
+(`synth_stat.txt`'s "Chip area") = 1,409,167.7 um^2 - all three
+clustering tightly around the cited range, not contradicting it. The
+"~62x the A-operand's" claim checks out precisely: A-operand's own
+synthesis-stage `instance__area` (same metric, same stage, apples to
+apples) is 22,675.4 um^2; 1,410,330 / 22,675.4 = **62.20x**, matching
+"~62x" almost exactly. Also confirmed directly: no `.json` exists past
+`3_2_place_iop` (the log file for `3_3_place_gp` exists with no
+matching `.json` - consistent with the stage starting, then being
+killed mid-run before it could write its summary), and no final DEF/GDS
+exists for this design at all - matching the "placement OOM-killed,
+never reached CTS" account exactly.
+
+**Result: no defect found, same as the register-map check.** `TKT-020`'s
+B-operand record holds up under independent, stage-by-stage
+re-verification against real files, not just the A-operand side already
+checked this tick.
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (every figure
+re-derived from real per-stage JSON/log files, not read from the
+ticket's own prose and trusted).
+
+**Commits:** none - nothing needed changing; this entry plus the
+conversational reconciliation are the record.
+
+**Ticket status changes:** none.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
