@@ -2175,3 +2175,42 @@ not a ticket-level change; all six stay `open | pending`, correctly.
 **Next candidate:** continuing open-ended per the Architect's own
 directive, staying mindful of the host's memory ceiling before any more
 large EDA runs.
+
+## Open-ended continuation — 2026-09-13 (gcb-wiki/16's own gap #1 sat stale for a full day)
+
+**Context:** swept `gcb-rtl`/`gcb-host`/`gcb-papers` READMEs (all
+accurate, no action needed) then checked `gcb-wiki/16`'s own "Known
+documentation gaps (recorded, not filled)" list directly rather than
+trusting it - gap #1 claimed `gcb-spec/task3_physical_bom.md` "does not
+exist anywhere on disk."
+
+**What was found:** the file exists (`find` confirmed it directly).
+`git log` on both files pinned the exact timeline: the file was purged
+2026-09-03, `gcb-wiki/16` was created 2026-09-12 10:32 (correctly
+recording the gap as it stood then), and the file was re-added at
+10:42 - **ten minutes later, same session** - with its own header
+explicitly stating it "closes the citation gap flagged in
+`gcb-wiki/16`... item 1." Nobody ever went back and told `gcb-wiki/16`
+its own gap was closed; it sat stale for a full day. Worse: the file
+contains real `[CANDIDATE — parametric fit]` PD/TIA/ADC part numbers
+(InGaAs photodiode, `AD8015`-class TIA per `TKT-026`, TI
+`ADS786x`-class SAR ADC per `TKT-027`) that Part 12's own entry in the
+same document also claimed didn't exist ("NO vendor part number
+anywhere") - a second, larger staleness than just the file's existence.
+
+**What was done:** rewrote Part 12's entry to reflect the real
+candidate BOM (still `CANDIDATE`-tier, not vendor-quoted/purchased/
+bench-populated/measured - no overclaim in the other direction either);
+marked gap #1 resolved (struck through, not deleted).
+
+**Epistemic status: PROVEN — DIRECT VERIFICATION** (`find` confirmed
+the file exists; `git log` timestamps pinned the exact same-day
+timeline; the BOM file's own content read in full before describing it).
+
+**Commits:** `gcb-wiki@fe246e0` (pushed, verified); this entry.
+
+**Ticket status changes:** none - documentation accuracy only.
+
+**Next candidate:** continuing open-ended per the Architect's own
+directive, staying mindful of the host's memory ceiling before any more
+large EDA runs.
