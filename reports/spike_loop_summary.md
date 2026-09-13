@@ -1696,3 +1696,74 @@ claim).
 **Commits:** `gcb-workspaces` (this commit) - `TKT-035` correction
 section, this entry. Redundant `~/tools/OpenROAD-flow-scripts` clone
 removed (WSL-local state, not a git commit).
+
+---
+
+## Open-ended continuation — 2026-09-13 (real OpenROAD P&R: first data point for the tensor SRAM array, TKT-020 Y1 item 4)
+
+**Context:** continuing directly from the prior correction (OpenROAD is
+real and working, not unavailable). With the toolchain confirmed, pursued
+`TKT-020`'s own still-open "heavier OpenROAD place-and-route question"
+(Y1 item 4: "OpenROAD on the full 4 MiB array is the first real
+place-and-route data point" - never attempted, `TKT-029` only closed the
+Yosys-elaboration half of this).
+
+**What was done:**
+1. Identified the real blocker: `gcb_sram_sp1w1r` is a behavioral
+   `mem[]` model - Yosys would expand a 4 MiB array into literal
+   flip-flops, infeasible for P&R. Scoped down to a bounded, honest first
+   step: the A-operand slice only (`LANES=16 SUBTILES=1 DEPTH_K=256
+   DW=64`, the real default geometry), not the much larger B-operand or
+   the full broadcast-fabric integration.
+2. Generated a real ASAP7 FakeRAM2.0 dual-port macro (`gcb_dpsram_256x64`)
+   matching the exact shape, using the canonical ASAP7 physical
+   parameters this ORFS checkout already ships
+   (`flow/platforms/asap7/fakeram.cfg`) - not guessed values.
+3. Wrote a P&R-only substitute wrapper (same port interface as the real
+   `gcb_sram_sp1w1r`, the real macro inside) - the real simulation RTL in
+   `gcb-wdm-transceiver` untouched. Staged the real `gcb_tensor_operand_sram.sv`
+   via `sv2v`, unmodified otherwise.
+4. Built a new ORFS design (`gcb_tensor_a_operand_pd`) and ran the full
+   flow. Hit and fixed two real, scoped toolchain issues along the way
+   (not silently worked around): `kepler-formal` (an optional internal
+   LEC helper) is linked against a `libpython3.12` that no longer exists
+   on this host (genuine environment drift since `TKT-021`'s own build) -
+   disabled via `LEC_CHECK=0` for this design only; the GDS-merge step's
+   `GDS_ALLOW_EMPTY` default didn't match the custom macro's name -
+   extended (not replaced) for this design only.
+5. **Full flow completed end to end**: synth -> floorplan -> real macro
+   placement (32 macros, 16 lanes x 2 double-buffered banks - confirmed
+   by the tool's own count) -> CTS -> route -> finish/GDS. ~34 min,
+   peak memory 7.3 GB - a real, live test of `TKT-021`'s own swap
+   mitigation against the host's documented 8GB/4-vCPU ceiling, which
+   held.
+6. Pulled and verified the real final numbers directly from the tool's
+   own reports, not assumed: 0 DRC violations, 23,350.9 um^2, 13,734
+   std cells + 32 macros, a real 35MB GDS. WNS = -706.22 ps against a
+   deliberately simple 2ns test constraint (not met - an honest,
+   untuned first-pass result). Checked the power figure's unit directly
+   (confirmed Watts) and found the 87.45W total is 98.5% a FakeRAM
+   placeholder macro-leakage artifact, not a real physical claim -
+   flagged explicitly rather than reported at face value.
+
+**Epistemic status: PROVEN — DIGITAL PLACE-AND-ROUTE, TESTED CONDITIONS**
+for the A-operand slice's structural result (synthesizes, places,
+routes, 0 DRC, real GDS). **FAILED** (measured, not untested) for timing
+closure at the 2ns test constraint. **UNPROVEN**: the full B-operand/
+broadcast-fabric array at real scale; any tuned timing attempt; any real
+physical power figure.
+
+**Commits:** `gcb-workspaces` (this commit) - `TKT-020` Y1 item 4
+disposition update, `README.md`, this entry. No commit in any ORFS/WSL
+location - the design files live in `~/eda/OpenROAD-flow-scripts` (WSL-
+local state, following the same precedent `gcb_max_reduce`'s own config
+already set - not duplicated into a git repo).
+
+**Ticket status changes:** none flipped - `TKT-020` remains `open|pending`
+(Y1 item 4 is now partially closed - a real slice proven, the full array
+still open; R3 and Y2 remainder also still open, unrelated to this work).
+
+**Next candidate:** the full B-operand array (`MACRO_DEPTH=16384` per
+lane) is the natural next scale-up, or a tuned timing-closure attempt on
+the already-working A-operand design; alternatively, continuing the
+broader open-ended backlog sweep per the Architect's own directive.

@@ -330,6 +330,87 @@ Epic demo is scheduled.
    check) - tracked as `TKT-029` (new), since none of this had its own
    ticket before now.
 
+   **Disposition update (session `01Rpa9VJGe7xypzp5FkukSco`, 2026-09-13) -
+   the "separate, heavier OpenROAD place-and-route question" `TKT-029`
+   explicitly left open: FIRST REAL DATA POINT OBTAINED, for a bounded,
+   honestly-scoped slice, not the full array.**
+
+   Built a real ASAP7 ORFS design (`eda/OpenROAD-flow-scripts/flow/designs/
+   asap7/gcb_tensor_a_operand_pd/`) for `gcb_tensor_operand_sram` at its
+   real default A-operand geometry (`LANES=16 SUBTILES=1 DEPTH_K=256
+   DW=64`) - **the A operand only, not the much larger B operand
+   (`MACRO_DEPTH=16384`) or the full `gcb_tensor_memory_engine` +
+   broadcast-fabric integration**, following this program's own
+   established "prove the mechanism at a smaller scale first" discipline.
+
+   `gcb_sram_sp1w1r` (the real, unmodified, behavioral `mem[]` simulation
+   RTL - nothing in `gcb-wdm-transceiver` touched) cannot be synthesized
+   directly at this scale (Yosys would expand a 4 MiB array into literal
+   flip-flops). Generated a real ASAP7 FakeRAM2.0 dual-port macro
+   (`gcb_dpsram_256x64` - width=64, depth=256, matching the A-operand
+   shape exactly) using the canonical, already-working ASAP7 physical
+   parameters this ORFS checkout ships (`flow/platforms/asap7/fakeram.cfg`),
+   and wrote a P&R-only substitute wrapper (same port interface, real
+   dual-port macro inside) used ONLY in this flow - a standard ORFS
+   pattern (`riscv32i-mock-sram` uses the identical technique).
+
+   **Result: place-and-route genuinely succeeded.** Full flow (synth ->
+   floorplan -> real macro placement, 32 macros [16 lanes x 2 double-
+   buffered banks, confirmed by the tool's own macro count, not assumed]
+   -> global/detailed placement -> CTS -> global/detailed route ->
+   finish/GDS) completed end to end, ~34 min wall time, peak memory
+   7.3 GB (survived the host's documented 8 GB/4-vCPU ceiling via
+   `TKT-021`'s own swap configuration - a real, live test of that
+   mitigation, which held). **0 detailed-routing DRC violations**
+   (`5_route_drc.rpt` empty). Real final metrics (`6_report.json`):
+   design area 23,350.9 um^2, 13,734 standard cells + 32 real macros.
+   Total power reports 87.4542 **W** (unit confirmed directly from the
+   report table, not guessed) - but **this is not a meaningful physical
+   power claim**: the `Macro` row alone is 86.1 W, 98.5% of the total,
+   and is FakeRAM2.0's own generic/placeholder leakage characterization
+   for a blackbox stand-in, not any real ASAP7 SRAM compiler's figure -
+   flagged explicitly so this number is never later mistaken for a real
+   power result. A real 35 MB `6_final.gds` was produced.
+
+   **Timing: NOT met, honestly reported, not the mechanism's fault.**
+   `WNS = -706.22 ps` against a deliberately simple 2 ns (500 MHz) test
+   constraint - not the real fabric clock, and no floorplan/density
+   tuning was attempted, same "deliberately-ugly recipe, a bad number is
+   a positive Orange result" philosophy `GCB-032` used for `gcb_max_reduce`.
+   This says the first untuned attempt doesn't close timing at an
+   arbitrary target, not that the design cannot ever close.
+
+   **Two real, fixable toolchain issues hit and resolved along the way**
+   (both scoped to this one design's own `config.mk`, nothing touched
+   globally): (1) the checked-out `kepler-formal` binary (an optional
+   internal logical-equivalence-check helper invoked during CTS) is
+   linked against `libpython3.12`, which no longer exists on this host
+   (system `python3` is now 3.14.4 - genuine environment drift since
+   `TKT-021`'s own build, exactly the fragility risk that ticket itself
+   flagged) - worked around by setting `LEC_CHECK=0` for this design,
+   disabling an optional sanity check, not a core P&R step. (2) the final
+   GDS-merge step's `GDS_ALLOW_EMPTY` default (`fakeram.*`) did not match
+   the custom macro's name - extended (not replaced) to
+   `(fakeram|gcb_dpsram).*` for this design only.
+
+   **What this does NOT close**: the full 4 MiB array (B operand,
+   `MACRO_DEPTH=16384` per lane), the broadcast-fabric integration,
+   `NUM_CORES=256`, or any real timing closure - all genuinely separate,
+   larger, not-yet-attempted follow-on work. `Y1` item 4's own "never
+   synthesised at its real size" claim is now **partially closed**: a
+   real, representative slice of the array has a genuine first P&R data
+   point; the full array does not yet.
+
+   **Epistemic status: PROVEN - DIGITAL PLACE-AND-ROUTE, TESTED
+   CONDITIONS** for the A-operand slice's structural result (synthesizes,
+   places, routes, 0 DRC, real GDS) - a genuine OpenROAD/ASAP7 physical-
+   design data point, not a Yosys elaboration proxy. **FAILED** (not
+   UNPROVEN - measured, not merely untested) for timing closure at the
+   2 ns test constraint. **UNPROVEN**: the full B-operand/broadcast-
+   fabric array at real scale; any tuned timing-closure attempt; any
+   real physical power figure (the reported 87.45 W is a FakeRAM
+   placeholder artifact, not a silicon or foundry-macro claim).
+
 ---
 ## Execution Log
 
