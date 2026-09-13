@@ -109,3 +109,55 @@ and as Triage Coordinator in writing this entry. A genuine
 demonstration that "External Reviewer" isn't only useful against a
 different AI's output — re-checking one's own earlier conclusion
 caught a real error here.
+
+---
+
+## Pass 3 — 2026-09-13 — `gcb-kelvin`
+
+**Harvested:** a real new angle found by this session while directly
+working the repo, not brought back from elsewhere — checking whether
+a real WSL-based `ngspice`+OSDI+BSIM-CMG toolchain (per
+`gcb-spec/docs/spice_setup.md`) was reachable on this host, rather
+than assuming no simulator access existed beyond what the repo's own
+evidence docs already cited. It was reachable; used directly.
+
+**What happened:** `.noise`'s known failure against the real BSIM-CMG
+device was re-run and re-confirmed (exactly zero, 4 decades checked) —
+not assumed stale. A separate `.op`/`.ac` probe then found something
+not previously recorded anywhere: real small-signal parameters
+(`gm`/`gds`/`cgg`) extract cleanly from the same real device model even
+though internal noise-source synthesis (`.noise`) does not. This opens
+a real, previously-speculative angle in the repo's own briefing (a
+manual noise-injection model using the real device's own `gm`) from
+"maybe possible" to "confirmed buildable, not yet built."
+
+**Classification:**
+
+1. **The core comparator-noise question** — **still needs more
+   research**, unchanged. No comparator-circuit noise number was
+   computed; a single transistor's `gm` is not a noise result.
+   **Priority: P0 unchanged** — still the direct blocker on
+   `CONDITIONAL GO → GO`.
+2. **The manual noise-injection path itself** — **needs more
+   research**, newly scoped rather than purely speculative. Requires
+   real analog-IC noise-design judgment (node-by-node noise source
+   placement/correlation, chopper/1-over-f modeling, latch
+   regeneration noise) that this pass did not attempt — a circuit-
+   design task, not a scripting one. **Priority: P1** — a real,
+   untried alternative to waiting indefinitely on Spectre access, but
+   not yet proven to actually narrow the uncertainty band.
+
+Not ticket-worthy — no architecture decision or process question for
+the Architect here, just a research path to hand to whoever (AI or
+person) has real analog-IC noise-design expertise next.
+
+**Drafted:** `gcb-kelvin/FINDINGS-2026-09-13.md`; `ai-agents/ORANGE_TEAM.md`
+updated to V2 with this state; `EXTERNAL_AI_BRIEFING.md` updated so a
+future external consultation builds on this rather than re-deriving
+whether `.op`/`.ac` works on OSDI models (it does — confirmed).
+
+**Roles exercised this pass:** Research Scientist (ran the real
+toolchain checks directly) and Triage Coordinator (this entry). A
+reminder folded into the repo's own hard rules: "no access to tool X"
+should be checked directly each time a new session picks up a repo,
+not carried forward as an assumption from the repo's own prior text.
