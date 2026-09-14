@@ -3711,3 +3711,56 @@ pushed, verified `HEAD == origin/main`.
 item.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Open-ended loop tick, 2026-09-13 - the recommended FDTD fix was tried and failed; a real negative result, not hidden
+
+**Continued directly from the prior tick's own recommendation**
+(`gcb-lumen/FINDINGS-2026-09-13-fdtd.md`'s "add a normalization
+reference run" next step) - executed now rather than left for a later
+session, per the standing loop discipline of making real progress each
+tick rather than just re-describing open questions.
+
+**Built and ran the fix**: `fdtd/mmi_fdtd_v2.py` adds a separate,
+clean straight-waveguide reference run (no MMI junction, no reflection
+source of any kind) to normalize the input flux against, instead of
+measuring it in the same run as the junction.
+
+**It failed - reported honestly, not re-tried until a better number
+appeared or quietly dropped.** The non-convergence pattern barely
+changed: 4.36 dB (res=20) -> 10.94 dB (res=30, *worse* than the
+original 9.06 dB) -> 2.87 dB (res=40). This rules out reflection
+contamination of the input monitor as the dominant cause.
+
+**A new, sharper observation emerged from the negative result itself**:
+`P_in`, measured from the clean reference run with no junction
+present at all, varies 2.3x across resolution (5.71e-5 / 7.57e-5 /
+3.22e-5) - for a fixed physical source, a well-resolved simulation
+should give a stable answer. This points the diagnosis upstream of any
+monitor-placement question entirely, toward either the
+`EigenModeSource`'s own resolution-dependent power normalization, or
+(the current leading suspect) the field-decay-based stopping criterion
+causing different resolutions to integrate their flux DFTs over
+different total simulation times.
+
+**Debugging deliberately stopped here for this tick** - two real
+fixes have now been tried and ruled out in one day; stacking a third
+rushed guess would risk exactly the kind of unvalidated result this
+program's own discipline exists to prevent. `FINDINGS-2026-09-13-fdtd-v2.md`
+records the reasoning and the next concrete step (a fixed,
+resolution-independent run duration instead of the decay criterion) as
+the honest state to resume from.
+
+**Epistemic status: PROVEN — DIGITAL FDTD SIMULATION, TESTED
+CONDITIONS** for the negative result itself (genuinely reproduced: the
+fix was really tried, really failed, at real resolutions). **UNPROVEN**,
+explicitly and unchanged: any specific insertion-loss figure - none of
+the five numbers obtained across today's two attempts should be
+treated as the real answer.
+
+**Commits:** `gcb-lumen@c66c220`, `gcb-workspaces@78f30e0` - both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - a research finding, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop.
