@@ -3866,3 +3866,60 @@ item.
 
 **Next candidate:** await the resolution-100 background result, then
 continue the open-ended loop.
+
+## Task-notification tick, 2026-09-13 - gcb-lumen's research arc completes: a real, usable combiner-loss number
+
+**Woken by the background resolution-100 task completing.** Final
+result: IL = 1.96 dB, split exactly 0.5000:0.5000, completing a clean,
+consistently-decaying four-point sequence across this whole day's
+debugging arc: 2.87 -> 2.30 -> 2.07 -> 1.96 dB (resolutions 40/60/80/
+100), gap ratios 0.40 then 0.48 - close enough to trust a geometric
+extrapolation to a limit near ~1.87 dB.
+
+**Made the real judgment call to stop the resolution sweep here** -
+not because the sequence stopped converging, but because it had
+converged enough: the res=100 junction run alone took 1451s (~24 min),
+and further resolution increases would buy diminishing refinement at
+steeply rising cost. Treated as converged-enough for engineering use,
+stated explicitly as not mathematically exact.
+
+**Fed both real numbers - the measured 1.96 dB and the extrapolated
+1.87 dB, kept as separate, distinctly-tagged constants, never merged -
+into the real `sax_combiner_model.py` circuit rollup**: N=8 total tree
+loss ~5.88 dB (measured) / 5.61 dB (extrapolated); N=16 ~7.84 / 7.48 dB.
+Roughly 15-20x worse than this program's original `~0.1 dB/stage`
+literature guess, still better than the fully-incoherent `~10*log10(N)`
+pessimistic bound.
+
+**Promoted the result to `gcb-wiki/DECISION_LEDGER.md`** - both
+`optical.cell.combiner-loss` and `optical.cell.fanin` updated with the
+real evidence, kept `Open` rather than closed unilaterally: this is 2D
+effective-index FDTD, explicitly not the bench measurement the
+combiner-loss entry originally asked for, and the actual fan-in choice
+is a link-budget call for the Architect, not decided here.
+`orange-team-collaborator.md`'s status row updated to match.
+
+**The whole six-pass, single-day arc, summarized**: an external AI's
+SAX suggestion (checked, partly right); real FDTD access found where
+none was thought to exist; three separate wrong hypotheses tried and
+rigorously ruled out (same-run monitor contamination, a normalization
+reference run, run-duration variation) - each checked against real
+data before being acted on, not guessed at; the real cause (taper
+under-resolution) found; a clean convergence sweep completed. This is
+this session's own new Research Operations harvest/triage/promotion
+workflow running end to end, for the first time, on a genuinely deep
+research thread rather than a single finding.
+
+**Epistemic status: PROVEN — DIGITAL FDTD SIMULATION, TESTED
+CONDITIONS** for the final convergence result and every number derived
+from it (all real, reproduced, traceable runs). **Explicitly NOT
+bench-validated** - stated plainly everywhere this number appears, not
+blurred into a stronger claim than the evidence supports.
+
+**Commits:** `gcb-lumen@286c5e2`, `gcb-wiki@e4dfca7`,
+`gcb-workspaces@88a463a` - all pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - `DECISION_LEDGER.md` entries updated
+with evidence, kept `Open` for Architect review, not closed.
+
+**Next candidate:** continuing the open-ended loop.
