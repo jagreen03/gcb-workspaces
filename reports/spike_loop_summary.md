@@ -3764,3 +3764,53 @@ pushed, verified `HEAD == origin/main`.
 item.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Open-ended loop tick, 2026-09-13 - checked a hypothesis before building it; found the real cause instead
+
+**Continued directly from the prior tick's own recommended next step**
+(a fixed, resolution-independent `until=` replacing the field-decay
+stopping criterion, to fix a suspected DFT-integration-time bug in
+`gcb-lumen`'s FDTD simulation) - but before implementing it, checked
+its underlying premise against the real log output first.
+
+**The premise was false.** The actual "run finished at t=..." lines
+across every resolution already tried (20/30/40) are essentially
+identical (reference run ≈150.0, junction run ≈200.0 at all three) -
+run duration was never the variable. The prior tick's own "sharper
+diagnosis" was wrong, caught here before a tool call was spent
+building a fix for a problem that didn't exist.
+
+**Tried a fourth, higher resolution (60 px/µm) instead of a third
+guess.** Result: 2.30 dB, meaningfully close to resolution 40's
+2.87 dB (~20% apart) - a real convergence signal, unlike any pair
+seen before (which differed by factors of 2-4x). **The real, final
+explanation for today's whole non-convergence puzzle**: resolutions 20
+and 30 px/µm were simply too coarse to resolve the combiner's input/
+output tapers (narrowing to 0.5 µm over 10 µm - only ~10 pixels across
+the narrow end at res=20), whose diagonal edges get staircased onto
+the FDTD grid - a normal, well-understood FDTD sensitivity for
+sub-wavelength diagonal geometry, not a software bug, not a
+normalization error, not a timing artifact. All three of today's
+hypotheses were real, genuinely tried, and genuinely ruled out in
+sequence before the actual cause was found - not guessed at and left
+unverified.
+
+**A directional, explicitly-not-final read** now exists: the true
+per-junction insertion loss is likely around 2-2.5 dB, well above the
+literature's original ~0.1 dB/stage optimistic guess - stated as a
+signal to extrapolate from, not a number to act on, pending
+confirmation at higher resolution.
+
+**Epistemic status: PROVEN — DIGITAL FDTD SIMULATION, TESTED
+CONDITIONS** for the convergence-trend finding itself (a real,
+reproduced fourth data point). **UNPROVEN**, explicitly: any specific
+final insertion-loss figure - the directional ~2-2.5 dB read is
+labeled as extrapolation, not a result, in every file it appears.
+
+**Commits:** `gcb-lumen@e979885`, `gcb-workspaces@2f133a7` - both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - a research finding, not a backlog
+item.
+
+**Next candidate:** continuing the open-ended loop.
