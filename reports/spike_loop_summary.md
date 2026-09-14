@@ -3923,3 +3923,60 @@ blurred into a stronger claim than the evidence supports.
 with evidence, kept `Open` for Architect review, not closed.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Direct Architect report, 2026-09-13 - formalizing the ticket lifecycle & filtering doctrine (GCB-044)
+
+**What the Architect described**: a workflow pattern for filtering
+resolved prompts/tickets from active exploration - frontmatter status
+flips (`open|pending` → `done|blue`/`green`), PBG telemetry triage, and
+append-only corrections that never rewrite history, citing `TKT-033`
+and `GCB-040` as examples. **This matched real, already-consistent
+practice almost exactly** - every ticket cited was already following
+this shape - but the pattern itself had never been written down
+anywhere, unlike Orange-Team doctrine (`TKT-000`).
+
+**Formalized as `GCB-044`**, citing real, already-executed precedent
+rather than inventing rules: `GCB-040`/`GCB-041`/`GCB-043`'s status/
+grade patterns, `TKT-000`/`TKT-019.5`'s no-PBG-grade patterns, and
+four real append-only corrections found across this session's own
+work (`GCB-041`'s later paragraph, `gcb-spec/registers.yaml`'s
+`DEFECT-002`/`DEFECT-004` resolution, `gcb-wiki/16`'s Part 9
+correction, and `gcb-pic-core/mmi_power_tree.py`'s own inline `K=16`
+correction).
+
+**Self-caught two real errors while writing the doctrine about
+correctness discipline itself** - checked before publishing, not
+after: (1) an invalid YAML `telemetry_color` placeholder value that
+would have violated `09_pbg_telemetry_vector_space.md`'s own
+documented parsing contract; (2) a claimed rule ("graded only when
+`status: done`") directly contradicted by `TKT-019.5`'s real
+frontmatter (`done`, explicitly ungraded) - caught by checking that
+real file before trusting the claim, corrected to "graded only on a
+real measured/ratified outcome, independent of open/done status." A
+reversed-column table row was also caught in the same pass.
+
+**Also addressed the Architect's wiki-compaction question**: confirmed
+`gcb-wiki`'s existing SSOT discipline (appendices citing real
+`gcb-spec` sources, the 4-lens consolidation) already serves the
+stated goal; flagged a dedicated staleness audit as a real, separate
+follow-on rather than assuming one was needed right now; clarified
+`/compact` as a Claude Code CLI command for the Architect's own
+terminal session, not something this session can invoke on the
+repository.
+
+Cross-referenced from `gcb-wiki/09_pbg_telemetry_vector_space.md` §6
+and `gcb-workspaces/README.md`'s ticket index (both indexes updated).
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** for the doctrine
+document itself (every cited example independently re-verified against
+its real frontmatter before being used as precedent, not assumed from
+memory) — no PBG grade, per the doctrine's own stated rule, same
+category as `TKT-000`.
+
+**Commits:** `gcb-wiki@4bc2b48`, `gcb-workspaces@71ab2b6` — both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** `GCB-044` filed, `done` (no PBG grade).
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive.
