@@ -4127,3 +4127,44 @@ grade yet, priority explicitly low/deferred.
 check the core ticket backlog for the next real, medium-effort-
 appropriate item, or advance `comparator_noise.py`'s own remaining
 real question (γ) if nothing higher-priority surfaces.
+
+---
+
+## 2026-09-14 — TKT-019.19 cross-reference gap found and fixed
+
+Continuing the standing loop at medium effort, checked `TKT-019` epic's
+real current state rather than trust frontmatter status alone (per the
+loop's own standing instruction). Found `TKT-019.19` (`open`) recommends
+testing reset-drain candidate C's contingency under independent
+per-lane reset timing — but `TKT-019.20` (found real failures under
+write-during-skew-window) and `TKT-019.21` (hardened the RTL against
+them) had already done exactly that, both `closed`, neither
+cross-referenced back into `.19`.
+
+Re-ran the real cocotb regression (`sim/cocotb/test_wdm_deskew_cdc.py`,
+WSL/Verilator/cocotb19, `Makefile.wdm_deskew_cdc`) to confirm against
+current RTL rather than trust ticket text: `TESTS=10 PASS=10 FAIL=0`,
+including the exact staggered-reset sub-case exercising `.19`'s flagged
+contingency. Appended an Update section to `.19` (append-only, per
+`GCB-044`) — status stays `open | pending`, matching the
+`GCB-035`–`.038` "Update present, doesn't self-close" pattern, since
+`.20` itself disclaims full/exhaustive closure.
+
+**Self-caught error during editing**: the first `Edit` call truncated
+a sentence mid-word; caught by re-reading the file before committing,
+fixed in the same tick.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.** The `TESTS=10 PASS=10`
+result is a real, freshly re-run regression, not carried forward from
+the cited tickets' own (older) text.
+
+**Commits:** `gcb-workspaces@7e7957f` — pushed, `HEAD == origin/main`
+verified.
+
+**Ticket status changes:** `TKT-019.19` unchanged (`open | pending`),
+now carries an accurate Update section instead of a stale
+recommendation.
+
+**Next candidate:** continuing the standing loop at medium effort —
+check the remaining `TKT-019.x` chain (`.14`-`.18` etc.) for similar
+cross-reference gaps, or the core backlog, next tick.
