@@ -4168,3 +4168,55 @@ recommendation.
 **Next candidate:** continuing the standing loop at medium effort —
 check the remaining `TKT-019.x` chain (`.14`-`.18` etc.) for similar
 cross-reference gaps, or the core backlog, next tick.
+
+---
+
+## 2026-09-14 — TKT-019 epic-chain cross-reference sweep (2 more found and fixed)
+
+Continuing the standing loop at medium effort, per the prior tick's own
+next-candidate note: swept the rest of the `TKT-019.x` chain for the
+same missing-forward-cross-reference pattern found on `TKT-019.19`.
+Found two more real instances:
+
+- `TKT-019.14` recommended `TKT-019.15` decide drain-barrier-vs-
+  width-sizing before selecting `EPOCH_W`. `.15` already did this, with
+  a negative result (falsified the `fifo_empty`-drain framing,
+  sharpened the identity-space finding) — `.14` never carried the
+  forward pointer.
+- `TKT-019.17` recommended testing a reset-boundary Ghost Abort.
+  `TKT-019.18` already ran exactly this test and neutralized it
+  (session_nonce tagging) — `.17` never carried the forward pointer
+  either, even though `.18` itself correctly cites `.17` by name.
+
+Checked `.10`-`.13` too: no gap there — `.10`/`.11` predate this
+recommendation-heading style, and `.12`/`.13`'s own recommendations
+(the broader identity-authority question) remain genuinely open through
+`.14`-`.19`, consistently represented as unresolved throughout, not
+silently dropped. Stopped the sweep there rather than exhaustively
+re-verify every already-consistent link — three real fixes (`.14`,
+`.17`, `.19`) is the real yield from this chain right now.
+
+Both new fixes follow the same append-only Update pattern as `.19`'s
+correction — status unchanged (`open | pending`), since neither
+successor ticket claims full/exhaustive closure.
+
+**Self-caught error, twice, same tick**: both `Edit` calls truncated a
+sentence mid-word at the boundary of the matched `old_string` (copied
+from a partial grep/sed view rather than a full `Read`) — caught each
+time by re-reading the file immediately after editing, fixed both
+before committing.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.** Every cross-reference
+added traces to real text read directly in the cited successor
+ticket's own file, not assumed from its title or from memory.
+
+**Commits:** `gcb-workspaces@241fd2d` — pushed, `HEAD == origin/main`
+verified.
+
+**Ticket status changes:** `TKT-019.14`, `TKT-019.17` unchanged
+(`open | pending`), each now carrying an accurate Update section.
+
+**Next candidate:** the core ticket backlog outside the `TKT-019`
+chain (last swept there was `TKT-019.19`/now `.14`/`.17`), or advance
+`comparator_noise.py`'s own real remaining question (`γ`) per the
+prior tick's note, if nothing higher-priority surfaces.
