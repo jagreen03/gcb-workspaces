@@ -286,3 +286,49 @@ written to fix them, catching two dead ends cheaply rather than after
 a wasted implementation. This is the harvest/triage workflow's own
 External Reviewer discipline applied continuously within a single
 research thread, not just at hand-off boundaries between sessions.
+
+---
+
+## Pass 7 — 2026-09-13 — `gcb-lumen` (fifth pass, same day)
+
+**Harvested:** the prior tick's own started background task
+(resolution 80 of the FDTD combiner-loss convergence study) —
+completed successfully, result harvested and written up rather than
+left in a log file.
+
+**What happened:** IL = 2.07 dB at resolution 80, split still exactly
+50:50. Full sequence is now clean and monotonic: 2.87 (res=40) → 2.30
+(res=60) → 2.07 (res=80) dB, with shrinking gaps (−0.57, then
+−0.23 dB) — the real signature of genuine FDTD convergence, replacing
+the earlier bounce that came from under-resolved (20/30 px/µm) runs.
+A rough, explicitly-labeled extrapolation suggests a possible limit
+near ~1.9 dB. A resolution-100 confirmatory run was started as a
+further background task before this pass ended.
+
+**Engineering note**: resolution 80's junction run alone took 745s,
+too long for one bounded foreground call alongside its reference run
+— split into a `mmi_fdtd_single.py` wrapper (same `build()` function,
+no reimplementation) so each configuration runs as its own tracked
+background task. A real, useful execution-mechanics lesson for
+continuing this study at even higher resolution.
+
+**Classification:** the core insertion-loss question — **still needs
+confirmation**, but is now close: one more converging data point
+(resolution 100, in progress) away from a real, trustworthy number.
+**Priority: P1, trending toward resolution.** Not ticket-worthy yet —
+once a final number exists, updating `optical.cell.fanin`
+(`DECISION_LEDGER.md`) with it would be the natural promotion, at
+that point likely warranting the PI's attention as a real, actionable
+number rather than a research thread.
+
+**Drafted:** `gcb-lumen/FINDINGS-2026-09-13-fdtd-v4.md`;
+`fdtd/mmi_fdtd_single.py`; `ai-agents/ORANGE_TEAM.md` (V6), `README.md`,
+`EXTERNAL_AI_BRIEFING.md` all updated with the clean convergence
+result and a pointer to the in-progress resolution-100 run.
+
+**Discipline note:** stated explicitly, twice (in the findings file
+and in the repo state), that even this clean convergence is not yet a
+number to act on — the fan-in decision implication was described
+cautiously ("if this holds") rather than presented as settled, keeping
+the distinction between "converging nicely" and "converged" intact
+even as the result got genuinely encouraging.
