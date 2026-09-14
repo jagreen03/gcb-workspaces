@@ -332,3 +332,52 @@ number to act on — the fan-in decision implication was described
 cautiously ("if this holds") rather than presented as settled, keeping
 the distinction between "converging nicely" and "converged" intact
 even as the result got genuinely encouraging.
+
+---
+
+## Pass 8 — 2026-09-13 — `gcb-lumen` (sixth pass, same day — arc complete)
+
+**Harvested:** the resolution-100 background task, completed via a
+real-time notification. Final result: IL = 1.96 dB, split exactly
+0.5000:0.5000, completing a clean, consistently-decaying four-point
+sequence (2.87 → 2.30 → 2.07 → 1.96 dB, gap ratios 0.40 then 0.48).
+
+**What happened:** a geometric extrapolation from all four points gives
+a limit near 1.87 dB — close enough to the res=100 value (under 0.1 dB
+apart) that further resolution increases were judged not worth their
+steeply rising cost (res=100's junction run alone took 1451s ≈ 24 min).
+**Stopped the resolution sweep here, as converged-enough for
+engineering use, not mathematically exact.** Fed both the measured
+(1.96 dB, `[M]`) and extrapolated (1.87 dB, `[D]`) values into the real
+`sax_combiner_model.py` rollup: N=8 tree loss ≈ 5.88/5.61 dB, N=16 ≈
+7.84/7.48 dB.
+
+**Classification:** the core insertion-loss question — **resolved to
+the research repo's own standard** (real, resolution-converged FDTD
+evidence), though explicitly **not** the bench measurement
+`DECISION_LEDGER.md`'s `optical.cell.combiner-loss` entry originally
+asked for. **Promoted**: both relevant `DECISION_LEDGER.md` entries
+updated with the real evidence (kept `Open`, not closed unilaterally —
+that determination, and the actual `optical.cell.fanin` choice, are
+for the PI). `gcb-wiki/appendices/orange-team-collaborator.md`'s
+status row updated to match. **Priority downgraded from P1 (active
+research) to awaiting-PI-review** — this thread's research work is
+done; what remains is a decision, not more measurement.
+
+**Drafted:** `gcb-lumen/FINDINGS-2026-09-13-fdtd-v5.md` (the
+completing finding, with the full six-pass arc summarized for future
+readers); `sax_combiner_model.py` updated with real values;
+`ai-agents/ORANGE_TEAM.md` (V7), `README.md`, `EXTERNAL_AI_BRIEFING.md`
+all updated to state the core question as substantially answered.
+
+**Discipline note, for the whole arc across Passes 4–8**: three
+genuinely different hypotheses (same-run monitor contamination, a
+separate normalization run, run-duration variation) were tried and
+rigorously ruled out — each checked directly against real log output
+*before* being acted on or discarded — before the actual cause
+(taper under-resolution) was found. The final number is explicitly
+caveated as a 2D approximation, not bench-equivalent, everywhere it
+appears, and the two real figures (measured vs. extrapolated) are kept
+as separate, distinctly-tagged constants rather than merged into one
+number. This is the harvest/triage/promotion workflow working exactly
+as designed, end to end, on its own first deep research thread.
