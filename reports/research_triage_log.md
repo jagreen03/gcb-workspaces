@@ -242,3 +242,47 @@ better-looking number appeared. Debugging explicitly stopped here
 rather than stacking a third rushed guess - this needs careful,
 one-variable-at-a-time work, which this log records as the honest
 state to resume from, not a result to paper over.
+
+---
+
+## Pass 6 — 2026-09-13 — `gcb-lumen` (fourth pass, same day)
+
+**Harvested:** the prior tick's own recommended next step (a fixed,
+resolution-independent `until=` to replace the decay-based stopping
+criterion) — but its premise was checked directly before building
+anything, rather than assumed correct because it sounded plausible.
+
+**What happened:** the actual "run finished at t=..." logs across
+every resolution already tried (20/30/40) are essentially identical
+(reference run ≈150.0, junction run ≈200.0 at all three) — **the V4
+"sharper diagnosis" was wrong too**, caught before wasting a tool call
+building a fix for a problem that didn't exist. Tried a fourth, higher
+resolution (60 px/µm) instead of a third guess: 2.30 dB, meaningfully
+closer to res=40's 2.87 dB (~20% apart) than any earlier pair (2–4×
+apart) — a real convergence signal. **Real conclusion**: resolutions
+20/30 were simply too coarse to resolve the taper geometry (diagonal
+edges staircasing onto the FDTD grid at only ~10 pixels across the
+narrow end) — a normal FDTD sensitivity, not a bug.
+
+**Classification:** the core insertion-loss question — **still needs
+more research**, now with the actual cause understood (a standard, if
+computationally expensive, convergence study) rather than an
+unexplained bug. **Priority: P1 unchanged.** A directional (not final)
+read — true loss likely ~2–2.5 dB/junction — recorded explicitly as
+extrapolation, not a result. Not ticket-worthy.
+
+**Drafted:** `gcb-lumen/FINDINGS-2026-09-13-fdtd-v3.md`;
+`ai-agents/ORANGE_TEAM.md` (V5), `README.md`, and
+`EXTERNAL_AI_BRIEFING.md` all updated so a future session continues
+the convergence study (try 80, then 100+ px/µm) instead of re-
+diagnosing a "why doesn't it converge" question that's now answered.
+
+**Discipline note, the sharpest of this whole day-long arc:** three
+separate hypotheses were tried and ruled out in sequence (same-run
+monitor contamination → a separate reference run → run-duration
+variation) before the real cause surfaced — and the second and third
+were each checked directly against real log output *before* code was
+written to fix them, catching two dead ends cheaply rather than after
+a wasted implementation. This is the harvest/triage workflow's own
+External Reviewer discipline applied continuously within a single
+research thread, not just at hand-off boundaries between sessions.
