@@ -381,3 +381,50 @@ appears, and the two real figures (measured vs. extrapolated) are kept
 as separate, distinctly-tagged constants rather than merged into one
 number. This is the harvest/triage/promotion workflow working exactly
 as designed, end to end, on its own first deep research thread.
+
+---
+
+## Pass 9 — 2026-09-13 — `gcb-lambda`
+
+**Harvested:** `gcb-lambda/ai-agents/ORANGE_TEAM.md`'s RECONCILIATION
+STATE V2 — Deliverable 1 (Phase-I laser-count reconciliation) already
+done and filed as `GCB-043`; Deliverable 2 (Phase-II laser/modulator
+scoping) not yet started. Picked as the next tick's work after
+`gcb-lumen`'s research thread concluded (Pass 8), to diversify across
+the three problem repos rather than over-indexing on one.
+
+**What happened:** re-read `gcb-spec/docs/optical_geometry_spec.md` in
+full (the real locked Phase-II digital envelope) plus
+`gcb-spec/task3_physical_bom.md` (Phase-I's real modulator choice and
+its stated rationale) and `TKT-033` (the no-WDM finding) directly,
+rather than reasoning from memory. Produced `gcb-lambda/PHASE2_SCOPING.md`
+— four real findings, each tagged and none decided unilaterally: (1)
+Phase-I's VOA modulator choice cannot carry forward, since its own
+stated rationale is contradicted by Phase-II's locked 2.0 GHz `T_fire`;
+(2) modulator/driver count jumps ~130× (1040 operand channels/fire);
+(3) reusing `gcb-lumen`'s real FDTD per-junction loss figure against a
+1024-way distribution tree gives a ≈19.6 dB splitting-loss floor — a
+genuine cross-repo reuse of Pass 4–8's own result, computed, not
+assumed; (4) the 1310 nm wavelength carries forward only as an
+assumption.
+
+**Classification:** Deliverable 2 (P2 — exploratory scoping, per this
+repo's own mandate) — **done to the scoping standard the mandate
+itself asks for** ("a scoped question list and candidate directions,
+not a finished laser-bank design"). Not promoted to a `DECISION_LEDGER`
+entry — none of the four findings are decisions, they're open questions
+for the Architect / `gcb-pic-core`'s future work, same posture as
+`GCB-043`. `gcb-lambda`'s own mandate (both deliverables) is now
+substantially complete.
+
+**Drafted:** `gcb-lambda/PHASE2_SCOPING.md` (new); `ai-agents/
+ORANGE_TEAM.md` (RECONCILIATION STATE V3) and `README.md` updated to
+reflect completion. Committed `gcb-lambda@bc41f52`, pushed, `HEAD ==
+origin/main` verified.
+
+**Note on cross-repo reuse**: finding (3) above is a real example of
+one problem repo's harvested result (`gcb-lumen`'s FDTD loss figure)
+being reused as an input to a *different* repo's open question, without
+re-deriving or re-measuring it — exactly the kind of compounding value
+the three-repo isolation was designed to allow once a real number
+exists in one of them.

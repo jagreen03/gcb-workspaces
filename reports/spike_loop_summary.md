@@ -3980,3 +3980,57 @@ pushed, verified `HEAD == origin/main`.
 
 **Next candidate:** continuing the open-ended loop per the Architect's
 standing directive.
+
+---
+
+## 2026-09-13 — `gcb-lambda` Deliverable 2 (Phase-II laser/modulator scoping)
+
+Diversified off `gcb-lumen` (research thread concluded, Pass 8) to
+`gcb-lambda`'s remaining, not-yet-started Deliverable 2: scope what a
+Phase-II laser/modulator design needs, starting from
+`gcb-spec/docs/optical_geometry_spec.md`'s locked `N=64`/`L=16`/
+`T_fire`=500ps digital envelope, which has zero optical-source content.
+
+Re-read the real locked spec, `task3_physical_bom.md`'s Phase-I
+modulator BOM, and `TKT-033`'s no-WDM finding directly (not from
+memory). Produced `gcb-lambda/PHASE2_SCOPING.md` — a scoped question
+list, per the repo's exploratory mandate — with four real findings:
+
+1. Phase-I's VOA modulator choice (`TKT-028`) cannot carry forward —
+   its own stated rationale ("bandwidth only needs the bench's low-rate
+   fire cadence") is contradicted by Phase-II's locked 2.0 GHz `T_fire`.
+2. Modulator/driver count jumps ~130× (1040 operand channels/fire vs.
+   Phase-I's largest N=8 config) — the locked spec itself leaves "how
+   operands reach the modulator bus" an explicit black box.
+3. Reusing `gcb-lumen`'s real FDTD per-junction loss figure (≈1.96 dB,
+   `LUMEN-FDTD`) against a 1024-way distribution tree gives a ≈19.6 dB
+   splitting-loss floor — a genuine cross-repo reuse of another problem
+   repo's real result, arithmetic only, no new experiment.
+4. The 1310 nm wavelength carries forward only as an assumption, not a
+   stated Phase-II requirement.
+
+None of the four are decided here — filed as open questions for the
+Architect / `gcb-pic-core`'s future work, same posture as `GCB-043`.
+`gcb-lambda`'s mandate (both deliverables) is now substantially
+complete. Logged as Research Triage Pass 9
+(`gcb-workspaces/reports/research_triage_log.md`).
+
+**Epistemic status: PROVEN — DIRECT EXECUTION**. Every number traces to
+a real, already-locked file (`optical_geometry_spec.md`'s own table
+values) or a real prior result (`gcb-lumen`'s FDTD figure), re-verified
+this pass rather than reused from memory. The link-budget arithmetic in
+finding 3 was checked with a standalone Python calculation before being
+written up.
+
+**Commits:** `gcb-lambda@bc41f52` — pushed, verified `HEAD ==
+origin/main`.
+
+**Ticket status changes:** none — this is a scoping deliverable inside
+an existing repo mandate, not a new backlog ticket; `gcb-lambda`'s
+`ai-agents/ORANGE_TEAM.md` RECONCILIATION STATE advanced to V3.
+
+**Next candidate:** continuing the open-ended loop per the Architect's
+standing directive — `gcb-kelvin`'s manual noise-injection model (using
+the already-extracted real `gm`/`gds` values) is the next real,
+previously-identified, not-yet-attempted thread if no higher-priority
+backlog item surfaces first.
