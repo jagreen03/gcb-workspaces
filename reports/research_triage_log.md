@@ -208,3 +208,37 @@ itself a real, useful Orange-Team result (a bad/unstable number is a
 successful measurement of "this pipeline isn't trustworthy yet," not
 a failure to hide) — the same principle this program already applies
 to "deliberately ugly first passes" elsewhere.
+
+---
+
+## Pass 5 — 2026-09-13 — `gcb-lumen` (third pass, same day)
+
+**Harvested:** this session's own prior recommendation
+(`FINDINGS-2026-09-13-fdtd.md`'s "add a normalization reference run"
+next step), executed directly rather than left for a future session.
+
+**What happened:** built and ran the recommended fix
+(`fdtd/mmi_fdtd_v2.py`). **It failed** - the non-convergence pattern
+barely changed (4.36 → 10.94 → 2.87 dB; resolution 30 got *worse*, not
+better). This is a real, useful negative result: it rules out
+reflection contamination as the dominant cause, and a new observation
+(the clean reference run's own `P_in` varies 2.3× across resolution)
+points the diagnosis upstream, toward the simulation's run-duration/
+stopping-criterion handling or the source's own power normalization.
+
+**Classification:** the core insertion-loss question - **still needs
+more research**, now on a sharper, narrower hypothesis than before
+(fixed-duration run vs. decay-based stopping, not reflection
+normalization). **Priority: P1 unchanged.** Not ticket-worthy - a
+continuation of an existing debugging thread, not a new decision.
+
+**Drafted:** `gcb-lumen/FINDINGS-2026-09-13-fdtd-v2.md`; `ai-agents/ORANGE_TEAM.md`
+(V4) and `EXTERNAL_AI_BRIEFING.md` updated so a future session doesn't
+re-suggest either of the two fixes already tried and ruled out today.
+
+**Discipline note:** two real fixes attempted in one day, both
+reported as failures rather than silently abandoned or re-run until a
+better-looking number appeared. Debugging explicitly stopped here
+rather than stacking a third rushed guess - this needs careful,
+one-variable-at-a-time work, which this log records as the honest
+state to resume from, not a result to paper over.
