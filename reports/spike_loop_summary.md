@@ -4034,3 +4034,45 @@ standing directive — `gcb-kelvin`'s manual noise-injection model (using
 the already-extracted real `gm`/`gds` values) is the next real,
 previously-identified, not-yet-attempted thread if no higher-priority
 backlog item surfaces first.
+
+---
+
+## 2026-09-13 — `gcb-kelvin` manual noise-injection path, first analytical step
+
+Continuing the standing loop, picked up `gcb-kelvin`'s previously-
+flagged-but-unattempted next step (manual multi-transistor noise-
+injection model using real device-extracted `gm`/`gds`, since Spectre
+access is confirmed unavailable and `.noise` is confirmed broken on the
+real BSIM-CMG device). Deliberately scoped down to the smallest real
+first increment given the tight memory ceiling — an analytical
+single-transistor estimate, no new background EDA run.
+
+Computed two closed-form single-transistor thermal-noise models against
+the real extracted gm and the 53 µV BSIM4-surrogate target:
+pole-limited (transistor's own gm/C_L pole, ~155 MHz) lands at 58.75 µV
+for γ=2/3 — within +11%, inside the ±20% confirmation band; gate-
+window-limited (20 ns decision gate, ~25 MHz ENBW) needs an implausible
+γ≈5.3 to match. Read as a real, checked signal favoring the
+pole-limited picture and encouraging for the manual-noise-injection
+approach generally — explicitly **not** a closure: single transistor
+only, γ still assumed (no ASAP7 flicker model), full 2-stage+chopper+
+latch circuit not modeled.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION** for the arithmetic
+itself (verified via a standalone script, not hand-typed) using real,
+previously-extracted device parameters; the physical interpretation
+(pole- vs. gate-limited) is `[D]erived`/reasoned, not simulated —
+flagged as the natural next `.ac`-based step, not asserted as settled.
+
+**Commits:** `gcb-kelvin@55eb3b1` — pushed, verified `HEAD ==
+origin/main`. Logged as Research Triage Pass 10.
+
+**Ticket status changes:** none — `DECISION_LEDGER.md`'s
+`readout.comparator.noise.spectre-histogram` stays `Open`, unchanged;
+no GO implied per this repo's own Hard Rule 3.
+
+**Next candidate:** the smaller, refined next increment this pass
+itself recommends (a real `.ac`-based noise-source propagation for just
+gcb-kelvin's first preamp stage, via the WSL ngspice/OSDI toolchain) —
+or another real backlog item if one surfaces with higher priority when
+the loop next checks in.

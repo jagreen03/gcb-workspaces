@@ -428,3 +428,41 @@ being reused as an input to a *different* repo's open question, without
 re-deriving or re-measuring it — exactly the kind of compounding value
 the three-repo isolation was designed to allow once a real number
 exists in one of them.
+
+---
+
+## Pass 10 — 2026-09-13 — `gcb-kelvin`
+
+**Harvested:** `gcb-kelvin/ai-agents/ORANGE_TEAM.md`'s MEASUREMENT
+STATE V2 and `FINDINGS-2026-09-13.md`'s recommended-but-unstarted next
+step: build a manual multi-transistor noise-injection model using the
+real device-extracted `gm`/`gds`, since Spectre access is confirmed
+unavailable and ngspice's `.noise` is confirmed broken on the real
+BSIM-CMG device.
+
+**What happened:** rather than attempting the full 2-stage+chopper+
+latch model in one step (explicitly flagged in the prior findings as
+"a real, substantial circuit-design task"), took the smallest real
+first increment: an analytical (no new EDA run — respects the host's
+tight memory ceiling) single-transistor thermal-noise estimate using
+the real extracted gm, checked two competing closed-form bandwidth
+models (pole-limited vs. gate-window-limited) against the 53 µV BSIM4-
+surrogate target. The pole-limited model landed within +11% at a
+physically ordinary γ (2/3); the gate-limited model needed an
+implausible γ≈5.3 — a real, checked signal about which physical
+mechanism is likely dominant for this device/load, obtained by direct
+computation (verified via a standalone script), not asserted.
+
+**Classification:** genuine research progress on an already-open,
+previously-unattempted path (P2 — exploratory, same tier as the
+Phase-II laser scoping in Pass 9) — **not a closure**. Explicitly does
+not touch `readout.comparator.noise.spectre-histogram`'s `Open` status
+in `DECISION_LEDGER.md`; no GO implied or claimed, consistent with this
+repo's own Hard Rule 3.
+
+**Drafted:** `gcb-kelvin/FINDINGS-2026-09-13-manual-noise-v1.md` (new);
+`ai-agents/ORANGE_TEAM.md` (MEASUREMENT STATE V3) updated with a
+refined, smaller next-increment recommendation (a real `.ac` sweep for
+just the first preamp stage, to settle the pole-vs-gate ambiguity this
+pass surfaced but did not resolve). Committed `gcb-kelvin@55eb3b1`,
+pushed, `HEAD == origin/main` verified.
