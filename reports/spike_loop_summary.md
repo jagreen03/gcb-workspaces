@@ -3814,3 +3814,55 @@ pushed, verified `HEAD == origin/main`.
 item.
 
 **Next candidate:** continuing the open-ended loop.
+
+## Task-notification tick, 2026-09-13 - resolution 80 confirms real, clean FDTD convergence
+
+**Woken by the background task started last tick** (`gcb-lumen`'s
+resolution-80 FDTD junction run) completing, rather than the fallback
+timer - the harness's own background-task notification mechanism
+working exactly as intended.
+
+**Harvested a real, clean result**: IL = 2.07 dB at resolution 80,
+split still exactly 50:50. The full sequence is now unambiguously
+converging: 2.87 dB (res=40) -> 2.30 dB (res=60) -> 2.07 dB (res=80),
+with the gap between successive resolutions shrinking each time
+(-0.57 dB, then -0.23 dB) - the real signature of genuine FDTD
+convergence, in sharp contrast to the earlier under-resolved 20/30/40
+sequence that bounced non-monotonically. A rough, explicitly-labeled
+geometric extrapolation from these three points suggests a possible
+limit near ~1.9 dB - stated plainly as an unverified guess, not a
+result to act on.
+
+**A real engineering lesson, not physics**: resolution 80's
+junction-geometry run alone took 745s, too long to fit alongside its
+reference run in one bounded foreground call. Split into a new
+`mmi_fdtd_single.py` wrapper around the same `build()` function (no
+reimplementation) so each configuration - reference and junction - now
+runs as its own independently-timed, backgroundable process. Started a
+further resolution-100 confirmatory run as a background task before
+this tick ended, continuing the same pattern.
+
+**Stated cautiously what this would mean for the real decision**: if a
+value near ~1.9-2.1 dB/junction holds up, the combiner tree's total
+loss (N=8: ~6.2 dB; N=16: ~8.3 dB) would be meaningfully worse than
+this program's `~0.1 dB/stage` literature-cited optimistic guess, and
+closer to (though still better than) the `~10*log10(N)` pessimistic
+bound - a real, useful directional signal even before the exact figure
+is nailed down. Explicitly not yet a number to make the
+`optical.cell.fanin` decision from.
+
+**Epistemic status: PROVEN — DIGITAL FDTD SIMULATION, TESTED
+CONDITIONS** for the convergence trend itself (a real, reproduced
+fifth data point extending a genuine monotonic sequence).
+**UNPROVEN**, explicitly: any final insertion-loss figure - the ~1.9 dB
+extrapolation is labeled a guess to check, not a result, everywhere it
+appears.
+
+**Commits:** `gcb-lumen@d47ee3d`, `gcb-workspaces@6197bb4` - both
+pushed, verified `HEAD == origin/main`.
+
+**Ticket status changes:** none - a research finding, not a backlog
+item.
+
+**Next candidate:** await the resolution-100 background result, then
+continue the open-ended loop.
