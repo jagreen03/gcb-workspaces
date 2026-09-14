@@ -129,6 +129,24 @@ doctrine ticket on ticket-lifecycle discipline — this is a sibling
 doctrine question about the outsourcing *decision* rather than ticket
 *lifecycle*).
 
+## Update, 2026-09-14 — a second, live confirming instance, same day as filing
+
+Continuing the standing loop (at medium effort, per the Architect's own
+instruction not to spend higher effort on this ticket specifically),
+the `gcb-kelvin` `g_m` "discrepancy" this ticket's own motivating
+example cited — the one the rewritten wiki prompt asked a frontier AI
+to diagnose — was itself resolved by internal, medium-effort checking
+within the same day: re-running the real extraction deck found roughly
+half of all attempts deterministically fail to converge to a physical
+operating point, and the original 779 µS figure was never checked for
+that before being trusted (`gcb-kelvin@a27f1f0`). The wiki prompt was
+corrected in place (`gcb-wiki@845c0b5`) rather than left pointing at a
+resolved non-issue. **This is not new evidence requiring this ticket's
+own scope to change** — it's a second live instance of exactly the
+pattern this ticket already describes, recorded here because it
+happened to the same example this ticket cites, not because the fix
+sketched above was designed or implemented (it still hasn't been).
+
 ## Telemetry & Evaluation
 
 No PBG grade yet — `status: open`, a real finding filed for later

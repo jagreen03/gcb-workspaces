@@ -466,3 +466,46 @@ refined, smaller next-increment recommendation (a real `.ac` sweep for
 just the first preamp stage, to settle the pole-vs-gate ambiguity this
 pass surfaced but did not resolve). Committed `gcb-kelvin@55eb3b1`,
 pushed, `HEAD == origin/main` verified.
+
+---
+
+## Pass 11 — 2026-09-14 — `gcb-kelvin` / `gcb-wiki`
+
+**Harvested:** the Architect's own direct correction of Pass 10's
+output — the rewritten `gcb-kelvin` orange-team-collaborator prompt
+asked an external frontier AI to diagnose a ≈2× `g_m` discrepancy that
+this session had itself partly found while drafting the prompt,
+proving the outsourcing threshold was too low. Filed as `GCB-045`
+(low priority, explicitly deferred per the Architect's instruction).
+
+**What happened, continuing at medium effort per instruction:** rather
+than stopping at the ticket, re-ran the real `.op` extraction deck
+(`~/gcb_spice/tb/_gm.cir` and six fresh independent single-point decks)
+at all six of `comparator_noise.py`'s own `MEAS` bias points. Found a
+real, reproducible toolchain quirk: roughly half of all attempts
+deterministically converge to a non-physical operating point (`v(op)`
+in the millions of volts) — confirmed not solver-state noise by
+re-running the same failing point three times, byte-identical garbage
+each time. Every physically-plausible result landed in
+`comparator_noise.py`'s own real 167–395 µS range, not near the
+previously-reported 779 µS. **The `g_m` "discrepancy" most likely never
+existed as a real device/bias finding** — it was an unchecked
+non-converged solve, exactly the kind of thing a `0 < v(op) < V_dd`
+sanity check (now added as a standing rule) would have caught.
+
+**Classification:** a second, live, same-day confirming instance of
+`GCB-045`'s own finding — internal medium-effort checking (re-run a
+deck, add one plausibility check) resolved what the wiki had just
+asked a frontier AI to diagnose. Not promoted to `DECISION_LEDGER.md`
+— doesn't touch `readout.comparator.noise.spectre-histogram`'s `Open`
+status; the real remaining gap narrowed to `γ=1.0` (assumed) vs.
+BSIM4's `γ_eff≈1.4`, not a data discrepancy.
+
+**Drafted:** `gcb-kelvin/FINDINGS-2026-09-13-manual-noise-v1.md`
+Correction 2 (new); `ai-agents/ORANGE_TEAM.md` updated to match;
+`gcb-wiki/appendices/orange-team-collaborator.md`'s `gcb-kelvin`
+section and prompt rewritten around the real, narrower remaining gap
+rather than left pointing at a resolved non-issue; `GCB-045` updated
+with this as a second confirming instance, not a scope change.
+Committed `gcb-kelvin@a27f1f0`, `gcb-wiki@845c0b5`, both pushed,
+`HEAD == origin/main` verified.

@@ -4076,3 +4076,54 @@ itself recommends (a real `.ac`-based noise-source propagation for just
 gcb-kelvin's first preamp stage, via the WSL ngspice/OSDI toolchain) —
 or another real backlog item if one surfaces with higher priority when
 the loop next checks in.
+
+---
+
+## 2026-09-14 — GCB-045 filed; a live same-day confirming instance resolved internally
+
+The Architect identified directly that the rewritten `gcb-kelvin`
+orange-team-collaborator prompt (previous entry) asked an external
+frontier AI to diagnose a ≈2× `g_m` discrepancy that this session had
+itself found, and partly started diagnosing, while drafting the prompt
+— proof the page's outsourcing threshold is set too low. Filed
+`GCB-045` (`gcb-workspaces@26efb87`) at **low priority, explicitly
+deferred** per the Architect's own instruction to work on this later
+at higher token budget, not now at medium effort.
+
+Continuing the loop at medium effort (per instruction), the same `g_m`
+discrepancy GCB-045 cites as its motivating example was itself resolved
+within the same day: re-ran the real `.op` extraction deck at all six
+bias points and found roughly half deterministically converge to a
+non-physical operating point (`v(op)` in the millions of volts) —
+confirmed repeatable, not solver noise, by three identical re-runs of
+the same failing point. The original 779 µS figure was never checked
+against this before being trusted; every physically-plausible result
+matched the existing roll-up script's own real range. **The
+discrepancy most likely never existed as a real device finding** — a
+second, live, same-day instance of exactly what GCB-045 describes.
+
+Corrected `gcb-kelvin/FINDINGS-2026-09-13-manual-noise-v1.md`
+(Correction 2, append-only), `ai-agents/ORANGE_TEAM.md`, and the
+`gcb-wiki` prompt itself — rewritten around the real, narrower
+remaining gap (`γ=1.0` assumed vs. BSIM4's `γ_eff≈1.4`) rather than
+left pointing at a resolved non-issue. Added a brief, dated update to
+`GCB-045` citing this as a second confirming instance, not a scope
+change.
+
+**Epistemic status: PROVEN — DIRECT EXECUTION.** Every claim here comes
+from a real SPICE deck actually re-run in WSL this pass (three repeated
+identical-garbage runs at the failing point, not asserted), not
+reasoned about in the abstract.
+
+**Commits:** `gcb-workspaces@26efb87` (GCB-045 filed),
+`gcb-kelvin@a27f1f0` (Correction 2), `gcb-wiki@845c0b5` (prompt
+correction) — all pushed, `HEAD == origin/main` verified on each.
+Logged as Research Triage Pass 11.
+
+**Ticket status changes:** `GCB-045` filed, `open | pending`, no PBG
+grade yet, priority explicitly low/deferred.
+
+**Next candidate:** continuing the standing loop at medium effort —
+check the core ticket backlog for the next real, medium-effort-
+appropriate item, or advance `comparator_noise.py`'s own remaining
+real question (γ) if nothing higher-priority surfaces.
